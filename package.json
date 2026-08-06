@@ -18,6 +18,8 @@
     "assets:build": "node scripts/build-brand-assets.mjs",
     "sources:check": "node scripts/validate-sources.mjs",
     "feeds:sync": "node scripts/sync-feeds.mjs",
+    "database:migrate": "node scripts/database/migrate.mjs",
+    "newsletter:export": "node scripts/newsletter/export.mjs",
     "release:build": "node scripts/build-release.mjs",
     "video:render": "node scripts/render-short.mjs",
     "publish:buttondown": "node scripts/publish/buttondown.mjs",

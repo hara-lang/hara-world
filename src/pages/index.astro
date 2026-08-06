@@ -8,7 +8,6 @@ import { getArticles, articlePath } from "../lib/articles";
 const articles = await getArticles();
 const featured = articles.find((article) => article.data.featured) ?? articles[0];
 const latest = articles.slice(0, 6);
-const newsletterUrl = import.meta.env.PUBLIC_HARA_WORLD_NEWSLETTER_URL;
 ---
 <SiteLayout>
   <section class="world-hero">
@@ -31,7 +30,7 @@ const newsletterUrl = import.meta.env.PUBLIC_HARA_WORLD_NEWSLETTER_URL;
         <article>
           <span class="metric-label"><span class="status-dot"></span>Mail</span>
           <strong>Hara World Dispatch</strong>
-          <p>Weekly editorial digest with release-only lists available later.</p>
+          <p>Weekly editorial digest with an explicit release-notice option.</p>
         </article>
         <article>
           <span class="metric-label"><span class="status-dot"></span>Motion</span>
@@ -114,7 +113,7 @@ const newsletterUrl = import.meta.env.PUBLIC_HARA_WORLD_NEWSLETTER_URL;
         <h2>A mailing list worth opening.</h2>
         <p>A compact weekly edition: one argument, one working example, notable community writing, and a clear view of what changed in Hara.</p>
         <div class="hero-actions">
-          {newsletterUrl ? <a class="button button--primary" href={newsletterUrl}>Join the dispatch</a> : <a class="button button--primary" href="/newsletter">Newsletter launch status</a>}
+          <a class="button button--primary" href="/newsletter#join">Join the dispatch</a>
           <a class="button" href="/feed.xml">Use RSS instead</a>
         </div>
       </div>

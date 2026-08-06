@@ -1,6 +1,7 @@
 ---
 import SiteLayout from "../layouts/SiteLayout.astro";
-const newsletterUrl = import.meta.env.PUBLIC_HARA_WORLD_NEWSLETTER_URL;
+import "../styles/newsletter.css";
+const manageUrl = import.meta.env.PUBLIC_HARA_WORLD_MANAGE_SUBSCRIPTION_URL;
 ---
 <SiteLayout title="Newsletter" description="Hara World Dispatch — a weekly editorial edition from the Hara community.">
   <header class="page-hero">
@@ -9,19 +10,121 @@ const newsletterUrl = import.meta.env.PUBLIC_HARA_WORLD_NEWSLETTER_URL;
       <h1>Hara World Dispatch.</h1>
       <p class="lede">One substantive argument, one working example, the strongest community writing of the week, and a precise record of what changed.</p>
       <div class="hero-actions">
-        {newsletterUrl ? <a class="button button--primary" href={newsletterUrl}>Join the mailing list <span aria-hidden="true">↗</span></a> : <span class="button" aria-disabled="true">Signup endpoint not configured yet</span>}
+        <a class="button button--primary" href="#join">Join the mailing list</a>
         <a class="button" href="/feed.xml">Subscribe by RSS</a>
       </div>
     </div>
   </header>
-  <section class="section">
+
+  <section class="section" id="join">
+    <div class="shell newsletter-join">
+      <div class="newsletter-join__copy">
+        <p class="eyebrow">Confirmed subscription</p>
+        <h2>One list, explicit consent.</h2>
+        <p>Hara World records your request and consent in its Neon ledger. Buttondown sends the confirmation and the editions. You are not subscribed until you confirm the email it sends.</p>
+        <p>No raw IP address is stored in the Hara World database. The delivery provider may receive and retain your IP address under its own policy for spam prevention when configured.</p>
+        {manageUrl && <p><a class="arrow-link" href={manageUrl}>Manage an existing subscription →</a></p>}
+      </div>
+
+      <form class="newsletter-form" data-newsletter-form action="/api/newsletter/subscribe" method="post">
+        <input type="hidden" name="source" value="world-newsletter" />
+        <input type="hidden" name="requestId" value="" data-newsletter-request-id />
+        <label class="newsletter-honeypot" aria-hidden="true">
+          Company
+          <input type="text" name="company" tabindex="-1" autocomplete="off" />
+        </label>
+
+        <label class="newsletter-field">
+          <span>Email address</span>
+          <input type="email" name="email" autocomplete="email" inputmode="email" maxlength="254" placeholder="you@example.com" required />
+        </label>
+
+        <fieldset class="newsletter-options">
+          <legend>What should arrive</legend>
+          <label class="newsletter-option">
+            <input type="checkbox" name="interests" value="dispatch" checked />
+            <span><strong>Weekly dispatch</strong><br />Arguments, demonstrations, and selected community writing.</span>
+          </label>
+          <label class="newsletter-option">
+            <input type="checkbox" name="interests" value="releases" />
+            <span><strong>Release notices</strong><br />Lower-volume language, runtime, package, and tooling updates.</span>
+          </label>
+        </fieldset>
+
+        <label class="newsletter-consent">
+          <input type="checkbox" name="consent" value="true" required />
+          <span>I agree to receive Hara World email. I understand that my email address, selected interests, consent record, and subscription status will be stored, and that I can unsubscribe at any time.</span>
+        </label>
+
+        <button class="button button--primary" type="submit" data-newsletter-submit>Request confirmation</button>
+        <p class="newsletter-status" role="status" aria-live="polite" data-newsletter-status></p>
+        <p class="newsletter-note">See the <a href="/privacy">privacy notice</a>. Every edition includes an unsubscribe path.</p>
+      </form>
+    </div>
+  </section>
+
+  <section class="section section--tight">
     <div class="shell">
       <div class="policy-grid">
         <article class="policy-card"><h3>Weekly, not incessant</h3><p>The main list is a curated digest rather than an email for every repository event.</p></article>
         <article class="policy-card"><h3>Plain links, real archives</h3><p>Each edition points to canonical public pages and remains available as an RSS-readable archive.</p></article>
-        <article class="policy-card"><h3>Separate release stream</h3><p>A lower-volume or automatic release-only list can be added without forcing it onto editorial subscribers.</p></article>
-        <article class="policy-card"><h3>Provider-independent source</h3><p>The newsletter body is generated as Markdown first, so Hara World can move between Buttondown, listmonk, or another sender.</p></article>
+        <article class="policy-card"><h3>Separate release stream</h3><p>Release notices remain an explicit interest rather than being forced onto every editorial subscriber.</p></article>
+        <article class="policy-card"><h3>Provider-independent ledger</h3><p>Neon stores the consent and lifecycle record while newsletter bodies remain portable Markdown.</p></article>
       </div>
     </div>
   </section>
+
+  <script>
+    const form = document.querySelector("[data-newsletter-form]");
+    if (form instanceof HTMLFormElement) {
+      const status = form.querySelector("[data-newsletter-status]");
+      const submit = form.querySelector("[data-newsletter-submit]");
+      const requestId = form.querySelector("[data-newsletter-request-id]");
+      if (requestId instanceof HTMLInputElement && !requestId.value) requestId.value = crypto.randomUUID();
+
+      const query = new URLSearchParams(location.search);
+      if (status instanceof HTMLElement && query.get("confirmed") === "1") {
+        status.textContent = "Subscription confirmed. The next dispatch will arrive by email.";
+        status.dataset.state = "success";
+      }
+
+      form.addEventListener("submit", async (event) => {
+        event.preventDefault();
+        if (!(status instanceof HTMLElement) || !(submit instanceof HTMLButtonElement)) return;
+        submit.disabled = true;
+        status.textContent = "Recording your request…";
+        status.dataset.state = "pending";
+
+        const data = new FormData(form);
+        const payload = {
+          email: data.get("email"),
+          company: data.get("company"),
+          source: data.get("source"),
+          requestId: data.get("requestId"),
+          consent: data.get("consent"),
+          interests: data.getAll("interests")
+        };
+
+        try {
+          const response = await fetch(form.action, {
+            method: "POST",
+            headers: { "content-type": "application/json" },
+            body: JSON.stringify(payload)
+          });
+          const result = await response.json().catch(() => ({}));
+          if (!response.ok) throw new Error(result.message || "The signup request failed.");
+          status.textContent = result.message || "Your request was received. Check your inbox if confirmation is required.";
+          status.dataset.state = "success";
+          form.reset();
+          const nextId = form.querySelector("[data-newsletter-request-id]");
+          if (nextId instanceof HTMLInputElement) nextId.value = crypto.randomUUID();
+        } catch (error) {
+          status.textContent = error instanceof Error ? error.message : "The signup request failed.";
+          status.dataset.state = "error";
+        } finally {
+          submit.disabled = false;
+        }
+      });
+    }
+  </script>
 </SiteLayout>

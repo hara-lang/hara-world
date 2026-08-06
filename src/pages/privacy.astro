@@ -1,0 +1,31 @@
+---
+import SiteLayout from "../layouts/SiteLayout.astro";
+---
+<SiteLayout title="Privacy" description="How Hara World handles mailing-list and publication data.">
+  <header class="page-hero">
+    <div class="shell">
+      <p class="eyebrow">Policy / data handling</p>
+      <h1>Minimal records, explicit purpose.</h1>
+      <p class="lede">Hara World stores only the information needed to publish the site, operate the mailing list, honour consent, and preserve attribution.</p>
+    </div>
+  </header>
+  <section class="section">
+    <div class="shell prose">
+      <h2>Mailing-list data</h2>
+      <p>When you request a subscription, Hara World records your email address, selected interests, the time and version of your consent, subscription state, and identifiers needed to reconcile that state with the delivery provider.</p>
+      <p>Hara World does not retain your raw IP address or full browser user-agent in its Neon database. The email delivery provider may receive and retain an IP address under its own policy for fraud and spam checks when that option is enabled.</p>
+
+      <h2>Confirmation and delivery</h2>
+      <p>Buttondown performs double opt-in confirmation and email delivery. A request remains pending until the address owner confirms it. Buttondown also provides the unsubscribe and subscription-management paths included in email.</p>
+
+      <h2>Lifecycle and retention</h2>
+      <p>Unsubscription, suppression, and deletion events are retained as minimal lifecycle records so Hara World can prevent accidental re-mailing and demonstrate that an opt-out was honoured. Provider webhook payloads are reduced before storage; tracking history and raw provider records are not copied into Neon.</p>
+
+      <h2>Publication data</h2>
+      <p>Submitted articles, source permissions, attribution, corrections, and canonical links are public editorial records when accepted. Submission discussions may also remain visible in the GitHub repository.</p>
+
+      <h2>Your choices</h2>
+      <p>You can unsubscribe through any edition or use the provider's subscriber portal. For correction, access, or deletion requests, contact the Hara World maintainers through the repository organisation's published contact path.</p>
+    </div>
+  </section>
+</SiteLayout>

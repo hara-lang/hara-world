@@ -25,4 +25,25 @@ const articles = defineCollection({
   })
 });
 
-export const collections = { articles };
+const profiles = defineCollection({
+  loader: glob({ pattern: "**/*.md", base: "./content/profiles" }),
+  schema: z.object({
+    githubId: z.coerce.string().regex(/^\d+$/),
+    githubLogin: z.string().regex(/^[A-Za-z0-9](?:[A-Za-z0-9-]{0,37}[A-Za-z0-9])?$/),
+    displayName: z.string().min(1).max(100),
+    summary: z.string().min(1).max(320),
+    avatarUrl: z.string().url().optional(),
+    website: z.string().url().optional(),
+    location: z.string().max(100).optional(),
+    interests: z.array(z.string().min(1)).default([]),
+    roles: z.array(z.string().min(1)).default([]),
+    links: z.array(z.object({
+      label: z.string().min(1).max(80),
+      url: z.string().url()
+    })).default([]),
+    joinedAt: z.coerce.date(),
+    published: z.boolean().default(false)
+  })
+});
+
+export const collections = { articles, profiles };

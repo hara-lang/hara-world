@@ -1,0 +1,71 @@
+name: Submit or update a community profile
+description: Propose a public Git-reviewed profile for the Hara World people directory.
+title: "Profile: "
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Profiles are public records stored as Markdown in Git. Submit your own profile, or identify the person's explicit authorization when submitting for someone else. GitHub sign-in identifies the account operating Hara sites but does not automatically publish a profile.
+  - type: input
+    id: github-login
+    attributes:
+      label: GitHub login
+      placeholder: zcaudate
+    validations:
+      required: true
+  - type: input
+    id: github-id
+    attributes:
+      label: Stable numeric GitHub user ID
+      description: Use the numeric account ID, not the changeable login. It is visible on the Hara World Account page after sign-in.
+      placeholder: "6685337"
+    validations:
+      required: true
+  - type: input
+    id: display-name
+    attributes:
+      label: Public display name
+    validations:
+      required: true
+  - type: textarea
+    id: summary
+    attributes:
+      label: Short profile summary
+      description: One or two sentences for directory cards and metadata.
+    validations:
+      required: true
+  - type: textarea
+    id: biography
+    attributes:
+      label: Biography
+      description: Markdown is welcome. Describe your Hara, Lisp, runtime, tooling, media, or community work.
+    validations:
+      required: true
+  - type: input
+    id: interests
+    attributes:
+      label: Hara interests
+      placeholder: language design, wasm, tooling
+  - type: input
+    id: links
+    attributes:
+      label: Public links
+      description: Website, packages, projects, talks, or writing. Separate links with spaces or new lines.
+  - type: dropdown
+    id: authority
+    attributes:
+      label: Submission authority
+      options:
+        - I am submitting my own profile
+        - I have explicit permission to submit this profile
+    validations:
+      required: true
+  - type: checkboxes
+    id: attestations
+    attributes:
+      label: Public-record acknowledgement
+      options:
+        - label: I understand this information will be stored publicly in Git history and published on Hara World.
+          required: true
+        - label: I understand that roles and verified contribution claims require separate repository evidence or maintainer review.
+          required: true

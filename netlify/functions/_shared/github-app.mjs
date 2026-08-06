@@ -31,11 +31,16 @@ export function createGitHubAppJwt({ appId, privateKey, now = Date.now() }) {
 
 export function readGitHubAppConfig(env = {}) {
   const appId = envValue(env, "HARA_WORLD_GITHUB_APP_ID");
-  const privateKey = envValue(env, "HARA_WORLD_GITHUB_APP_PRIVATE_KEY");
+  const privateKey = normalizePrivateKey(envValue(env, "HARA_WORLD_GITHUB_APP_PRIVATE_KEY"));
   const installationId = envValue(env, "HARA_WORLD_GITHUB_INSTALLATION_ID");
   const repository = envValue(env, "HARA_WORLD_GITHUB_REPOSITORY", "hara-lang/hara-world");
   const baseBranch = envValue(env, "HARA_WORLD_GITHUB_BASE_BRANCH", "main");
-  if (!/^\d+$/.test(appId) || !/^\d+$/.test(installationId) || !privateKey) {
+  if (
+    !/^\d+$/.test(appId)
+    || !/^\d+$/.test(installationId)
+    || !privateKey.includes("BEGIN")
+    || !privateKey.includes("PRIVATE KEY")
+  ) {
     throw new Error("The Hara World GitHub App is not configured.");
   }
   if (!/^[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+$/.test(repository)) {
@@ -44,7 +49,7 @@ export function readGitHubAppConfig(env = {}) {
   if (!/^[A-Za-z0-9._/-]+$/.test(baseBranch) || baseBranch.includes("..")) {
     throw new Error("HARA_WORLD_GITHUB_BASE_BRANCH is invalid.");
   }
-  return { appId, privateKey: normalizePrivateKey(privateKey), installationId, repository, baseBranch };
+  return { appId, privateKey, installationId, repository, baseBranch };
 }
 
 async function readJson(response) {

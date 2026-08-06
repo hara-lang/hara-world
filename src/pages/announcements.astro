@@ -1,0 +1,35 @@
+---
+import ArticleCard from "../components/ArticleCard.astro";
+import SiteLayout from "../layouts/SiteLayout.astro";
+import { getArticles } from "../lib/articles";
+
+const announcements = (await getArticles())
+  .filter((article) => article.data.topics.includes("announcement"));
+---
+<SiteLayout title="Announcements" description="Reviewed community and project announcements from Hara World.">
+  <header class="page-hero">
+    <div class="shell">
+      <p class="eyebrow">Community / announcements</p>
+      <h1>Announcements worth keeping.</h1>
+      <p class="lede">Public notices from reviewed Hara sources, including pinned Discord announcements after editorial review. Every item retains its provenance and stable canonical record.</p>
+      <div class="hero-actions">
+        <a class="text-link" href="/articles">Browse every dispatch</a>
+        <a class="text-link" href="https://github.com/hara-lang/hara-world/blob/main/docs/discord-announcements.md">Read the Discord intake policy</a>
+      </div>
+    </div>
+  </header>
+  <section class="section section--tight">
+    <div class="shell">
+      {announcements.length > 0 ? (
+        <div class="article-list">
+          {announcements.map((article) => <ArticleCard article={article} compact />)}
+        </div>
+      ) : (
+        <div class="empty-state">
+          <h2>No reviewed announcements yet.</h2>
+          <p>Discord pins and other announcement sources appear here only after their draft intake pull request is reviewed and merged.</p>
+        </div>
+      )}
+    </div>
+  </section>
+</SiteLayout>

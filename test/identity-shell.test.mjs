@@ -4,37 +4,33 @@ import test from "node:test";
 
 const read = (path) => readFile(new URL(`../${path}`, import.meta.url), "utf8");
 
-test("World mounts the shared Hara identity client without owning OAuth", async () => {
-  const [layout, loader] = await Promise.all([
+test("World mounts central Identity and clears stale local sessions", async () => {
+  const [layout, loader, sync] = await Promise.all([
     read("src/layouts/SiteLayout.astro"),
     read("public/identity-loader.js"),
+    read("public/world-session-sync.js"),
   ]);
-
   assert.match(layout, /<div data-hara-identity><\/div>/);
   assert.match(layout, /src="\/identity-loader\.js"/);
-  assert.match(layout, /href="\/me"/);
-
   assert.match(loader, /https:\/\/id\.testing\.hara-lang\.org/);
   assert.match(loader, /https:\/\/id\.hara-lang\.org/);
+  assert.match(loader, /\/world-session-sync\.js/);
   assert.match(loader, /\/identity-client\.js/);
-  assert.match(loader, /endsWith\("\.testing\.hara-lang\.org"\)/);
-
-  assert.doesNotMatch(loader, /HARA_GITHUB_OAUTH_CLIENT_SECRET/);
-  assert.doesNotMatch(loader, /HARA_AUTH_SESSION_SECRET/);
-  assert.doesNotMatch(loader, /client_secret/i);
-  assert.doesNotMatch(loader, /client_id/i);
+  assert.match(sync, /hara:identity-change/);
+  assert.match(sync, /\/api\/auth\/session/);
+  assert.match(sync, /localId === centralId/);
+  assert.match(sync, /\/api\/auth\/logout/);
+  assert.match(sync, /central-sign-out/);
+  assert.doesNotMatch([loader, sync].join("\n"), /HARA_GITHUB_OAUTH_CLIENT_SECRET|HARA_AUTH_SESSION_SECRET|HARA_WORLD_SESSION_SECRET|client_secret/i);
 });
 
-test("the first World account page remains read-only", async () => {
+test("the account page uses the trusted World session for profile proposals", async () => {
   const accountPage = await read("src/pages/me.astro");
-
-  assert.match(accountPage, /hara:identity-change/);
-  assert.match(accountPage, /HaraIdentity\?\.refresh/);
-  assert.match(accountPage, /display only/i);
-  assert.match(accountPage, /No profile, comment, follow, or submission mutation/);
-  assert.match(accountPage, /newsletter email/i);
-
-  assert.doesNotMatch(accountPage, /<form/i);
-  assert.doesNotMatch(accountPage, /method=["']post/i);
-  assert.doesNotMatch(accountPage, /fetch\s*\(/);
+  assert.match(accountPage, /\/api\/auth\/start\?returnTo=\/me/);
+  assert.match(accountPage, /fetch\("\/api\/auth\/session"/);
+  assert.match(accountPage, /fetch\("\/api\/profile"/);
+  assert.match(accountPage, /Open draft profile PR/);
+  assert.match(accountPage, /stored in Git history/);
+  assert.doesNotMatch(accountPage, /name="githubId"|name="githubLogin"|name="roles"/);
+  assert.doesNotMatch(accountPage, /HARA_WORLD_HANDOFF_SECRET|HARA_WORLD_SESSION_SECRET|HARA_WORLD_GITHUB_APP_PRIVATE_KEY/);
 });

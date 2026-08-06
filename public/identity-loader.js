@@ -18,9 +18,15 @@
       : "https://id.hara-lang.org";
   }
 
+  const sync = document.createElement("script");
+  sync.src = "/world-session-sync.js";
+  sync.async = false;
+  sync.dataset.haraWorldSessionSync = "";
+  document.head.append(sync);
+
   const client = document.createElement("script");
   client.src = `${identityOrigin}/identity-client.js`;
-  client.defer = true;
+  client.async = false;
   client.dataset.haraIdentityClient = "";
   document.head.append(client);
 })();

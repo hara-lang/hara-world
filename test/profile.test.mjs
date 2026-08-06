@@ -4,34 +4,37 @@ import test from "node:test";
 
 const read = (path) => readFile(new URL(`../${path}`, import.meta.url), "utf8");
 
-test("profiles are Git-reviewed content keyed by stable GitHub identity", async () => {
-  const [config, index, page, issue] = await Promise.all([
+test("profiles remain Git-reviewed content keyed by stable GitHub identity", async () => {
+  const [config, index, page, migration] = await Promise.all([
     read("src/content.config.ts"),
     read("src/pages/people/index.astro"),
     read("src/pages/people/[...id].astro"),
-    read(".github/ISSUE_TEMPLATE/profile.yml"),
+    read("database/migrations/002_community_accounts.sql"),
   ]);
-
   assert.match(config, /const profiles = defineCollection/);
   assert.match(config, /githubId/);
-  assert.match(config, /githubLogin/);
-  assert.match(config, /published/);
   assert.match(index, /getCollection\("profiles"/);
-  assert.match(index, /Submit a profile/);
   assert.match(page, /github:\{profile\.data\.githubId\}/);
-  assert.match(page, /profile\.data\.roles/);
-  assert.match(issue, /Stable numeric GitHub user ID/);
-  assert.match(issue, /stored publicly in Git history/);
+  assert.match(migration, /github_user_id bigint PRIMARY KEY/);
+  assert.doesNotMatch(migration, /UNIQUE[\s\S]*github_login|community_accounts_github_login_key/);
 });
 
-test("the first profile system does not introduce browser-trusted mutation", async () => {
-  const files = [
-    await read("src/pages/people/index.astro"),
-    await read("src/pages/people/[...id].astro"),
-  ].join("\n");
-
-  assert.doesNotMatch(files, /method=["']post/i);
-  assert.doesNotMatch(files, /fetch\s*\(/);
-  assert.doesNotMatch(files, /HARA_AUTH_SESSION_SECRET/);
-  assert.doesNotMatch(files, /HARA_GITHUB_OAUTH_CLIENT_SECRET/);
+test("profile editing trusts only the World session and creates a reviewable Git change", async () => {
+  const [accountPage, endpoint, proposal, github] = await Promise.all([
+    read("src/pages/me.astro"),
+    read("netlify/functions/profile-proposal.mjs"),
+    read("netlify/functions/_shared/profile-proposal.mjs"),
+    read("netlify/functions/_shared/github-app.mjs"),
+  ]);
+  assert.match(accountPage, /<form class="profile-form"/);
+  assert.match(accountPage, /\/api\/auth\/start\?returnTo=\/me/);
+  assert.match(accountPage, /X-Hara-Request": "profile-proposal"/);
+  assert.doesNotMatch(accountPage, /name="githubId"|name="githubLogin"|name="roles"/);
+  assert.match(endpoint, /readWorldSession/);
+  assert.match(endpoint, /draft:\s*true/);
+  assert.match(endpoint, /Existing reviewed roles and links are preserved/);
+  assert.match(proposal, /Profile biography cannot contain raw HTML/);
+  assert.match(proposal, /unsafe link target/);
+  assert.match(github, /app\/installations/);
+  assert.doesNotMatch([accountPage, endpoint].join("\n"), /HARA_WORLD_GITHUB_APP_PRIVATE_KEY|HARA_WORLD_SESSION_SECRET\s*=/);
 });

@@ -86,7 +86,7 @@ jobs:
           NETLIFY_SITE_ID: ${{ secrets.NETLIFY_PRODUCTION_SITE_ID }}
           NETLIFY_CUSTOM_DOMAIN: world.hara-lang.org
 
-      - name: Verify testing World and shared Identity
+      - name: Verify testing World, session handoff, and profile publisher
         if: >-
           (github.event_name != 'pull_request' && github.ref_name == 'main') ||
           (github.event_name == 'pull_request' && github.event.pull_request.base.ref == 'main')
@@ -95,8 +95,10 @@ jobs:
           WORLD_ORIGIN: https://world.testing.hara-lang.org
           IDENTITY_ORIGIN: https://id.testing.hara-lang.org
           REQUIRE_IDENTITY_CONFIGURED: "true"
+          REQUIRE_WORLD_AUTH_CONFIGURED: "true"
+          REQUIRE_PROFILE_PUBLISHER_CONFIGURED: "true"
 
-      - name: Verify production World and shared Identity
+      - name: Verify production World, session handoff, and profile publisher
         if: >-
           (github.event_name != 'pull_request' && github.ref_name == 'production') ||
           (github.event_name == 'pull_request' && github.event.pull_request.base.ref == 'production')
@@ -105,3 +107,5 @@ jobs:
           WORLD_ORIGIN: https://world.hara-lang.org
           IDENTITY_ORIGIN: https://id.hara-lang.org
           REQUIRE_IDENTITY_CONFIGURED: "true"
+          REQUIRE_WORLD_AUTH_CONFIGURED: "true"
+          REQUIRE_PROFILE_PUBLISHER_CONFIGURED: "true"

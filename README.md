@@ -1,25 +1,28 @@
 # Hara World
 
-**Hara World** is the publication and distribution layer for the Hara Lisp community. It combines an Astro publication, a permissioned RSS/Atom source registry, a Neon-backed mailing-list ledger, newsletter generation, automated short-video production, and review-first social publishing.
+**Hara World** is the publication, community, and distribution layer for the Hara Lisp ecosystem. It combines an Astro publication, Git-reviewed contributor profiles, permissioned Discord and RSS/Atom intake, a Neon-backed mailing-list and identity ledger, newsletter generation, automated short-video production, and review-first social publishing.
 
 The governing idea is simple:
 
-> One canonical article. Many labelled projections.
+> One canonical record. Many labelled projections.
 
-An approved article may produce a website page, RSS and JSON Feed entries, newsletter Markdown, platform-specific copy, a narration script, captions, a vertical storyboard, and a private YouTube upload. The article remains the source of truth.
+An approved article may produce a website page, RSS and JSON Feed entries, newsletter Markdown, platform-specific copy, a narration script, captions, a vertical storyboard, and a private YouTube upload. Profiles, source registrations, and automated intake are likewise reviewable Git records.
 
 ## What ships in the first release
 
 - Static Astro site for `world.hara-lang.org`, using `@hara-lang/visual-language`.
 - Original dispatches, releases, field notes, and labelled syndicated articles.
 - RSS 2.0 and JSON Feed 1.1.
-- Public source registry with explicit permission and syndication modes.
-- Scheduled feed importer that opens a draft pull request rather than publishing unchecked content.
-- Neon consent and subscriber-lifecycle ledger with a signed Buttondown reconciliation webhook.
+- Public contributor profiles keyed by stable numeric GitHub identity.
+- Central GitHub sign-in through Hara Identity, followed by an audience-bound World session for authenticated profile proposals.
+- GitHub App-backed profile changes that open draft pull requests rather than writing directly to the publication branch.
+- Public source and Discord-channel registries with explicit review boundaries.
+- Scheduled feed and Discord-pin importers that open draft pull requests rather than publishing unchecked content.
+- Neon consent, subscriber-lifecycle, community-account, and one-time handoff ledgers.
 - Provider-independent release bundles.
 - Deterministic `1080 × 1920` short-video rendering with captions and optional TTS audio.
 - Buttondown draft, Bluesky, Mastodon, private YouTube upload, and managed-publisher webhook adapters.
-- GitHub Actions for validation, feed intake, release generation, and protected publishing.
+- GitHub Actions for validation, intake, release generation, and protected publishing.
 
 ## Local development
 
@@ -37,6 +40,14 @@ npm run check
 ```
 
 `npm run check` validates the source registry, runs the Node test suite, builds the brand asset, and performs a complete Astro production build.
+
+## Community identity and profiles
+
+GitHub OAuth is owned only by `id.hara-lang.org`. World creates random state and an S256 PKCE verifier, receives a one-time code at its exact callback, exchanges it server-to-server, records the handoff ID in Neon, and signs a separate two-hour host-only session.
+
+Profile edits at `/me` use that verified session. User-editable fields are converted into deterministic Markdown on a dedicated Git branch, and a narrowly scoped GitHub App opens a draft pull request. Stable GitHub ID, current login, reviewed roles, and existing verified links cannot be supplied by the browser. Merge remains the publication event.
+
+Apply the database migrations and configure the variables documented in [docs/community-identity.md](./docs/community-identity.md) before enabling the flow. GitHub identity is not automatically linked to newsletter email consent or package-publishing authority.
 
 ## Mailing list
 
@@ -113,7 +124,14 @@ npm run feeds:sync -- --dry-run
 npm run feeds:sync
 ```
 
-The scheduled workflow writes deterministic Markdown into `content/articles/syndicated/` and opens a draft PR. Merge is the editorial approval event.
+Fetch reviewed Discord pins locally with:
+
+```bash
+npm run discord:sync -- --dry-run
+npm run discord:sync
+```
+
+The scheduled workflows write deterministic Markdown into reviewed intake branches and open draft PRs. Merge is the editorial approval event.
 
 ## Build a release bundle
 
@@ -174,8 +192,8 @@ Functions directory: netlify/functions
 Node version: 24
 ```
 
-Run the Neon migration before accepting signups and store all database, webhook, and publisher credentials as encrypted Netlify or protected GitHub Actions environment variables. They must not be committed to source control.
+Run all database migrations before accepting signups or authenticated profile proposals. Store database, handoff, session, GitHub App, webhook, and publisher credentials as encrypted Netlify or protected GitHub Actions environment variables. They must not be committed to source control.
 
 ## Licence
 
-Code is available under the [MIT License](./LICENSE). Article licensing is declared per article and remains distinct from the software licence.
+Code is available under the [MIT License](./LICENSE). Article and profile licensing is declared separately and remains distinct from the software licence.

@@ -1,0 +1,11 @@
+---
+const { index, title, description, status = "active" } = Astro.props;
+---
+<article class="channel-card">
+  <div class="channel-card__rail">
+    <span>{String(index).padStart(2, "0")}</span>
+    <span class:list={["channel-card__status", `channel-card__status--${status}`]}>{status}</span>
+  </div>
+  <h3>{title}</h3>
+  <p>{description}</p>
+</article>

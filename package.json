@@ -1,0 +1,38 @@
+{
+  "name": "@hara-lang/world",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "license": "MIT",
+  "description": "Hara World — community syndication, editorial releases, newsletters, video, and social distribution for Hara Lisp.",
+  "engines": {
+    "node": ">=24"
+  },
+  "scripts": {
+    "predev": "npm run assets:build",
+    "dev": "astro dev",
+    "prebuild": "npm run assets:build",
+    "build": "astro build",
+    "preview": "astro preview",
+    "check": "npm run sources:check && npm test && npm run build",
+    "assets:build": "node scripts/build-brand-assets.mjs",
+    "sources:check": "node scripts/validate-sources.mjs",
+    "feeds:sync": "node scripts/sync-feeds.mjs",
+    "release:build": "node scripts/build-release.mjs",
+    "video:render": "node scripts/render-short.mjs",
+    "publish:buttondown": "node scripts/publish/buttondown.mjs",
+    "publish:bluesky": "node scripts/publish/bluesky.mjs",
+    "publish:mastodon": "node scripts/publish/mastodon.mjs",
+    "publish:youtube": "node scripts/publish/youtube.mjs",
+    "publish:webhook": "node scripts/publish/webhook.mjs",
+    "test": "node --test test/*.test.mjs"
+  },
+  "dependencies": {
+    "@astrojs/rss": "^4.0.12",
+    "@hara-lang/visual-language": "github:hara-lang/visual-language#a902c76a73da88ab4bcb199318e8365c48324f71",
+    "astro": "^5.16.0",
+    "fast-xml-parser": "^5.2.5",
+    "sharp": "^0.34.3",
+    "@astrojs/sitemap": "^3.4.2"
+  }
+}

@@ -1,0 +1,43 @@
+---
+import SiteLayout from "../layouts/SiteLayout.astro";
+const submissionUrl = "https://github.com/hara-lang/hara-world/issues/new?template=source-submission.yml";
+---
+<SiteLayout title="Submit a source" description="Register an RSS or Atom publication for inclusion in Hara World.">
+  <header class="page-hero">
+    <div class="shell">
+      <p class="eyebrow">World Feed / source registry</p>
+      <h1>Bring your own publication.</h1>
+      <p class="lede">Submit an RSS or Atom feed you own or are authorised to represent. Hara World will review provenance, relevance, and syndication permission before ingestion.</p>
+      <div class="hero-actions">
+        <a class="button button--primary" href={submissionUrl}>Open a source submission <span aria-hidden="true">↗</span></a>
+        <a class="button" href="https://github.com/hara-lang/hara-world/blob/main/EDITORIAL.md">Read the editorial policy</a>
+      </div>
+    </div>
+  </header>
+
+  <section class="section">
+    <div class="shell">
+      <div class="section-heading">
+        <div><p class="eyebrow">Submission contract</p><h2>Four things we need to know.</h2></div>
+        <p>These fields are kept in the source registry so that automation never has to guess whether it may republish someone’s work.</p>
+      </div>
+      <div class="release-flow">
+        <article><h3>Identity</h3><p>Publication name, homepage, feed URL, author or organisation, and a contact path.</p></article>
+        <article><h3>Relevance</h3><p>How the publication relates to Hara, Lisp, language tools, runtime systems, or programmable media.</p></article>
+        <article><h3>Permission</h3><p>Whether Hara World may link only, carry an excerpt, or republish full text under a stated licence.</p></article>
+        <article><h3>Topics</h3><p>A small stable set of tags used for feeds, digests, and future channel-specific lists.</p></article>
+        <article><h3>Revocation</h3><p>A person who can request pause, correction, or removal if the publication changes hands or policy.</p></article>
+      </div>
+    </div>
+  </section>
+
+  <section class="section section--tight">
+    <div class="shell">
+      <div class="callout">
+        <p class="eyebrow">Default mode</p>
+        <h2>Excerpt, attribution, canonical link.</h2>
+        <p>Hara World does not scrape and re-host full articles merely because a feed exposes content. Full-text syndication is opt-in; excerpt syndication remains reversible and sends readers to the original publication.</p>
+      </div>
+    </div>
+  </section>
+</SiteLayout>

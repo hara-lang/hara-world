@@ -1,0 +1,85 @@
+name: Submit a publication feed
+description: Register an RSS or Atom publication for review by Hara World.
+title: "Source: "
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Submit a feed you own or are authorised to represent. A public feed URL does not by itself grant republication rights.
+  - type: input
+    id: publication
+    attributes:
+      label: Publication name
+      placeholder: Example Lisp Journal
+    validations:
+      required: true
+  - type: input
+    id: homepage
+    attributes:
+      label: HTTPS homepage
+      placeholder: https://example.com
+    validations:
+      required: true
+  - type: input
+    id: feed
+    attributes:
+      label: HTTPS RSS or Atom feed
+      placeholder: https://example.com/feed.xml
+    validations:
+      required: true
+  - type: input
+    id: contact
+    attributes:
+      label: Contact path
+      description: Email address, profile, or public contact page for permission, correction, and revocation requests.
+    validations:
+      required: true
+  - type: dropdown
+    id: authority
+    attributes:
+      label: Your authority
+      options:
+        - I own the publication or feed
+        - I am authorised by the owner or author
+        - The requested use is covered by an open licence
+    validations:
+      required: true
+  - type: dropdown
+    id: syndication
+    attributes:
+      label: Requested syndication mode
+      description: Excerpt is the normal default.
+      options:
+        - Link only
+        - Excerpt, attribution, and canonical link
+        - Full text under explicit permission or licence
+    validations:
+      required: true
+  - type: input
+    id: licence
+    attributes:
+      label: Licence or permission reference
+      description: Required for open-licence and full-text requests. Link to the licence or describe the written permission.
+  - type: textarea
+    id: relevance
+    attributes:
+      label: Relevance to Hara World
+      description: Explain the publication's relationship to Hara, Lisp, language tools, runtimes, or programmable media.
+    validations:
+      required: true
+  - type: input
+    id: topics
+    attributes:
+      label: Proposed topics
+      placeholder: hara, lisp, runtimes
+    validations:
+      required: true
+  - type: checkboxes
+    id: attestations
+    attributes:
+      label: Attestations
+      options:
+        - label: I have the right to make this submission or have identified the applicable open licence.
+          required: true
+        - label: I understand that activation requires editorial review and may be revoked or paused.
+          required: true

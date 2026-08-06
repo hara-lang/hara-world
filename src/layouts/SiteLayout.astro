@@ -90,6 +90,7 @@ const activePath = Astro.url.pathname;
     <nav class="section-nav" aria-label="Hara World navigation">
       <div>
         <a href="/articles" aria-current={activePath.startsWith("/articles") ? "page" : undefined}>Dispatches</a>
+        <a href="/people" aria-current={activePath.startsWith("/people") ? "page" : undefined}>People</a>
         <a href="/sources" aria-current={activePath === "/sources" ? "page" : undefined}>Sources</a>
         <a href="/submit" aria-current={activePath === "/submit" ? "page" : undefined}>Submit</a>
         <a href="/about" aria-current={activePath === "/about" ? "page" : undefined}>About</a>
@@ -109,6 +110,7 @@ const activePath = Astro.url.pathname;
         <a href="/feed.json">JSON Feed</a>
         <a href="/sources.opml">Source OPML</a>
         <a href="/submit">Submit a source</a>
+        <a href="/people">People</a>
         <a href="/me">Account</a>
         <a href="/privacy">Privacy</a>
         <a href="https://opensource.greenways.ai/open-source/">A Greenways Open Source Project</a>

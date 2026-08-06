@@ -1,0 +1,48 @@
+---
+import { getCollection } from "astro:content";
+import SiteLayout from "../../layouts/SiteLayout.astro";
+
+const profiles = (await getCollection("profiles", ({ data }) => data.published))
+  .sort((left, right) => left.data.displayName.localeCompare(right.data.displayName));
+---
+<SiteLayout title="People" description="The Git-reviewed contributor directory for the Hara community.">
+  <header class="page-hero">
+    <div class="shell">
+      <p class="eyebrow">Community / people</p>
+      <h1>The people building Hara.</h1>
+      <p class="lede">Profiles are public, portable records reviewed through Git. GitHub identifies the person; the profile describes how they participate in the Hara world.</p>
+      <div class="hero-actions">
+        <a class="button" href="https://github.com/hara-lang/hara-world/issues/new?template=profile.yml">Submit a profile</a>
+        <a class="text-link" href="/me">View your signed-in identity</a>
+      </div>
+    </div>
+  </header>
+
+  <section class="section section--tight">
+    <div class="shell">
+      {profiles.length > 0 ? (
+        <div class="policy-grid profile-grid">
+          {profiles.map((profile) => {
+            const avatar = profile.data.avatarUrl ?? `https://avatars.githubusercontent.com/u/${profile.data.githubId}?v=4`;
+            return (
+              <a class="policy-card profile-card" href={`/people/${profile.id}/`}>
+                <img src={avatar} alt="" width="72" height="72" loading="lazy" />
+                <p class="eyebrow">@{profile.data.githubLogin}</p>
+                <h2>{profile.data.displayName}</h2>
+                <p>{profile.data.summary}</p>
+                <span>{profile.data.interests.join(" · ") || "Hara contributor"}</span>
+              </a>
+            );
+          })}
+        </div>
+      ) : (
+        <div class="provenance-note">
+          <p class="eyebrow">Directory opening</p>
+          <h2>No public profiles have been merged yet.</h2>
+          <p>The first profiles will appear after their reviewed Markdown records are merged into the World repository.</p>
+          <a class="button" href="https://github.com/hara-lang/hara-world/issues/new?template=profile.yml">Propose the first profile</a>
+        </div>
+      )}
+    </div>
+  </section>
+</SiteLayout>

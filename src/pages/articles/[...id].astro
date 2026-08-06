@@ -1,0 +1,76 @@
+---
+import { getCollection, render, type CollectionEntry } from "astro:content";
+import SiteLayout from "../../layouts/SiteLayout.astro";
+import { articlePath } from "../../lib/articles";
+import { formatDate, kindLabels } from "../../lib/site";
+
+export async function getStaticPaths() {
+  const articles = await getCollection("articles", ({ data }) => !data.draft);
+  return articles.map((article) => ({
+    params: { id: article.id },
+    props: { article }
+  }));
+}
+
+const { article } = Astro.props as { article: CollectionEntry<"articles"> };
+const { Content } = await render(article);
+const canonicalUrl = article.data.canonicalUrl ?? new URL(articlePath(article), Astro.site).toString();
+const isSyndicated = article.data.kind === "syndicated";
+---
+<SiteLayout
+  title={article.data.title}
+  description={article.data.description}
+  canonicalPath={articlePath(article)}
+  canonicalUrl={canonicalUrl}
+  articleMeta={{
+    publishedAt: article.data.publishedAt,
+    updatedAt: article.data.updatedAt,
+    author: article.data.author,
+    topics: article.data.topics
+  }}
+>
+  <article class="article-page">
+    <header class="article-hero">
+      <div class="shell article-hero__inner">
+        <p class="eyebrow">{kindLabels[article.data.kind]} / {article.data.topics.join(" · ") || "Hara"}</p>
+        <h1>{article.data.title}</h1>
+        <p class="lede">{article.data.description}</p>
+        <div class="article-meta">
+          <span>By {article.data.author}</span>
+          <time datetime={article.data.publishedAt.toISOString()}>{formatDate(article.data.publishedAt)}</time>
+          {article.data.updatedAt && <span>Updated {formatDate(article.data.updatedAt)}</span>}
+        </div>
+      </div>
+    </header>
+
+    <div class="shell article-layout">
+      <div class="article-body">
+        {isSyndicated && article.data.canonicalUrl && (
+          <aside class="provenance-note">
+            <p class="eyebrow">Syndicated source</p>
+            <p>This edition preserves attribution and points to the writer’s canonical publication.</p>
+            <a class="button" href={article.data.canonicalUrl}>Read at {article.data.sourceTitle ?? "the original source"} <span aria-hidden="true">↗</span></a>
+          </aside>
+        )}
+        <Content />
+        {article.data.disclosure && (
+          <aside class="disclosure-note">
+            <strong>Automation disclosure</strong>
+            <p>{article.data.disclosure}</p>
+          </aside>
+        )}
+      </div>
+      <aside class="article-rail" aria-label="Article details">
+        <dl>
+          <dt>Transmission</dt><dd>{kindLabels[article.data.kind]}</dd>
+          <dt>Author</dt><dd>{article.data.author}</dd>
+          <dt>Published</dt><dd>{formatDate(article.data.publishedAt)}</dd>
+          {article.data.license && <><dt>Licence</dt><dd>{article.data.license}</dd></>}
+          {article.data.sourceId && <><dt>Source ID</dt><dd><code>{article.data.sourceId}</code></dd></>}
+          <dt>Derivatives</dt><dd>{[article.data.newsletter && "mail", article.data.social && "social", article.data.video && "video"].filter(Boolean).join(" · ") || "none"}</dd>
+        </dl>
+        <a class="text-link" href="/feed.xml">Follow Hara World by RSS</a>
+      </aside>
+    </div>
+  </article>
+</SiteLayout>

@@ -1,0 +1,54 @@
+name: Propose an article
+description: Pitch an original Hara World dispatch, field note, release, or authorised syndication.
+title: "Article: "
+body:
+  - type: dropdown
+    id: kind
+    attributes:
+      label: Article kind
+      options:
+        - Dispatch
+        - Field note
+        - Release
+        - Syndicated article
+    validations:
+      required: true
+  - type: input
+    id: working-title
+    attributes:
+      label: Working title
+    validations:
+      required: true
+  - type: textarea
+    id: thesis
+    attributes:
+      label: Thesis and reader value
+      description: State the central argument, demonstration, or release value in a few paragraphs.
+    validations:
+      required: true
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Evidence, code, or demonstrations
+      description: Link the repositories, benchmarks, screenshots, specifications, or other primary material you expect to use.
+  - type: input
+    id: author
+    attributes:
+      label: Author and attribution
+    validations:
+      required: true
+  - type: dropdown
+    id: rights
+    attributes:
+      label: Rights status
+      options:
+        - I am submitting original work I control
+        - I have explicit permission to syndicate this work
+        - The work has a compatible open licence
+    validations:
+      required: true
+  - type: textarea
+    id: automation
+    attributes:
+      label: Automation disclosure
+      description: Note material AI-generated text, synthetic narration, generated imagery, or automated analysis expected in the edition.

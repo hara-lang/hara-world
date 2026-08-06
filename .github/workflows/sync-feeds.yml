@@ -1,0 +1,62 @@
+name: Propose World Feed updates
+
+on:
+  schedule:
+    - cron: "17 0 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: hara-world-feed-sync
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    runs-on: ubuntu-24.04
+    env:
+      GH_TOKEN: ${{ github.token }}
+      BRANCH: automation/world-feed
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - name: Start from the current canonical branch
+        run: git switch -C "$BRANCH" origin/main
+      - run: npm install
+      - name: Poll active RSS and Atom sources
+        run: npm run feeds:sync
+      - name: Validate generated intake
+        run: |
+          npm run sources:check
+          npm test
+      - name: Commit and open or update the intake PR
+        shell: bash
+        run: |
+          if git diff --quiet -- content/articles/syndicated registry/sync-state.json; then
+            echo "No new feed entries."
+            exit 0
+          fi
+
+          git config user.name "hara-world-bot"
+          git config user.email "hara-world-bot@users.noreply.github.com"
+          git add content/articles/syndicated registry/sync-state.json
+          git commit -m "Propose World Feed updates"
+          git push --force origin "HEAD:$BRANCH"
+
+          number="$(gh pr list --base main --head "$BRANCH" --state open --json number --jq '.[0].number // empty')"
+          if [ -z "$number" ]; then
+            gh pr create \
+              --draft \
+              --base main \
+              --head "$BRANCH" \
+              --title "Propose World Feed updates" \
+              --body $'Automated RSS/Atom intake for editorial review.\n\nReview provenance, title, date, excerpt, attribution, topics, and canonical URL before merging. The feed importer does not grant itself publication permission.'
+          else
+            gh pr comment "$number" --body "World Feed intake refreshed from the current canonical branch."
+          fi

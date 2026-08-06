@@ -1,0 +1,44 @@
+---
+import SiteLayout from "../layouts/SiteLayout.astro";
+---
+<SiteLayout title="About" description="How Hara World handles editorial provenance, automation, syndication, and distribution.">
+  <header class="page-hero">
+    <div class="shell">
+      <p class="eyebrow">Editorial system / public rules</p>
+      <h1>Propagation without deception.</h1>
+      <p class="lede">“Propaganda” here means material designed to propagate an idea. Hara World does it in the open: named authors, checkable claims, explicit automation, canonical sources, and visible corrections.</p>
+    </div>
+  </header>
+
+  <section class="section">
+    <div class="shell">
+      <div class="section-heading">
+        <div><p class="eyebrow">What it is</p><h2>A publication and a release system.</h2></div>
+        <p>The website is the editorial centre. RSS is the universal transport. Every other channel is a projection that may have different length, media, authentication, and review requirements.</p>
+      </div>
+      <dl class="definition-list">
+        <dt>Canonical article</dt><dd>The stable source of truth, including author, date, corrections, topics, and original-source URL where applicable.</dd>
+        <dt>Release object</dt><dd>A generated manifest containing platform copy, newsletter draft, storyboard, narration, captions, media paths, and distribution state.</dd>
+        <dt>Outbox adapter</dt><dd>A small credentialed publisher for one network or for a managed social queue. It cannot silently change article content.</dd>
+        <dt>Receipt</dt><dd>The returned platform identifier and public URL. Receipts can later be signed into Hestia rather than living only in CI logs.</dd>
+      </dl>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="shell">
+      <div class="section-heading">
+        <div><p class="eyebrow">Editorial guarantees</p><h2>What the automation is not allowed to erase.</h2></div>
+        <p>The system is deliberately conservative about rights, provenance, and public publishing.</p>
+      </div>
+      <div class="policy-grid">
+        <article class="policy-card"><h3>Attribution survives every projection</h3><p>Social copy, video descriptions, feeds, and newsletters retain the author and canonical URL.</p></article>
+        <article class="policy-card"><h3>Syndication is permissioned</h3><p>Excerpt is the default. Full-text republication requires an explicit licence or owner permission.</p></article>
+        <article class="policy-card"><h3>Automation is disclosed</h3><p>Synthetic narration, generated summaries, and templated visuals are labelled rather than passed off as human performance.</p></article>
+        <article class="policy-card"><h3>Corrections remain attached</h3><p>The canonical article records updates. Derivative posts may be corrected, replaced, or linked to the correction.</p></article>
+        <article class="policy-card"><h3>Community is not “official” by accident</h3><p>Official releases, Hara World editorials, independent pieces, and syndicated posts use separate content labels.</p></article>
+        <article class="policy-card"><h3>No engagement spam</h3><p>The outbox is paced by editorial cadence and platform policy, not by a mandate to fill every slot on every network.</p></article>
+      </div>
+    </div>
+  </section>
+</SiteLayout>

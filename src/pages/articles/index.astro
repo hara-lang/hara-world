@@ -1,0 +1,27 @@
+---
+import ArticleCard from "../../components/ArticleCard.astro";
+import SiteLayout from "../../layouts/SiteLayout.astro";
+import { getArticles } from "../../lib/articles";
+
+const articles = await getArticles();
+---
+<SiteLayout title="Dispatches" description="Essays, releases, field notes, and syndicated writing from Hara World.">
+  <header class="page-hero">
+    <div class="shell">
+      <p class="eyebrow">Archive / canonical record</p>
+      <h1>Dispatches from Hara World.</h1>
+      <p class="lede">Official releases, independent arguments, technical notes, and community writing—labelled by provenance and preserved at a stable URL.</p>
+    </div>
+  </header>
+  <section class="section section--tight">
+    <div class="shell">
+      {articles.length > 0 ? (
+        <div class="article-list">
+          {articles.map((article) => <ArticleCard article={article} compact />)}
+        </div>
+      ) : (
+        <div class="empty-state"><h2>No dispatches yet.</h2><p>The publication is ready for its first article.</p></div>
+      )}
+    </div>
+  </section>
+</SiteLayout>

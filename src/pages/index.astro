@@ -1,0 +1,123 @@
+---
+import Backdrop from "@hara-lang/visual-language/astro/Backdrop.astro";
+import ArticleCard from "../components/ArticleCard.astro";
+import ChannelCard from "../components/ChannelCard.astro";
+import SiteLayout from "../layouts/SiteLayout.astro";
+import { getArticles, articlePath } from "../lib/articles";
+
+const articles = await getArticles();
+const featured = articles.find((article) => article.data.featured) ?? articles[0];
+const latest = articles.slice(0, 6);
+const newsletterUrl = import.meta.env.PUBLIC_HARA_WORLD_NEWSLETTER_URL;
+---
+<SiteLayout>
+  <section class="world-hero">
+    <Backdrop effect="kernel" intensity="quiet" />
+    <div class="shell world-hero__inner">
+      <p class="eyebrow">Hara World / open transmission</p>
+      <h1>The programmable world, <span>in Lisp.</span></h1>
+      <p class="lede">Essays, field reports, working demonstrations, releases, and independent writing from people building with Hara.</p>
+      <div class="hero-actions">
+        {featured && <a class="button button--primary" href={articlePath(featured)}>Read the first dispatch <span aria-hidden="true">↗</span></a>}
+        <a class="button" href="/submit">Submit your publication</a>
+        <a class="button" href="/feed.xml">Follow by RSS</a>
+      </div>
+      <div class="hero-console" aria-label="Hara World distribution status">
+        <article>
+          <span class="metric-label"><span class="status-dot"></span>Canonical</span>
+          <strong>Web + RSS</strong>
+          <p>Every release starts as an attributed, addressable article.</p>
+        </article>
+        <article>
+          <span class="metric-label"><span class="status-dot"></span>Mail</span>
+          <strong>Hara World Dispatch</strong>
+          <p>Weekly editorial digest with release-only lists available later.</p>
+        </article>
+        <article>
+          <span class="metric-label"><span class="status-dot"></span>Motion</span>
+          <strong>Hara in 90 seconds</strong>
+          <p>Templated shorts, captions, narration scripts, and private review uploads.</p>
+        </article>
+        <article>
+          <span class="metric-label"><span class="status-dot"></span>Outbox</span>
+          <strong>Social projections</strong>
+          <p>Platform-specific drafts generated from one approved release object.</p>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="shell">
+      <div class="section-heading">
+        <div>
+          <p class="eyebrow">Editorial channels</p>
+          <h2>One world. Several transmission bands.</h2>
+        </div>
+        <p>Hara World is not a single corporate voice. Official releases, community work, independent argument, and automated summaries are labelled so readers can tell what they are looking at.</p>
+      </div>
+      <div class="channel-grid">
+        <ChannelCard index={1} title="Dispatches" status="active" description="Original essays about language design, runtime architecture, tools, and the culture around programmable systems." />
+        <ChannelCard index={2} title="World Feed" status="active" description="Permissioned RSS syndication from Hara users and adjacent Lisp writers, with canonical links and visible provenance." />
+        <ChannelCard index={3} title="Hara in 90 seconds" status="forming" description="Automated vertical video editions built from approved stories, using a restrained visual template and disclosed synthetic narration." />
+        <ChannelCard index={4} title="Kernel Sessions" status="forming" description="Longer demonstrations: live coding, internals, benchmarks, package walkthroughs, and conversations with implementers." />
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="shell">
+      <div class="section-heading">
+        <div>
+          <p class="eyebrow">Latest transmission</p>
+          <h2>Read what is moving.</h2>
+        </div>
+        <p>Articles remain the canonical record. Video, mail, and social posts point back here rather than becoming disconnected copies.</p>
+      </div>
+      {latest.length > 0 ? (
+        <div class="article-grid">
+          {latest.map((article) => <ArticleCard article={article} />)}
+        </div>
+      ) : (
+        <div class="empty-state">
+          <h3>The signal path is ready.</h3>
+          <p>The first article has not been published yet.</p>
+          <a class="button" href="/submit">Submit a source</a>
+        </div>
+      )}
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="shell">
+      <div class="section-heading">
+        <div>
+          <p class="eyebrow">Release algebra</p>
+          <h2>Approve once. Project everywhere.</h2>
+        </div>
+        <p>Automation generates useful derivatives, but merge remains the editorial boundary. Each outbound adapter can stay in draft, private, or public mode independently.</p>
+      </div>
+      <div class="release-flow">
+        <article><h3>Submit</h3><p>A writer registers a feed or opens an article pull request with permission and provenance.</p></article>
+        <article><h3>Review</h3><p>Claims, attribution, canonical URLs, licensing, and house labels are checked.</p></article>
+        <article><h3>Merge</h3><p>The article becomes the canonical release object and enters the public feeds.</p></article>
+        <article><h3>Generate</h3><p>Mail, social copy, storyboard, narration, captions, and video frames are built.</p></article>
+        <article><h3>Distribute</h3><p>Open networks publish directly; closed platforms route through an approved publisher adapter.</p></article>
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="shell">
+      <div class="callout">
+        <p class="eyebrow">Hara World Dispatch</p>
+        <h2>A mailing list worth opening.</h2>
+        <p>A compact weekly edition: one argument, one working example, notable community writing, and a clear view of what changed in Hara.</p>
+        <div class="hero-actions">
+          {newsletterUrl ? <a class="button button--primary" href={newsletterUrl}>Join the dispatch</a> : <a class="button button--primary" href="/newsletter">Newsletter launch status</a>}
+          <a class="button" href="/feed.xml">Use RSS instead</a>
+        </div>
+      </div>
+    </div>
+  </section>
+</SiteLayout>

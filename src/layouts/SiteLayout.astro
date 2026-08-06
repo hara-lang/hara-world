@@ -1,0 +1,140 @@
+---
+import HaraMark from "@hara-lang/visual-language/astro/HaraMark.astro";
+import ThemeToggle from "@hara-lang/visual-language/astro/ThemeToggle.astro";
+import "@hara-lang/visual-language/theme.css";
+import "@hara-lang/visual-language/motifs.css";
+import "@hara-lang/visual-language/effects.css";
+import "../styles/global.css";
+import { SITE } from "../lib/site";
+
+interface Props {
+  title?: string;
+  description?: string;
+  canonicalPath?: string;
+  canonicalUrl?: string;
+  articleMeta?: {
+    publishedAt?: Date;
+    updatedAt?: Date;
+    author?: string;
+    topics?: string[];
+  };
+}
+
+const {
+  title = SITE.name,
+  description = SITE.description,
+  canonicalPath = Astro.url.pathname,
+  canonicalUrl,
+  articleMeta
+} = Astro.props as Props;
+const pageTitle = title === SITE.name ? title : `${title} — ${SITE.name}`;
+const pageUrl = new URL(canonicalPath, Astro.site).toString();
+const canonical = canonicalUrl ?? pageUrl;
+const isArticle = Boolean(articleMeta);
+const socialImage = new URL("/og-hara-world.jpg", Astro.site).toString();
+const activePath = Astro.url.pathname;
+const newsletterUrl = import.meta.env.PUBLIC_HARA_WORLD_NEWSLETTER_URL;
+---
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width" />
+    <meta name="description" content={description} />
+    <meta name="theme-color" content="#080a0d" />
+    <meta name="generator" content={Astro.generator} />
+    <meta property="og:type" content={isArticle ? "article" : "website"} />
+    <meta property="og:site_name" content={SITE.name} />
+    <meta property="og:title" content={pageTitle} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={pageUrl} />
+    <meta property="og:image" content={socialImage} />
+    <meta property="og:image:width" content="3840" />
+    <meta property="og:image:height" content="2016" />
+    <meta property="og:image:alt" content="Hara World — broadcasts from a programmable world" />
+    {articleMeta?.publishedAt && <meta property="article:published_time" content={articleMeta.publishedAt.toISOString()} />}
+    {articleMeta?.updatedAt && <meta property="article:modified_time" content={articleMeta.updatedAt.toISOString()} />}
+    {articleMeta?.author && <meta property="article:author" content={articleMeta.author} />}
+    {articleMeta?.topics?.map((topic) => <meta property="article:tag" content={topic} />)}
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={pageTitle} />
+    <meta name="twitter:description" content={description} />
+    <meta name="twitter:image" content={socialImage} />
+    <link rel="canonical" href={canonical} />
+    <link rel="alternate" type="application/rss+xml" title="Hara World RSS" href="/feed.xml" />
+    <link rel="alternate" type="application/feed+json" title="Hara World JSON Feed" href="/feed.json" />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <title>{pageTitle}</title>
+  </head>
+  <body>
+    <a class="skip-link" href="#content">Skip to content</a>
+    <header class="site-header">
+      <a class="brand" href="/" aria-label="Hara World home">
+        <HaraMark size={30} title="Hara" />
+        <span><strong>Hara</strong> World</span>
+      </a>
+      <nav class="ecosystem-nav" aria-label="Hara ecosystem navigation">
+        <a href="/" aria-current={activePath === "/" ? "page" : undefined}>World</a>
+        <a href={SITE.docs}>Docs</a>
+        <a href={SITE.playground}>Playground</a>
+        <a href={SITE.specs}>Specs</a>
+      </nav>
+      <div class="header-actions">
+        <a class="icon-action" href={SITE.repository} aria-label="Hara World source on GitHub" title="Source on GitHub">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2a10 10 0 0 0-3.16 19.49c.5.09.68-.22.68-.48v-1.88c-2.78.6-3.37-1.18-3.37-1.18-.45-1.16-1.11-1.47-1.11-1.47-.91-.62.07-.61.07-.61 1 .07 1.53 1.03 1.53 1.03.9 1.53 2.35 1.09 2.92.83.09-.65.35-1.09.64-1.34-2.22-.25-4.56-1.11-4.56-4.94 0-1.09.39-1.98 1.03-2.68-.1-.25-.45-1.27.1-2.64 0 0 .84-.27 2.75 1.02A9.56 9.56 0 0 1 12 6.82a9.5 9.5 0 0 1 2.5.34c1.91-1.3 2.75-1.02 2.75-1.02.55 1.37.2 2.39.1 2.64.64.7 1.03 1.59 1.03 2.68 0 3.84-2.34 4.68-4.57 4.93.36.31.68.92.68 1.86v2.76c0 .27.18.58.69.48A10 10 0 0 0 12 2Z"></path></svg>
+        </a>
+        <ThemeToggle label="Change colour theme" />
+      </div>
+    </header>
+    <nav class="section-nav" aria-label="Hara World navigation">
+      <div>
+        <a href="/articles" aria-current={activePath.startsWith("/articles") ? "page" : undefined}>Dispatches</a>
+        <a href="/sources" aria-current={activePath === "/sources" ? "page" : undefined}>Sources</a>
+        <a href="/submit" aria-current={activePath === "/submit" ? "page" : undefined}>Submit</a>
+        <a href="/about" aria-current={activePath === "/about" ? "page" : undefined}>About</a>
+        {newsletterUrl ? <a href={newsletterUrl}>Newsletter</a> : <a href="/newsletter" aria-current={activePath === "/newsletter" ? "page" : undefined}>Newsletter</a>}
+      </div>
+    </nav>
+    <main id="content">
+      <slot />
+    </main>
+    <footer class="site-footer">
+      <div class="site-footer__identity">
+        <HaraMark size={26} title="Hara" />
+        <span>Independent dispatches from a programmable world.</span>
+      </div>
+      <div class="site-footer__links">
+        <a href="/feed.xml">RSS</a>
+        <a href="/feed.json">JSON Feed</a>
+        <a href="/sources.opml">Source OPML</a>
+        <a href="/submit">Submit a source</a>
+        <a href="https://opensource.greenways.ai/open-source/">A Greenways Open Source Project</a>
+        <a href="https://github.com/hara-lang/hara-world/blob/main/LICENSE">MIT License</a>
+        <a href={SITE.repository}>Source</a>
+      </div>
+    </footer>
+    <script>
+      import { getThemePreference } from "@hara-lang/visual-language/theme.js";
+
+      const icons = {
+        system: '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="13" rx="2"></rect><path d="M8 21h8M12 17v4"></path></svg>',
+        light: '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4"></circle><path d="M12 2v2M12 20v2M4.93 4.93l1.42 1.42M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.42-1.42M17.66 6.34l1.41-1.41"></path></svg>',
+        dark: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20.2 15.4A8.5 8.5 0 0 1 8.6 3.8 8.5 8.5 0 1 0 20.2 15.4Z"></path></svg>'
+      };
+      const order = ["system", "light", "dark"];
+      const syncThemeIcon = () => {
+        const preference = getThemePreference();
+        const next = order[(order.indexOf(preference) + 1) % order.length];
+        document.querySelectorAll("[data-hara-theme-toggle]").forEach((button) => {
+          const icon = button.querySelector("[data-hara-theme-icon]");
+          if (icon) icon.innerHTML = icons[preference] || icons.system;
+          button.setAttribute("aria-label", `${preference} theme. Switch to ${next}.`);
+          button.setAttribute("title", `${preference} theme`);
+        });
+      };
+      document.addEventListener("astro:page-load", syncThemeIcon);
+      addEventListener("hara:theme-change", syncThemeIcon);
+      syncThemeIcon();
+    </script>
+  </body>
+</html>

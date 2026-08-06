@@ -1,0 +1,19 @@
+---
+import type { Article } from "../lib/articles";
+import { articlePath } from "../lib/articles";
+import { formatDate, kindLabels } from "../lib/site";
+
+const { article, compact = false } = Astro.props as { article: Article; compact?: boolean };
+---
+<article class:list={["article-card", compact && "article-card--compact"]}>
+  <div class="article-card__meta">
+    <span>{kindLabels[article.data.kind]}</span>
+    <time datetime={article.data.publishedAt.toISOString()}>{formatDate(article.data.publishedAt)}</time>
+  </div>
+  <h3><a href={articlePath(article)}>{article.data.title}</a></h3>
+  <p>{article.data.description}</p>
+  <div class="article-card__footer">
+    <span>{article.data.author}</span>
+    <a class="arrow-link" href={articlePath(article)} aria-label={`Read ${article.data.title}`}>Read <span aria-hidden="true">↗</span></a>
+  </div>
+</article>

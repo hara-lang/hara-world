@@ -1,0 +1,27 @@
+---
+import SiteLayout from "../layouts/SiteLayout.astro";
+const newsletterUrl = import.meta.env.PUBLIC_HARA_WORLD_NEWSLETTER_URL;
+---
+<SiteLayout title="Newsletter" description="Hara World Dispatch — a weekly editorial edition from the Hara community.">
+  <header class="page-hero">
+    <div class="shell">
+      <p class="eyebrow">Mail / weekly edition</p>
+      <h1>Hara World Dispatch.</h1>
+      <p class="lede">One substantive argument, one working example, the strongest community writing of the week, and a precise record of what changed.</p>
+      <div class="hero-actions">
+        {newsletterUrl ? <a class="button button--primary" href={newsletterUrl}>Join the mailing list <span aria-hidden="true">↗</span></a> : <span class="button" aria-disabled="true">Signup endpoint not configured yet</span>}
+        <a class="button" href="/feed.xml">Subscribe by RSS</a>
+      </div>
+    </div>
+  </header>
+  <section class="section">
+    <div class="shell">
+      <div class="policy-grid">
+        <article class="policy-card"><h3>Weekly, not incessant</h3><p>The main list is a curated digest rather than an email for every repository event.</p></article>
+        <article class="policy-card"><h3>Plain links, real archives</h3><p>Each edition points to canonical public pages and remains available as an RSS-readable archive.</p></article>
+        <article class="policy-card"><h3>Separate release stream</h3><p>A lower-volume or automatic release-only list can be added without forcing it onto editorial subscribers.</p></article>
+        <article class="policy-card"><h3>Provider-independent source</h3><p>The newsletter body is generated as Markdown first, so Hara World can move between Buttondown, listmonk, or another sender.</p></article>
+      </div>
+    </div>
+  </section>
+</SiteLayout>

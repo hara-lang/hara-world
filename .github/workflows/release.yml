@@ -1,0 +1,148 @@
+name: Build and distribute a Hara World release
+
+on:
+  workflow_dispatch:
+    inputs:
+      article_id:
+        description: Content ID below content/articles, without .md
+        required: true
+        type: string
+      render_video:
+        description: Render a silent review video artifact
+        required: true
+        default: true
+        type: boolean
+      publish_buttondown:
+        description: Create a Buttondown draft
+        required: true
+        default: false
+        type: boolean
+      publish_bluesky:
+        description: Publish the reviewed Bluesky projection
+        required: true
+        default: false
+        type: boolean
+      publish_mastodon:
+        description: Publish the reviewed Mastodon projection
+        required: true
+        default: false
+        type: boolean
+      upload_youtube:
+        description: Upload the video to YouTube (private by default)
+        required: true
+        default: false
+        type: boolean
+      queue_managed_social:
+        description: Send LinkedIn, Instagram, X, and TikTok projections to the managed publisher
+        required: true
+        default: false
+        type: boolean
+
+permissions:
+  contents: read
+
+concurrency:
+  group: hara-world-release-${{ inputs.article_id }}
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    env:
+      ARTICLE_ID: ${{ inputs.article_id }}
+      RELEASE_DIR: .hara-world/releases/${{ inputs.article_id }}
+      HARA_WORLD_SITE: https://world.hara-lang.org
+      YOUTUBE_PRIVACY_STATUS: private
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - run: npm install
+      - name: Build release projections
+        run: npm run release:build -- --article="$ARTICLE_ID"
+      - name: Install FFmpeg
+        if: inputs.render_video || inputs.upload_youtube || inputs.queue_managed_social
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ffmpeg
+      - name: Render review video
+        if: inputs.render_video || inputs.upload_youtube || inputs.queue_managed_social
+        run: npm run video:render -- --release="$RELEASE_DIR"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: hara-world-release-${{ github.run_id }}
+          path: ${{ env.RELEASE_DIR }}
+          include-hidden-files: true
+          if-no-files-found: error
+
+  publish:
+    if: inputs.publish_buttondown || inputs.publish_bluesky || inputs.publish_mastodon || inputs.upload_youtube || inputs.queue_managed_social
+    needs: build
+    runs-on: ubuntu-24.04
+    environment: hara-world-publishing
+    env:
+      ARTICLE_ID: ${{ inputs.article_id }}
+      RELEASE_DIR: .hara-world/releases/${{ inputs.article_id }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - run: npm install
+      - uses: actions/download-artifact@v4
+        with:
+          name: hara-world-release-${{ github.run_id }}
+          path: ${{ env.RELEASE_DIR }}
+      - name: Install FFmpeg for protected narration render
+        if: inputs.upload_youtube || inputs.queue_managed_social
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ffmpeg
+      - name: Re-render with configured narration service
+        if: inputs.upload_youtube || inputs.queue_managed_social
+        env:
+          HARA_WORLD_TTS_ENDPOINT: ${{ secrets.HARA_WORLD_TTS_ENDPOINT }}
+          HARA_WORLD_TTS_TOKEN: ${{ secrets.HARA_WORLD_TTS_TOKEN }}
+          HARA_WORLD_TTS_VOICE: ${{ vars.HARA_WORLD_TTS_VOICE }}
+        run: npm run video:render -- --release="$RELEASE_DIR"
+      - name: Create Buttondown draft
+        if: inputs.publish_buttondown
+        env:
+          BUTTONDOWN_API_KEY: ${{ secrets.BUTTONDOWN_API_KEY }}
+        run: npm run publish:buttondown -- --release="$RELEASE_DIR" --publish
+      - name: Publish to Bluesky
+        if: inputs.publish_bluesky
+        env:
+          BLUESKY_HANDLE: ${{ secrets.BLUESKY_HANDLE }}
+          BLUESKY_APP_PASSWORD: ${{ secrets.BLUESKY_APP_PASSWORD }}
+          BLUESKY_SERVICE_URL: ${{ vars.BLUESKY_SERVICE_URL }}
+        run: npm run publish:bluesky -- --release="$RELEASE_DIR" --publish
+      - name: Publish to Mastodon
+        if: inputs.publish_mastodon
+        env:
+          MASTODON_BASE_URL: ${{ secrets.MASTODON_BASE_URL }}
+          MASTODON_ACCESS_TOKEN: ${{ secrets.MASTODON_ACCESS_TOKEN }}
+          MASTODON_VISIBILITY: ${{ vars.MASTODON_VISIBILITY }}
+        run: npm run publish:mastodon -- --release="$RELEASE_DIR" --publish
+      - name: Upload privately to YouTube
+        if: inputs.upload_youtube
+        env:
+          YOUTUBE_CLIENT_ID: ${{ secrets.YOUTUBE_CLIENT_ID }}
+          YOUTUBE_CLIENT_SECRET: ${{ secrets.YOUTUBE_CLIENT_SECRET }}
+          YOUTUBE_REFRESH_TOKEN: ${{ secrets.YOUTUBE_REFRESH_TOKEN }}
+          YOUTUBE_PRIVACY_STATUS: ${{ vars.YOUTUBE_PRIVACY_STATUS }}
+        run: npm run publish:youtube -- --release="$RELEASE_DIR" --publish
+      - name: Queue managed social projections
+        if: inputs.queue_managed_social
+        env:
+          HARA_PUBLISH_WEBHOOK_URL: ${{ secrets.HARA_PUBLISH_WEBHOOK_URL }}
+          HARA_PUBLISH_WEBHOOK_SECRET: ${{ secrets.HARA_PUBLISH_WEBHOOK_SECRET }}
+        run: npm run publish:webhook -- --release="$RELEASE_DIR" --publish
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: hara-world-receipts-${{ github.run_id }}
+          path: ${{ env.RELEASE_DIR }}/receipts
+          include-hidden-files: true
+          if-no-files-found: ignore

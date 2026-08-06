@@ -1,6 +1,6 @@
 # Hara World
 
-**Hara World** is the publication and distribution layer for the Hara Lisp community. It combines an Astro publication, a permissioned RSS/Atom source registry, newsletter generation, automated short-video production, and review-first social publishing.
+**Hara World** is the publication and distribution layer for the Hara Lisp community. It combines an Astro publication, a permissioned RSS/Atom source registry, a Neon-backed mailing-list ledger, newsletter generation, automated short-video production, and review-first social publishing.
 
 The governing idea is simple:
 
@@ -15,6 +15,7 @@ An approved article may produce a website page, RSS and JSON Feed entries, newsl
 - RSS 2.0 and JSON Feed 1.1.
 - Public source registry with explicit permission and syndication modes.
 - Scheduled feed importer that opens a draft pull request rather than publishing unchecked content.
+- Neon consent and subscriber-lifecycle ledger with a signed Buttondown reconciliation webhook.
 - Provider-independent release bundles.
 - Deterministic `1080 × 1920` short-video rendering with captions and optional TTS audio.
 - Buttondown draft, Bluesky, Mastodon, private YouTube upload, and managed-publisher webhook adapters.
@@ -36,6 +37,34 @@ npm run check
 ```
 
 `npm run check` validates the source registry, runs the Node test suite, builds the brand asset, and performs a complete Astro production build.
+
+## Mailing list
+
+Hara World owns the consent and lifecycle record in Neon while Buttondown performs double opt-in confirmation, email delivery, unsubscribes, and subscriber self-service.
+
+Apply the database migration with the pooled connection string from the Neon `neondb` Connect dialog:
+
+```bash
+DATABASE_URL='postgresql://…' npm run database:migrate
+```
+
+The public form posts to `/api/newsletter/subscribe`. A signed Buttondown webhook at `/api/newsletter/buttondown` then reconciles confirmation, unsubscription, suppression, and deletion back into Neon. Configure these Netlify environment variables before enabling the form in production:
+
+```text
+DATABASE_URL
+BUTTONDOWN_API_KEY
+BUTTONDOWN_WEBHOOK_SECRET
+HARA_WORLD_SITE=https://world.hara-lang.org
+PUBLIC_HARA_WORLD_MANAGE_SUBSCRIPTION_URL=https://buttondown.com/login?subscriber=1
+```
+
+Export only active subscribers as CSV:
+
+```bash
+DATABASE_URL='postgresql://…' npm run newsletter:export > subscribers.csv
+```
+
+See [docs/mailing-list.md](./docs/mailing-list.md) for setup, webhook, privacy, and launch checks.
 
 ## Add an article
 
@@ -136,15 +165,16 @@ See [ARCHITECTURE.md](./ARCHITECTURE.md), [EDITORIAL.md](./EDITORIAL.md), and [d
 
 ## Deployment
 
-The site is a static Astro build and is ready for Netlify:
+The site is an Astro static build with Netlify Functions:
 
 ```text
 Build command: npm run build
 Publish directory: dist
+Functions directory: netlify/functions
 Node version: 24
 ```
 
-Set `PUBLIC_HARA_WORLD_NEWSLETTER_URL` after the mailing-list landing page exists. Keep all publisher credentials in a protected GitHub Actions environment named `hara-world-publishing`; they are not required by the website build.
+Run the Neon migration before accepting signups and store all database, webhook, and publisher credentials as encrypted Netlify or protected GitHub Actions environment variables. They must not be committed to source control.
 
 ## Licence
 

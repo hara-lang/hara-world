@@ -6,6 +6,10 @@
   NODE_VERSION = "24"
   HARA_WORLD_SITE = "https://world.hara-lang.org"
 
+[functions]
+  directory = "netlify/functions"
+  node_bundler = "esbuild"
+
 [dev]
   command = "npm run dev -- --host 0.0.0.0"
   targetPort = 4321

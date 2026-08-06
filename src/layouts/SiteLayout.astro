@@ -33,7 +33,6 @@ const canonical = canonicalUrl ?? pageUrl;
 const isArticle = Boolean(articleMeta);
 const socialImage = new URL("/og-hara-world.jpg", Astro.site).toString();
 const activePath = Astro.url.pathname;
-const newsletterUrl = import.meta.env.PUBLIC_HARA_WORLD_NEWSLETTER_URL;
 ---
 <!doctype html>
 <html lang="en">
@@ -92,7 +91,7 @@ const newsletterUrl = import.meta.env.PUBLIC_HARA_WORLD_NEWSLETTER_URL;
         <a href="/sources" aria-current={activePath === "/sources" ? "page" : undefined}>Sources</a>
         <a href="/submit" aria-current={activePath === "/submit" ? "page" : undefined}>Submit</a>
         <a href="/about" aria-current={activePath === "/about" ? "page" : undefined}>About</a>
-        {newsletterUrl ? <a href={newsletterUrl}>Newsletter</a> : <a href="/newsletter" aria-current={activePath === "/newsletter" ? "page" : undefined}>Newsletter</a>}
+        <a href="/newsletter" aria-current={activePath === "/newsletter" ? "page" : undefined}>Newsletter</a>
       </div>
     </nav>
     <main id="content">
@@ -108,6 +107,7 @@ const newsletterUrl = import.meta.env.PUBLIC_HARA_WORLD_NEWSLETTER_URL;
         <a href="/feed.json">JSON Feed</a>
         <a href="/sources.opml">Source OPML</a>
         <a href="/submit">Submit a source</a>
+        <a href="/privacy">Privacy</a>
         <a href="https://opensource.greenways.ai/open-source/">A Greenways Open Source Project</a>
         <a href="https://github.com/hara-lang/hara-world/blob/main/LICENSE">MIT License</a>
         <a href={SITE.repository}>Source</a>

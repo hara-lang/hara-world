@@ -19,6 +19,13 @@ test("publishes fail-closed World authentication and profile discovery", () => {
   assert.equal(missing.profiles.configured, false);
   assert.equal(missing.database.configured, false);
 
+  const malformedApp = discoveryPayload(request, {
+    ...CONFIGURED,
+    HARA_WORLD_GITHUB_APP_PRIVATE_KEY: "not-a-private-key",
+  });
+  assert.equal(malformedApp.profiles.configured, false);
+  assert.equal(malformedApp.configured, false);
+
   const ready = discoveryPayload(request, CONFIGURED);
   assert.equal(ready.configured, true);
   assert.equal(ready.centralIssuer, "https://id.hara-lang.org");

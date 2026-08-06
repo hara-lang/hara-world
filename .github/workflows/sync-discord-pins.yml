@@ -1,0 +1,67 @@
+name: Propose Discord pinned announcements
+
+on:
+  schedule:
+    - cron: "17 * * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: hara-world-discord-pins
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    runs-on: ubuntu-24.04
+    env:
+      GH_TOKEN: ${{ github.token }}
+      DISCORD_BOT_TOKEN: ${{ secrets.DISCORD_BOT_TOKEN }}
+      DISCORD_GUILD_ID: ${{ vars.DISCORD_GUILD_ID }}
+      BRANCH: automation/discord-pins
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - name: Start from the current canonical branch
+        run: git switch -C "$BRANCH" origin/main
+      - run: npm install
+      - name: Fetch reviewed Discord pins
+        run: npm run discord:sync
+      - name: Validate deterministic announcement intake
+        run: |
+          node --test test/discord-pins.test.mjs
+          npm run build
+      - name: Commit and open or update the review PR
+        shell: bash
+        run: |
+          if git diff --quiet -- content/articles/discord registry/discord-sync-state.json; then
+            echo "No Discord pin changes."
+            exit 0
+          fi
+
+          git config user.name "hara-world-bot"
+          git config user.email "hara-world-bot@users.noreply.github.com"
+          git add content/articles/discord registry/discord-sync-state.json
+          git commit -m "Propose Discord pinned announcements"
+          git push --force origin "HEAD:$BRANCH"
+
+          number="$(gh pr list --base main --head "$BRANCH" --state open --json number --jq '.[0].number // empty')"
+          body=$'Pinned Discord announcements proposed for editorial review.\n\nA pin is an intake signal, not automatic publication. Review attribution, title, content, links, attachment references, topics, and source provenance before merging. Unpinning removes the message from synchronization state but never silently deletes an already published World page.'
+          if [ -z "$number" ]; then
+            gh pr create \
+              --draft \
+              --base main \
+              --head "$BRANCH" \
+              --title "Propose Discord pinned announcements" \
+              --body "$body"
+          else
+            gh pr edit "$number" --body "$body"
+            gh pr comment "$number" --body "Discord pin intake refreshed from the current canonical branch."
+          fi

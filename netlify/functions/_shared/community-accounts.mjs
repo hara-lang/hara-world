@@ -11,10 +11,19 @@ export async function recordIdentityHandoff(identity, { db = getDatabase() } = {
   }
 
   const result = await db.query(
-    `WITH accepted AS (
+    `WITH permitted AS (
+       SELECT NOT EXISTS (
+         SELECT 1
+         FROM hara_world.community_accounts
+         WHERE github_user_id = $2::bigint AND status <> 'active'
+       ) AS allowed
+     ), accepted AS (
        INSERT INTO hara_world.community_identity_handoffs (
          handoff_id, github_user_id, issuer, audience, expires_at, consumed_at
-       ) VALUES ($1, $2::bigint, $3, $4, $5::timestamptz, now())
+       )
+       SELECT $1, $2::bigint, $3, $4, $5::timestamptz, now()
+       FROM permitted
+       WHERE allowed
        ON CONFLICT (handoff_id) DO NOTHING
        RETURNING handoff_id
      ), account_upsert AS (
@@ -31,6 +40,7 @@ export async function recordIdentityHandoff(identity, { db = getDatabase() } = {
          profile_url = EXCLUDED.profile_url,
          last_seen_at = now(),
          updated_at = now()
+       WHERE hara_world.community_accounts.status = 'active'
        RETURNING github_user_id
      )
      SELECT EXISTS (SELECT 1 FROM accepted) AS accepted`,

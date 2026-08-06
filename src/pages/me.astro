@@ -1,0 +1,87 @@
+---
+import SiteLayout from "../layouts/SiteLayout.astro";
+---
+<SiteLayout title="Account" description="Your shared Hara GitHub identity on Hara World.">
+  <header class="page-hero">
+    <div class="shell">
+      <p class="eyebrow">Community identity / first milestone</p>
+      <h1>Your Hara identity.</h1>
+      <p class="lede">Hara World reads the same central GitHub-backed session used by the rest of the Hara ecosystem. Community profiles and authenticated World publishing are not enabled yet.</p>
+    </div>
+  </header>
+
+  <section class="section section--tight">
+    <div class="shell">
+      <div class="section-heading">
+        <div>
+          <p class="eyebrow">Current session</p>
+          <h2 data-world-account-title>Checking Identity…</h2>
+        </div>
+        <p data-world-account-copy>The account control in the header is asking the central Identity service for the current session.</p>
+      </div>
+
+      <dl class="definition-list" data-world-account-details hidden>
+        <dt>Provider</dt><dd>GitHub through <code>id.hara-lang.org</code></dd>
+        <dt>Stable subject</dt><dd data-world-account-id>—</dd>
+        <dt>Current login</dt><dd data-world-account-login>—</dd>
+        <dt>World authority</dt><dd>Read-only identity display. No profile, comment, follow, or submission mutation is authorized by this session.</dd>
+      </dl>
+
+      <div class="policy-grid account-boundaries">
+        <article class="policy-card">
+          <h3>One central sign-in</h3>
+          <p>GitHub authorization happens only at Hara Identity. World does not receive the GitHub client secret or retain a GitHub provider token.</p>
+        </article>
+        <article class="policy-card">
+          <h3>Publishing remains separate</h3>
+          <p>Being signed in does not grant package, specification, editorial, or repository authority. Those continue to require their own reviewed grants and signatures.</p>
+        </article>
+        <article class="policy-card">
+          <h3>Profiles come after a session bridge</h3>
+          <p>World will not trust browser-submitted identity data. Authenticated writes require an audience-bound one-time exchange and a World-local host-only session.</p>
+        </article>
+        <article class="policy-card">
+          <h3>Newsletter consent stays separate</h3>
+          <p>A GitHub identity is not automatically linked to a newsletter email. Any future association will require an explicit consent action.</p>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <script>
+    const accountTitle = document.querySelector("[data-world-account-title]");
+    const accountCopy = document.querySelector("[data-world-account-copy]");
+    const accountDetails = document.querySelector("[data-world-account-details]");
+    const accountId = document.querySelector("[data-world-account-id]");
+    const accountLogin = document.querySelector("[data-world-account-login]");
+
+    const renderAccount = (session) => {
+      const profile = session?.profile || session?.user;
+      const signedIn = Boolean(session?.authenticated && profile?.id && profile?.login);
+
+      if (!accountTitle || !accountCopy || !accountDetails || !accountId || !accountLogin) return;
+
+      if (signedIn) {
+        accountTitle.textContent = `Signed in as @${profile.login}`;
+        accountCopy.textContent = "This is the central Hara web identity visible across approved Hara sites. World is currently using it for display only.";
+        accountId.textContent = `github:${profile.id}`;
+        accountLogin.textContent = `@${profile.login}`;
+        accountDetails.hidden = false;
+        return;
+      }
+
+      accountTitle.textContent = session?.configured === false
+        ? "GitHub sign-in is not configured"
+        : "Not signed in";
+      accountCopy.textContent = session?.configured === false
+        ? "The central Identity deployment is reachable, but its OAuth registration or session secret is not configured."
+        : "Use the Sign in control in the header. GitHub authorization will occur at the central Hara Identity origin and return you to this page.";
+      accountDetails.hidden = true;
+    };
+
+    addEventListener("hara:identity-change", (event) => renderAccount(event.detail));
+    document.addEventListener("astro:page-load", () => {
+      globalThis.HaraIdentity?.refresh?.().then(renderAccount).catch(() => renderAccount(null));
+    });
+  </script>
+</SiteLayout>

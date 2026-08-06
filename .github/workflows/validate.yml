@@ -21,6 +21,8 @@ jobs:
         with:
           node-version: 24
       - run: npm install
+      - name: Validate deployment scripts
+        run: bash -n .github/scripts/*.sh
       - run: npm run sources:check
       - run: npm test
       - run: npm run build

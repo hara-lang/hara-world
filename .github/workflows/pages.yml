@@ -1,0 +1,107 @@
+name: Deploy world.hara-lang.org
+
+on:
+  push:
+    branches: [main, production]
+    paths:
+      - "content/**"
+      - "database/**"
+      - "netlify/**"
+      - "public/**"
+      - "registry/**"
+      - "scripts/**"
+      - "src/**"
+      - "test/**"
+      - "astro.config.mjs"
+      - "netlify.toml"
+      - "package.json"
+      - "package-lock.json"
+      - ".github/scripts/**"
+      - ".github/workflows/pages.yml"
+  pull_request:
+    branches: [main, production]
+    types: [closed]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: netlify-world-${{ github.ref_name }}
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    if: >-
+      github.event_name != 'pull_request' ||
+      (github.event.pull_request.merged == true &&
+      startsWith(github.event.pull_request.title, '[deploy]'))
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - name: Install dependencies
+        run: npm install
+      - name: Validate publication and functions
+        run: npm run check
+
+      - name: Deploy main to world.testing.hara-lang.org
+        if: >-
+          (github.event_name != 'pull_request' && github.ref_name == 'main') ||
+          (github.event_name == 'pull_request' && github.event.pull_request.base.ref == 'main')
+        run: npx --yes netlify-cli deploy --build --prod --message "main ${GITHUB_SHA}"
+        env:
+          NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
+          NETLIFY_SITE_ID: ${{ secrets.NETLIFY_TESTING_SITE_ID }}
+
+      - name: Deploy production to world.hara-lang.org
+        if: >-
+          (github.event_name != 'pull_request' && github.ref_name == 'production') ||
+          (github.event_name == 'pull_request' && github.event.pull_request.base.ref == 'production')
+        run: npx --yes netlify-cli deploy --build --prod --message "production ${GITHUB_SHA}"
+        env:
+          NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
+          NETLIFY_SITE_ID: ${{ secrets.NETLIFY_PRODUCTION_SITE_ID }}
+
+      - name: Reconcile world.testing.hara-lang.org
+        if: >-
+          (github.event_name != 'pull_request' && github.ref_name == 'main') ||
+          (github.event_name == 'pull_request' && github.event.pull_request.base.ref == 'main')
+        run: bash .github/scripts/reconcile-netlify-domain.sh
+        env:
+          NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
+          NETLIFY_SITE_ID: ${{ secrets.NETLIFY_TESTING_SITE_ID }}
+          NETLIFY_CUSTOM_DOMAIN: world.testing.hara-lang.org
+
+      - name: Reconcile world.hara-lang.org
+        if: >-
+          (github.event_name != 'pull_request' && github.ref_name == 'production') ||
+          (github.event_name == 'pull_request' && github.event.pull_request.base.ref == 'production')
+        run: bash .github/scripts/reconcile-netlify-domain.sh
+        env:
+          NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
+          NETLIFY_SITE_ID: ${{ secrets.NETLIFY_PRODUCTION_SITE_ID }}
+          NETLIFY_CUSTOM_DOMAIN: world.hara-lang.org
+
+      - name: Verify testing World and shared Identity
+        if: >-
+          (github.event_name != 'pull_request' && github.ref_name == 'main') ||
+          (github.event_name == 'pull_request' && github.event.pull_request.base.ref == 'main')
+        run: bash .github/scripts/verify-world-site.sh
+        env:
+          WORLD_ORIGIN: https://world.testing.hara-lang.org
+          IDENTITY_ORIGIN: https://id.testing.hara-lang.org
+          REQUIRE_IDENTITY_CONFIGURED: "true"
+
+      - name: Verify production World and shared Identity
+        if: >-
+          (github.event_name != 'pull_request' && github.ref_name == 'production') ||
+          (github.event_name == 'pull_request' && github.event.pull_request.base.ref == 'production')
+        run: bash .github/scripts/verify-world-site.sh
+        env:
+          WORLD_ORIGIN: https://world.hara-lang.org
+          IDENTITY_ORIGIN: https://id.hara-lang.org
+          REQUIRE_IDENTITY_CONFIGURED: "true"

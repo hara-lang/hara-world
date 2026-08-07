@@ -11,7 +11,7 @@ const CONFIGURED = {
   DATABASE_URL: "postgresql://example.invalid/world",
 };
 
-test("publishes fail-closed World authentication and profile discovery", () => {
+test("publishes fail-closed discovery and points operators to active readiness", () => {
   const request = new Request("https://world.hara-lang.org/.well-known/hara-world");
   const missing = discoveryPayload(request, {});
   assert.equal(missing.configured, false);
@@ -19,19 +19,13 @@ test("publishes fail-closed World authentication and profile discovery", () => {
   assert.equal(missing.profiles.configured, false);
   assert.equal(missing.database.configured, false);
 
-  const malformedApp = discoveryPayload(request, {
-    ...CONFIGURED,
-    HARA_WORLD_GITHUB_APP_PRIVATE_KEY: "not-a-private-key",
-  });
-  assert.equal(malformedApp.profiles.configured, false);
-  assert.equal(malformedApp.configured, false);
-
   const ready = discoveryPayload(request, CONFIGURED);
   assert.equal(ready.configured, true);
-  assert.equal(ready.centralIssuer, "https://id.hara-lang.org");
-  assert.equal(ready.authentication.handoffDiscoveryEndpoint, "https://id.hara-lang.org/.well-known/hara-handoff");
-  assert.equal(ready.profiles.management, "git-pull-request");
-  assert.equal(ready.profiles.publicationBoundary, "merge");
+  assert.equal(ready.readinessEndpoint, "https://world.hara-lang.org/.well-known/hara-world-readiness");
+  assert.equal(ready.authentication.accountStatusEnforced, true);
+  assert.equal(ready.authentication.frontChannelLogout, true);
+  assert.equal(ready.profiles.index, "registry/profiles.json");
+  assert.equal(ready.profiles.oneOpenProposalPerIdentity, true);
   assert.doesNotMatch(JSON.stringify(ready), /postgresql:\/\/|BEGIN PRIVATE KEY|hhhhhhhh|ssssssss/);
 });
 

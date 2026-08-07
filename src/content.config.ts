@@ -1,6 +1,15 @@
 import { defineCollection, z } from "astro:content";
 import { glob } from "astro/loaders";
 
+const httpsUrl = z.string().url().refine((value) => {
+  try {
+    const url = new URL(value);
+    return url.protocol === "https:" && !url.username && !url.password;
+  } catch {
+    return false;
+  }
+}, "Profile URLs must use HTTPS without embedded credentials.");
+
 const articles = defineCollection({
   loader: glob({ pattern: "**/*.md", base: "./content/articles" }),
   schema: z.object({
@@ -32,15 +41,15 @@ const profiles = defineCollection({
     githubLogin: z.string().regex(/^[A-Za-z0-9](?:[A-Za-z0-9-]{0,37}[A-Za-z0-9])?$/),
     displayName: z.string().min(1).max(100),
     summary: z.string().min(1).max(320),
-    avatarUrl: z.string().url().optional(),
-    website: z.string().url().optional(),
+    avatarUrl: httpsUrl.optional(),
+    website: httpsUrl.optional(),
     location: z.string().max(100).optional(),
-    interests: z.array(z.string().min(1)).default([]),
-    roles: z.array(z.string().min(1)).default([]),
+    interests: z.array(z.string().min(1).max(40)).max(12).default([]),
+    roles: z.array(z.string().min(1).max(80)).max(24).default([]),
     links: z.array(z.object({
       label: z.string().min(1).max(80),
-      url: z.string().url()
-    })).default([]),
+      url: httpsUrl
+    })).max(24).default([]),
     joinedAt: z.coerce.date(),
     published: z.boolean().default(false)
   })

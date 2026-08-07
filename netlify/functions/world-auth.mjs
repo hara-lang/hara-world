@@ -1,4 +1,4 @@
-import { recordIdentityHandoff } from "./_shared/community-accounts.mjs";
+import { communityAccountStatus, recordIdentityHandoff } from "./_shared/community-accounts.mjs";
 import {
   WORLD_SESSION_COOKIE,
   appendCookies,
@@ -26,10 +26,49 @@ const CALLBACK_PATH = "/api/auth/callback";
 const SESSION_PATH = "/api/auth/session";
 const LOGOUT_PATH = "/api/auth/logout";
 
+const PRODUCTION_RETURN_ORIGINS = new Set([
+  "https://hara-lang.org",
+  "https://www.hara-lang.org",
+  "https://world.hara-lang.org",
+  "https://specs.hara-lang.org",
+  "https://packages.hara-lang.org",
+  "https://id.hara-lang.org",
+]);
+const TESTING_RETURN_ORIGINS = new Set([
+  "https://www.testing.hara-lang.org",
+  "https://world.testing.hara-lang.org",
+  "https://specs.testing.hara-lang.org",
+  "https://packages.testing.hara-lang.org",
+  "https://id.testing.hara-lang.org",
+]);
+
 function authErrorRedirect(request, message) {
   const target = new URL("/me", request.url);
-  target.searchParams.set("auth_error", message.slice(0, 180));
+  target.searchParams.set("auth_error", String(message || "World authentication is unavailable.").slice(0, 180));
   return redirect(target.toString(), clearAuthAttemptCookies(request.url));
+}
+
+function safeGlobalReturnTo(value, requestUrl) {
+  const request = new URL(requestUrl);
+  const fallback = new URL("/", request.origin).toString();
+  if (typeof value !== "string" || !value.trim() || /[\r\n\0\\]/.test(value)) return fallback;
+  let target;
+  try { target = new URL(value, request.origin); } catch { return fallback; }
+  const testing = request.hostname === "world.testing.hara-lang.org"
+    || request.hostname.endsWith(".testing.hara-lang.org");
+  const allowed = testing ? TESTING_RETURN_ORIGINS : PRODUCTION_RETURN_ORIGINS;
+  if (!allowed.has(target.origin) || !/^https:$/.test(target.protocol) || target.username || target.password) return fallback;
+  return target.toString();
+}
+
+function jsonWithCookies(status, body, cookies = []) {
+  const headers = appendCookies(new Headers({
+    "Cache-Control": "no-store",
+    "Content-Type": "application/json; charset=utf-8",
+    "Referrer-Policy": "no-referrer",
+    "X-Content-Type-Options": "nosniff",
+  }), cookies);
+  return new Response(`${JSON.stringify(body)}\n`, { status, headers });
 }
 
 async function start(request, env) {
@@ -79,36 +118,25 @@ async function callback(request, env, fetchImpl, now, recordIdentity) {
 
   let payload = {};
   try { payload = await response.json(); } catch {}
-  if (!response.ok) {
-    return authErrorRedirect(request, payload?.error?.message || "Identity rejected the World session handoff.");
-  }
+  if (!response.ok) return authErrorRedirect(request, payload?.error?.message || "Identity rejected the World session handoff.");
 
   let identity;
-  try {
-    identity = validateHandoffPayload(payload, config, now);
-  } catch (error) {
-    return authErrorRedirect(request, error.message);
-  }
+  try { identity = validateHandoffPayload(payload, config, now); }
+  catch (error) { return authErrorRedirect(request, error.message); }
 
   let accepted;
-  try {
-    accepted = await recordIdentity(identity);
-  } catch {
-    return authErrorRedirect(request, "World could not record the identity handoff.");
-  }
-  if (!accepted) return authErrorRedirect(request, "This identity handoff has already been used.");
+  try { accepted = await recordIdentity(identity); }
+  catch { return authErrorRedirect(request, "World could not record the identity handoff."); }
+  if (!accepted) return authErrorRedirect(request, "This identity handoff is unavailable, has already been used, or the account is inactive.");
 
-  const token = signWorldSession(identity, config.sessionSecret, {
-    issuer: worldOrigin(request.url),
-    now,
-  });
+  const token = signWorldSession(identity, config.sessionSecret, { issuer: worldOrigin(request.url), now });
   return redirect(callbackData.returnTo, [
     ...clearAuthAttemptCookies(request.url),
     worldSessionCookie(token, request.url),
   ]);
 }
 
-function session(request, env, now) {
+async function session(request, env, now, accountStatus) {
   if (request.method !== "GET" && request.method !== "HEAD") {
     return json(405, { error: { code: "METHOD_NOT_ALLOWED", message: "Only GET and HEAD are supported." } }, { Allow: "GET, HEAD" });
   }
@@ -122,6 +150,31 @@ function session(request, env, now) {
       now,
     });
   }
+
+  let accountStatusValue = profile ? "checking" : null;
+  if (profile) {
+    try {
+      accountStatusValue = await accountStatus(profile.id);
+    } catch {
+      return json(503, { error: { code: "WORLD_ACCOUNT_CHECK_FAILED", message: "World could not verify the community account." } });
+    }
+    if (accountStatusValue !== "active") {
+      const body = {
+        authenticated: false,
+        configured,
+        issuer: worldOrigin(request.url),
+        centralIssuer: identityOriginForRequest(request.url, env),
+        profile: null,
+        identity: null,
+        accountStatus: accountStatusValue,
+      };
+      const response = jsonWithCookies(200, body, [clearWorldSessionCookie(request.url)]);
+      return request.method === "HEAD"
+        ? new Response(null, { status: 200, headers: response.headers })
+        : response;
+    }
+  }
+
   const body = {
     authenticated: Boolean(profile),
     configured,
@@ -129,13 +182,22 @@ function session(request, env, now) {
     centralIssuer: identityOriginForRequest(request.url, env),
     profile,
     identity: profile ? { provider: "github", subject: profile.id, login: profile.login } : null,
+    accountStatus: accountStatusValue,
   };
   if (request.method === "HEAD") return new Response(null, { status: 200, headers: { "cache-control": "no-store" } });
   return json(200, body);
 }
 
 function logout(request, env) {
-  if (request.method !== "POST") return json(405, { error: { code: "METHOD_NOT_ALLOWED", message: "Only POST is supported." } }, { Allow: "POST" });
+  if (request.method === "GET") {
+    const url = new URL(request.url);
+    if (url.searchParams.get("source") !== "hara-identity") {
+      return json(400, { error: { code: "LOGOUT_SOURCE_INVALID", message: "The front-channel logout source is invalid." } });
+    }
+    const returnTo = safeGlobalReturnTo(url.searchParams.get("returnTo"), request.url);
+    return redirect(returnTo, [clearWorldSessionCookie(request.url)]);
+  }
+  if (request.method !== "POST") return json(405, { error: { code: "METHOD_NOT_ALLOWED", message: "Only GET and POST are supported." } }, { Allow: "GET, POST" });
   if (
     !sameOrigin(request, env)
     || !["world-sign-out", "central-sign-out"].includes(request.headers.get("x-hara-request"))
@@ -149,12 +211,13 @@ export async function handle(request, {
   fetchImpl = fetch,
   now = Date.now(),
   recordIdentityHandoffImpl = recordIdentityHandoff,
+  communityAccountStatusImpl = communityAccountStatus,
 } = {}) {
   const pathname = new URL(request.url).pathname;
   try {
     if (pathname === START_PATH) return await start(request, env);
     if (pathname === CALLBACK_PATH) return await callback(request, env, fetchImpl, now, (identity) => recordIdentityHandoffImpl(identity));
-    if (pathname === SESSION_PATH) return session(request, env, now);
+    if (pathname === SESSION_PATH) return await session(request, env, now, (id) => communityAccountStatusImpl(id));
     if (pathname === LOGOUT_PATH) return logout(request, env);
     return json(404, { error: { code: "NOT_FOUND", message: "Unknown Hara World authentication endpoint." } });
   } catch (error) {
@@ -172,4 +235,9 @@ export const config = {
     "/api/auth/session",
     "/api/auth/logout",
   ],
+  rateLimit: {
+    windowLimit: 120,
+    windowSize: 60,
+    aggregateBy: ["ip", "domain"],
+  },
 };

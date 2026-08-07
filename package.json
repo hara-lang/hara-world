@@ -5,18 +5,18 @@
   "type": "module",
   "license": "MIT",
   "description": "Hara World — community syndication, editorial releases, newsletters, video, and social distribution for Hara Lisp.",
-  "engines": {
-    "node": ">=24"
-  },
+  "engines": { "node": ">=24" },
   "scripts": {
     "predev": "npm run assets:build",
     "dev": "astro dev",
     "prebuild": "npm run assets:build",
     "build": "astro build",
     "preview": "astro preview",
-    "check": "npm run sources:check && npm test && npm run build",
+    "check": "npm run sources:check && npm run profiles:check && npm test && npm run build",
     "assets:build": "node scripts/build-brand-assets.mjs",
     "sources:check": "node scripts/validate-sources.mjs",
+    "profiles:index": "node scripts/build-profile-index.mjs",
+    "profiles:check": "node scripts/build-profile-index.mjs --check",
     "feeds:sync": "node scripts/sync-feeds.mjs",
     "discord:sync": "node scripts/sync-discord-pins.mjs",
     "database:migrate": "node scripts/database/migrate.mjs",

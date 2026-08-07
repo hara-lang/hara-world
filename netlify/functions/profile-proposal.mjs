@@ -1,5 +1,5 @@
-import { randomBytes } from "node:crypto";
 import { createGitHubAppClient } from "./_shared/github-app.mjs";
+import { communityAccountStatus } from "./_shared/community-accounts.mjs";
 import {
   buildProfileDocument,
   normalizeProfileProposal,
@@ -7,38 +7,46 @@ import {
   profilePath,
 } from "./_shared/profile-proposal.mjs";
 import {
+  assertProfileIndex,
+  profileForIdentity,
+  profileOwner,
+  serialiseProfileIndex,
+  updateProfileIndex,
+} from "./_shared/profile-index.mjs";
+import {
+  clearWorldSessionCookie,
   json,
   readWorldSession,
   sameOrigin,
 } from "./_shared/world-auth.mjs";
 
 const PROFILE_PATH = "/api/profile";
+const PROFILE_INDEX_PATH = "registry/profiles.json";
+const PR_MARKER = "<!-- hara-world-profile-proposal -->";
 
 function decodeContent(payload) {
   if (typeof payload?.content !== "string" || payload.encoding !== "base64") return "";
   return Buffer.from(payload.content.replace(/\s+/g, ""), "base64").toString("utf8");
 }
 
-async function loadProfiles(client) {
-  let entries;
-  try {
-    entries = await client.request(`/repos/${client.repository}/contents/content/profiles?ref=${encodeURIComponent(client.baseBranch)}`);
-  } catch (error) {
-    if (error?.status === 404) return [];
-    throw error;
+async function readRepositoryFile(client, path) {
+  const payload = await client.request(`/repos/${client.repository}/contents/${path}?ref=${encodeURIComponent(client.baseBranch)}`);
+  return { path, sha: payload.sha, source: decodeContent(payload) };
+}
+
+async function loadProfileState(client, identity) {
+  const indexFile = await readRepositoryFile(client, PROFILE_INDEX_PATH);
+  let parsedIndex;
+  try { parsedIndex = assertProfileIndex(JSON.parse(indexFile.source)); }
+  catch (error) { throw new Error(`Profile index could not be validated: ${error.message}`); }
+  const indexed = profileForIdentity(parsedIndex, identity.id);
+  let current = null;
+  if (indexed) {
+    const profileFile = await readRepositoryFile(client, indexed.path);
+    current = { ...profileFile, ...parseProfileDocument(profileFile.source) };
+    if (String(current.data.githubId) !== identity.id) throw new Error("Profile index and profile identity disagree.");
   }
-  if (!Array.isArray(entries)) return [];
-  const files = entries.filter((entry) => entry?.type === "file" && entry.name?.endsWith(".md"));
-  return Promise.all(files.map(async (entry) => {
-    const payload = await client.request(`/repos/${client.repository}/contents/${entry.path}?ref=${encodeURIComponent(client.baseBranch)}`);
-    const source = decodeContent(payload);
-    return {
-      path: entry.path,
-      sha: payload.sha || entry.sha,
-      source,
-      ...parseProfileDocument(source),
-    };
-  }));
+  return { indexFile, index: parsedIndex, indexed, current };
 }
 
 function publicProfile(record, identity) {
@@ -65,63 +73,112 @@ async function resolveClient(options, env, now) {
   return createGitHubAppClient({ env, fetchImpl: options.fetchImpl ?? fetch, now });
 }
 
-function branchName(identity, now, suffix) {
-  return `profile/github-${identity.id}-${Math.floor(now / 1000).toString(36)}-${suffix}`;
+function branchName(identity) {
+  return `profile/github-${identity.id}`;
 }
 
-async function createProfilePullRequest(client, {
-  identity,
-  proposal,
-  current,
-  now,
-  suffix,
-}) {
-  const targetPath = current?.path ?? profilePath(proposal.slug);
-  const document = buildProfileDocument({ identity, proposal, existing: current, now });
-  if (current?.source === document) {
-    return { unchanged: true, path: targetPath, pullRequestUrl: null, number: null };
+function refPath(branch) {
+  return String(branch).split("/").map(encodeURIComponent).join("/");
+}
+
+function pullRequestBody(identity) {
+  return [
+    PR_MARKER,
+    `<!-- hara-world-profile:github:${identity.id} -->`,
+    "## Hara World profile proposal",
+    "",
+    `Prepared from the authenticated World session for \`github:${identity.id}\` (\`@${identity.login}\`).`,
+    "",
+    "- The stable numeric GitHub identity and current login came from Hara Identity, not from form fields.",
+    "- Existing reviewed roles and links are preserved.",
+    "- The profile index is updated in the same reviewable branch.",
+    "- Merge remains the publication event.",
+    "- This profile does not grant package, specification, repository, or editorial authority.",
+  ].join("\n");
+}
+
+async function findOpenProfilePullRequest(client, branch) {
+  const owner = client.repository.split("/")[0];
+  const query = new URLSearchParams({ state: "open", head: `${owner}:${branch}`, base: client.baseBranch, per_page: "10" });
+  const pulls = await client.request(`/repos/${client.repository}/pulls?${query}`);
+  return Array.isArray(pulls) ? pulls.find((pull) => String(pull?.body ?? "").includes(PR_MARKER)) ?? null : null;
+}
+
+async function prepareProposalBranch(client, branch, baseSha) {
+  try {
+    await client.request(`/repos/${client.repository}/git/ref/heads/${refPath(branch)}`);
+    await client.request(`/repos/${client.repository}/git/refs/heads/${refPath(branch)}`, {
+      method: "PATCH",
+      body: { sha: baseSha, force: true },
+    });
+    return "reset";
+  } catch (error) {
+    if (error?.status !== 404) throw error;
+    await client.request(`/repos/${client.repository}/git/refs`, {
+      method: "POST",
+      body: { ref: `refs/heads/${branch}`, sha: baseSha },
+    });
+    return "created";
   }
+}
 
-  const ref = await client.request(`/repos/${client.repository}/git/ref/heads/${encodeURIComponent(client.baseBranch)}`);
-  const baseSha = ref?.object?.sha;
-  if (typeof baseSha !== "string") throw new Error("GitHub did not return the profile base revision.");
-  const branch = branchName(identity, now, suffix);
-  await client.request(`/repos/${client.repository}/git/refs`, {
-    method: "POST",
-    body: { ref: `refs/heads/${branch}`, sha: baseSha },
-  });
-
-  const update = {
-    message: current ? `Update World profile for @${identity.login}` : `Add World profile for @${identity.login}`,
-    content: Buffer.from(document).toString("base64"),
+async function putFile(client, path, source, branch, sha) {
+  const body = {
+    message: `Propose World profile record ${path}`,
+    content: Buffer.from(source).toString("base64"),
     branch,
   };
-  if (current?.sha) update.sha = current.sha;
-  await client.request(`/repos/${client.repository}/contents/${targetPath}`, {
-    method: "PUT",
-    body: update,
-  });
+  if (sha) body.sha = sha;
+  await client.request(`/repos/${client.repository}/contents/${path}`, { method: "PUT", body });
+}
 
-  const pull = await client.request(`/repos/${client.repository}/pulls`, {
-    method: "POST",
-    body: {
-      title: `Profile: @${identity.login}`,
-      head: branch,
-      base: client.baseBranch,
-      draft: true,
-      maintainer_can_modify: true,
-      body: [
-        "## Hara World profile proposal",
-        "",
-        `Prepared from the authenticated World session for \`github:${identity.id}\` (\`@${identity.login}\`).`,
-        "",
-        "- The stable numeric GitHub identity and current login came from Hara Identity, not from form fields.",
-        "- Existing reviewed roles and links are preserved.",
-        "- Merge remains the publication event.",
-        "- This profile does not grant package, specification, repository, or editorial authority.",
-      ].join("\n"),
-    },
+async function createOrUpdateProfilePullRequest(client, { identity, proposal, state, now }) {
+  const targetPath = state.current?.path ?? profilePath(proposal.slug);
+  const owner = profileOwner(state.index, proposal.slug);
+  if (owner && owner !== identity.id) throw new Error("That public profile slug is already in use.");
+  if (state.indexed && state.indexed.slug !== proposal.slug) throw new Error("A merged profile slug cannot be changed.");
+
+  const document = buildProfileDocument({ identity, proposal, existing: state.current, now });
+  const nextIndex = updateProfileIndex(state.index, {
+    githubId: identity.id,
+    githubLogin: identity.login,
+    slug: proposal.slug,
   });
+  const indexSource = serialiseProfileIndex(nextIndex);
+  if (state.current?.source === document && state.indexFile.source === indexSource) {
+    return { unchanged: true, path: targetPath, pullRequestUrl: null, number: null, reused: false };
+  }
+
+  const baseRef = await client.request(`/repos/${client.repository}/git/ref/heads/${refPath(client.baseBranch)}`);
+  const baseSha = baseRef?.object?.sha;
+  if (typeof baseSha !== "string") throw new Error("GitHub did not return the profile base revision.");
+  const branch = branchName(identity);
+  await prepareProposalBranch(client, branch, baseSha);
+  await putFile(client, targetPath, document, branch, state.current?.sha);
+  await putFile(client, PROFILE_INDEX_PATH, indexSource, branch, state.indexFile.sha);
+
+  const title = `Profile: @${identity.login}`;
+  const body = pullRequestBody(identity);
+  const existingPull = await findOpenProfilePullRequest(client, branch);
+  let pull;
+  if (existingPull) {
+    pull = await client.request(`/repos/${client.repository}/pulls/${existingPull.number}`, {
+      method: "PATCH",
+      body: { title, body, base: client.baseBranch, maintainer_can_modify: true },
+    });
+  } else {
+    pull = await client.request(`/repos/${client.repository}/pulls`, {
+      method: "POST",
+      body: {
+        title,
+        head: branch,
+        base: client.baseBranch,
+        draft: true,
+        maintainer_can_modify: true,
+        body,
+      },
+    });
+  }
 
   return {
     unchanged: false,
@@ -129,7 +186,18 @@ async function createProfilePullRequest(client, {
     branch,
     pullRequestUrl: pull?.html_url,
     number: pull?.number,
+    reused: Boolean(existingPull),
   };
+}
+
+function inactiveResponse(request, status) {
+  return json(403, {
+    error: {
+      code: "WORLD_ACCOUNT_INACTIVE",
+      message: "This Hara World account is not active.",
+      status,
+    },
+  }, { "Set-Cookie": clearWorldSessionCookie(request.url) });
 }
 
 export async function handle(request, options = {}) {
@@ -143,51 +211,38 @@ export async function handle(request, options = {}) {
   }
 
   const identity = readWorldSession(request, env, now);
-  if (!identity) {
-    return json(401, { error: { code: "WORLD_SESSION_REQUIRED", message: "Establish a Hara World session before editing a profile." } });
-  }
+  if (!identity) return json(401, { error: { code: "WORLD_SESSION_REQUIRED", message: "Establish a Hara World session before editing a profile." } });
   if (request.method === "POST" && (!sameOrigin(request, env) || request.headers.get("x-hara-request") !== "profile-proposal")) {
     return json(403, { error: { code: "PROFILE_REQUEST_REJECTED", message: "The profile request must come from Hara World." } });
   }
 
-  let client;
-  try {
-    client = await resolveClient(options, env, now);
-  } catch {
-    return json(503, { error: { code: "PROFILE_PUBLISHER_UNAVAILABLE", message: "The GitHub profile publisher is not configured." } });
-  }
+  let status;
+  try { status = await (options.communityAccountStatusImpl ?? communityAccountStatus)(identity.id); }
+  catch { return json(503, { error: { code: "WORLD_ACCOUNT_CHECK_FAILED", message: "World could not verify the community account." } }); }
+  if (status !== "active") return inactiveResponse(request, status);
 
-  let profiles;
-  try {
-    profiles = await loadProfiles(client);
-  } catch (error) {
+  let client;
+  try { client = await resolveClient(options, env, now); }
+  catch { return json(503, { error: { code: "PROFILE_PUBLISHER_UNAVAILABLE", message: "The GitHub profile publisher is not configured." } }); }
+
+  let state;
+  try { state = await loadProfileState(client, identity); }
+  catch (error) {
     console.error("World profile lookup failed", { status: error?.status, name: error?.name });
     return json(502, { error: { code: "PROFILE_REGISTRY_UNAVAILABLE", message: "The profile registry could not be read from GitHub." } });
   }
 
-  const current = profiles.find((profile) => String(profile.data.githubId) === identity.id) ?? null;
-  if (request.method === "GET") {
-    return json(200, { ok: true, profile: publicProfile(current, identity) });
-  }
+  if (request.method === "GET") return json(200, { ok: true, profile: publicProfile(state.current, identity) });
 
   let proposal;
-  try {
-    proposal = normalizeProfileProposal(await request.json());
-  } catch (error) {
-    return json(400, { error: { code: "PROFILE_INVALID", message: error.message || "The profile proposal is invalid." } });
-  }
-
-  const proposedPath = current?.path ?? profilePath(proposal.slug);
-  const conflict = profiles.find((profile) => profile.path === proposedPath && String(profile.data.githubId) !== identity.id);
-  if (conflict) {
-    return json(409, { error: { code: "PROFILE_SLUG_TAKEN", message: "That public profile slug is already in use." } });
-  }
+  try { proposal = normalizeProfileProposal(await request.json()); }
+  catch (error) { return json(400, { error: { code: "PROFILE_INVALID", message: error.message || "The profile proposal is invalid." } }); }
 
   try {
-    const suffix = options.randomSuffix ?? randomBytes(3).toString("hex");
-    const result = await createProfilePullRequest(client, { identity, proposal, current, now, suffix });
+    const result = await createOrUpdateProfilePullRequest(client, { identity, proposal, state, now });
     return json(result.unchanged ? 200 : 201, { ok: true, ...result });
   } catch (error) {
+    if (/slug/.test(error?.message ?? "")) return json(409, { error: { code: "PROFILE_SLUG_TAKEN", message: error.message } });
     console.error("World profile proposal failed", { status: error?.status, name: error?.name });
     return json(502, { error: { code: "PROFILE_PROPOSAL_FAILED", message: "The profile pull request could not be created." } });
   }

@@ -26,6 +26,7 @@ export function discoveryPayload(request, env = {}) {
     issuer,
     centralIssuer,
     configured: authConfigured && profilePublisherConfigured && databaseConfigured,
+    readinessEndpoint: `${issuer}/.well-known/hara-world-readiness`,
     authentication: {
       configured: authConfigured,
       startEndpoint: `${issuer}/api/auth/start`,
@@ -33,12 +34,16 @@ export function discoveryPayload(request, env = {}) {
       sessionEndpoint: `${issuer}/api/auth/session`,
       logoutEndpoint: `${issuer}/api/auth/logout`,
       handoffDiscoveryEndpoint: `${centralIssuer}/.well-known/hara-handoff`,
+      accountStatusEnforced: true,
+      frontChannelLogout: true,
     },
     profiles: {
       configured: profilePublisherConfigured,
       endpoint: `${issuer}/api/profile`,
+      index: "registry/profiles.json",
       management: "git-pull-request",
       publicationBoundary: "merge",
+      oneOpenProposalPerIdentity: true,
     },
     database: {
       configured: databaseConfigured,
@@ -71,6 +76,4 @@ export default async function worldDiscovery(request) {
   });
 }
 
-export const config = {
-  path: "/.well-known/hara-world",
-};
+export const config = { path: "/.well-known/hara-world" };

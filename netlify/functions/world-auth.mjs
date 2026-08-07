@@ -57,8 +57,46 @@ function safeGlobalReturnTo(value, requestUrl) {
   const testing = request.hostname === "world.testing.hara-lang.org"
     || request.hostname.endsWith(".testing.hara-lang.org");
   const allowed = testing ? TESTING_RETURN_ORIGINS : PRODUCTION_RETURN_ORIGINS;
-  if (!allowed.has(target.origin) || !/^https:$/.test(target.protocol) || target.username || target.password) return fallback;
+  if (!allowed.has(target.origin) || target.protocol !== "https:" || target.username || target.password) return fallback;
   return target.toString();
+}
+
+function escapeHtml(value) {
+  return String(value)
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#39;");
+}
+
+function frontChannelLogoutResponse(request) {
+  const url = new URL(request.url);
+  const returnTo = safeGlobalReturnTo(url.searchParams.get("returnTo"), request.url);
+  const href = escapeHtml(returnTo);
+  const body = `<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="referrer" content="no-referrer">
+  <title>Signing out · Hara World</title>
+</head>
+<body>
+  <p>Hara World signed out.</p>
+  <p><a data-hara-logout-return href="${href}">Continue</a></p>
+  <script>location.replace(document.querySelector("[data-hara-logout-return]").href)</script>
+</body>
+</html>`;
+  const headers = appendCookies(new Headers({
+    "Cache-Control": "no-store",
+    "Content-Type": "text/html; charset=utf-8",
+    "Content-Security-Policy": "default-src 'none'; script-src 'unsafe-inline'; base-uri 'none'; frame-ancestors 'none'; form-action 'none'",
+    "Referrer-Policy": "no-referrer",
+    "X-Content-Type-Options": "nosniff",
+    "X-Frame-Options": "DENY",
+  }), [clearWorldSessionCookie(request.url)]);
+  return new Response(body, { status: 200, headers });
 }
 
 function jsonWithCookies(status, body, cookies = []) {
@@ -194,8 +232,7 @@ function logout(request, env) {
     if (url.searchParams.get("source") !== "hara-identity") {
       return json(400, { error: { code: "LOGOUT_SOURCE_INVALID", message: "The front-channel logout source is invalid." } });
     }
-    const returnTo = safeGlobalReturnTo(url.searchParams.get("returnTo"), request.url);
-    return redirect(returnTo, [clearWorldSessionCookie(request.url)]);
+    return frontChannelLogoutResponse(request);
   }
   if (request.method !== "POST") return json(405, { error: { code: "METHOD_NOT_ALLOWED", message: "Only GET and POST are supported." } }, { Allow: "GET, POST" });
   if (

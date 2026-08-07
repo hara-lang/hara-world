@@ -96,12 +96,17 @@ status="$(curl --silent --show-error --max-time 20 --output "$work/profile.json"
 [[ "$status" == "401" ]]
 jq -e '.error.code == "WORLD_SESSION_REQUIRED"' "$work/profile.json" >/dev/null
 
-# World can deploy first: verify its front-channel half directly. Identity's deploy gate verifies the full two-origin chain after this endpoint is live.
+# Netlify preserves source query parameters on same-origin HTTP redirects. World therefore clears its cookie in an HTML bridge whose validated return link is exact and whose script uses that link directly.
 logout_return="${world_origin}/me"
 world_logout="${world_origin}/api/auth/logout?source=hara-identity&returnTo=$(jq -rn --arg value "$logout_return" '$value|@uri')"
-status="$(curl --silent --show-error --max-time 20 --dump-header "$work/world-logout.headers" --output /dev/null --write-out '%{http_code}' "$world_logout")"
-[[ "$status" == "302" ]]
-[[ "$(header_value Location "$work/world-logout.headers")" == "$logout_return" ]]
+status="$(curl --silent --show-error --max-time 20 --dump-header "$work/world-logout.headers" --output "$work/world-logout.html" --write-out '%{http_code}' "$world_logout")"
+[[ "$status" == "200" ]]
 grep -qi '^set-cookie: hara_world_session=;.*Max-Age=0' "$work/world-logout.headers"
+grep -q "data-hara-logout-return href=\"${logout_return}\"" "$work/world-logout.html"
+grep -q 'location.replace' "$work/world-logout.html"
+if grep -Eq 'source=hara-identity|returnTo=' "$work/world-logout.html"; then
+  echo "The logout bridge leaked its source query into the return document." >&2
+  exit 1
+fi
 
-echo "Verified Hara World at ${world_origin} with active readiness, account enforcement, and front-channel logout."
+echo "Verified Hara World at ${world_origin} with active readiness, account enforcement, and exact front-channel logout."

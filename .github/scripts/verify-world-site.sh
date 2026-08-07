@@ -96,19 +96,12 @@ status="$(curl --silent --show-error --max-time 20 --output "$work/profile.json"
 [[ "$status" == "401" ]]
 jq -e '.error.code == "WORLD_SESSION_REQUIRED"' "$work/profile.json" >/dev/null
 
+# World can deploy first: verify its front-channel half directly. Identity's deploy gate verifies the full two-origin chain after this endpoint is live.
 logout_return="${world_origin}/me"
-status="$(curl --silent --show-error --max-time 20 --dump-header "$work/identity-logout.headers" --output /dev/null --write-out '%{http_code}' --get --data-urlencode "returnTo=${logout_return}" "${identity_origin}/logout/global")"
-[[ "$status" == "302" ]]
-world_logout="$(header_value Location "$work/identity-logout.headers")"
-node - "$world_logout" "$world_origin" "$logout_return" <<'NODE'
-const [location, world, returnTo] = process.argv.slice(2);
-const url = new URL(location);
-if (url.origin !== world || url.pathname !== "/api/auth/logout") process.exit(1);
-if (url.searchParams.get("source") !== "hara-identity" || url.searchParams.get("returnTo") !== returnTo) process.exit(1);
-NODE
+world_logout="${world_origin}/api/auth/logout?source=hara-identity&returnTo=$(jq -rn --arg value "$logout_return" '$value|@uri')"
 status="$(curl --silent --show-error --max-time 20 --dump-header "$work/world-logout.headers" --output /dev/null --write-out '%{http_code}' "$world_logout")"
 [[ "$status" == "302" ]]
 [[ "$(header_value Location "$work/world-logout.headers")" == "$logout_return" ]]
 grep -qi '^set-cookie: hara_world_session=;.*Max-Age=0' "$work/world-logout.headers"
 
-echo "Verified Hara World at ${world_origin} with active readiness, account enforcement, and global logout."
+echo "Verified Hara World at ${world_origin} with active readiness, account enforcement, and front-channel logout."

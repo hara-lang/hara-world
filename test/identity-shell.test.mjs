@@ -4,7 +4,7 @@ import test from "node:test";
 
 const read = (path) => readFile(new URL(`../${path}`, import.meta.url), "utf8");
 
-test("World mounts central Identity and clears stale local sessions", async () => {
+test("World mounts central Identity in popup mode and clears stale local sessions", async () => {
   const [layout, loader, sync] = await Promise.all([
     read("src/layouts/SiteLayout.astro"),
     read("public/identity-loader.js"),
@@ -12,6 +12,8 @@ test("World mounts central Identity and clears stale local sessions", async () =
   ]);
   assert.match(layout, /<div data-hara-identity><\/div>/);
   assert.match(layout, /src="\/identity-loader\.js"/);
+  assert.match(loader, /meta\[name="hara-identity-mode"\]/);
+  assert.match(loader, /mode\.content = "popup"/);
   assert.match(loader, /https:\/\/id\.testing\.hara-lang\.org/);
   assert.match(loader, /https:\/\/id\.hara-lang\.org/);
   assert.match(loader, /\/world-session-sync\.js/);

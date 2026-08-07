@@ -1,6 +1,10 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { recordIdentityHandoff } from "../netlify/functions/_shared/community-accounts.mjs";
+import {
+  communityAccountStatus,
+  isCommunityAccountActive,
+  recordIdentityHandoff,
+} from "../netlify/functions/_shared/community-accounts.mjs";
 
 const IDENTITY = {
   handoffId: "handoff-01234567890123456789",
@@ -14,7 +18,7 @@ const IDENTITY = {
   profileUrl: "https://github.com/zcaudate",
 };
 
-test("uses the handoff ID as replay boundary and excludes suspended accounts", async () => {
+test("consumes a handoff only after an active account upsert succeeds", async () => {
   let captured;
   const accepted = await recordIdentityHandoff(IDENTITY, {
     db: {
@@ -25,11 +29,21 @@ test("uses the handoff ID as replay boundary and excludes suspended accounts", a
     },
   });
   assert.equal(accepted, false);
-  assert.match(captured.text, /ON CONFLICT \(handoff_id\) DO NOTHING/);
-  assert.match(captured.text, /status <> 'active'/);
+  const accountPosition = captured.text.indexOf("account_upsert AS");
+  const handoffPosition = captured.text.indexOf("accepted AS");
+  assert.ok(accountPosition >= 0 && accountPosition < handoffPosition);
+  assert.match(captured.text, /FROM account_upsert/);
   assert.match(captured.text, /community_accounts\.status = 'active'/);
+  assert.match(captured.text, /ON CONFLICT \(handoff_id\) DO NOTHING/);
   assert.equal(captured.params[0], IDENTITY.handoffId);
   assert.equal(captured.params[1], IDENTITY.id);
+});
+
+test("checks current community status for every sensitive operation", async () => {
+  const db = { async query() { return { rows: [{ status: "suspended" }] }; } };
+  assert.equal(await communityAccountStatus("6685337", { db }), "suspended");
+  assert.equal(await isCommunityAccountActive("6685337", { db }), false);
+  assert.equal(await communityAccountStatus("6685337", { db: { async query() { return { rows: [] }; } } }), "missing");
 });
 
 test("rejects browser-shaped identity input before touching the database", async () => {

@@ -13,8 +13,7 @@ work="$(mktemp -d)"
 trap 'rm -rf "$work"' EXIT
 
 fetch_until() {
-  local url="$1"
-  local output="$2"
+  local url="$1" output="$2"
   for attempt in {1..20}; do
     if curl --fail --silent --show-error --location --max-time 20 "$url" >"$output"; then return 0; fi
     if [[ "$attempt" -lt 20 ]]; then sleep 15; fi
@@ -23,34 +22,31 @@ fetch_until() {
   return 1
 }
 
+header_value() {
+  local name="$1" file="$2"
+  awk -v target="${name,,}" 'BEGIN{IGNORECASE=1} {key=$1; sub(/:$/, "", key); if(tolower(key)==target){$1=""; sub(/^[[:space:]]+/, ""); sub(/\r$/, ""); print; exit}}' "$file"
+}
+
 fetch_until "${world_origin}/" "$work/home.html"
 grep -q 'property="og:site_name" content="Hara World"' "$work/home.html"
 grep -q 'src="/identity-loader.js"' "$work/home.html"
-
 fetch_until "${world_origin}/identity-loader.js" "$work/identity-loader.js"
 grep -q '/identity-client.js' "$work/identity-loader.js"
 grep -q '/world-session-sync.js' "$work/identity-loader.js"
-grep -q 'id.testing.hara-lang.org' "$work/identity-loader.js"
-grep -q 'id.hara-lang.org' "$work/identity-loader.js"
-
 fetch_until "${world_origin}/world-session-sync.js" "$work/world-session-sync.js"
 grep -q '/api/auth/session' "$work/world-session-sync.js"
 grep -q '/api/auth/logout' "$work/world-session-sync.js"
-grep -q 'hara:identity-change' "$work/world-session-sync.js"
 
 fetch_until "${world_origin}/me" "$work/me.html"
 grep -q 'Your Hara World account' "$work/me.html"
 grep -q 'Open draft profile PR' "$work/me.html"
-
 fetch_until "${world_origin}/feed.xml" "$work/feed.xml"
 grep -Eq '<rss|<feed' "$work/feed.xml"
 fetch_until "${world_origin}/feed.json" "$work/feed.json"
 jq -e '.version and (.items | type == "array")' "$work/feed.json" >/dev/null
 
 fetch_until "${identity_origin}/.well-known/hara-session" "$work/identity.json"
-jq -e --arg issuer "$identity_origin" --arg world "$world_origin" '
-  .issuer == $issuer and (.allowedOrigins | index($world) != null)
-' "$work/identity.json" >/dev/null
+jq -e --arg issuer "$identity_origin" --arg world "$world_origin" '.issuer == $issuer and (.allowedOrigins | index($world) != null)' "$work/identity.json" >/dev/null
 if [[ "$REQUIRE_IDENTITY_CONFIGURED" == "true" ]]; then jq -e '.configured == true' "$work/identity.json" >/dev/null; fi
 
 fetch_until "${identity_origin}/.well-known/hara-handoff" "$work/handoff.json"
@@ -65,19 +61,24 @@ fetch_until "${world_origin}/.well-known/hara-world" "$work/world.json"
 jq -e --arg issuer "$world_origin" --arg central "$identity_origin" '
   .issuer == $issuer
   and .centralIssuer == $central
-  and .profiles.management == "git-pull-request"
-  and .profiles.publicationBoundary == "merge"
+  and .readinessEndpoint == ($issuer + "/.well-known/hara-world-readiness")
+  and .authentication.accountStatusEnforced == true
+  and .authentication.frontChannelLogout == true
+  and .profiles.index == "registry/profiles.json"
+  and .profiles.oneOpenProposalPerIdentity == true
 ' "$work/world.json" >/dev/null
-if [[ "$REQUIRE_WORLD_AUTH_CONFIGURED" == "true" ]]; then
-  jq -e '.authentication.configured == true and .database.configured == true' "$work/world.json" >/dev/null
-fi
-if [[ "$REQUIRE_PROFILE_PUBLISHER_CONFIGURED" == "true" ]]; then
-  jq -e '.profiles.configured == true and .configured == true' "$work/world.json" >/dev/null
+
+if [[ "$REQUIRE_WORLD_AUTH_CONFIGURED" == "true" || "$REQUIRE_PROFILE_PUBLISHER_CONFIGURED" == "true" ]]; then
+  fetch_until "${world_origin}/.well-known/hara-world-readiness" "$work/readiness.json"
+  jq -e --arg issuer "$world_origin" --arg central "$identity_origin" '
+    .ready == true and .issuer == $issuer and .centralIssuer == $central
+    and ([.checks[] | select(.ready != true)] | length) == 0
+  ' "$work/readiness.json" >/dev/null
 fi
 
 status="$(curl --silent --show-error --max-time 20 --dump-header "$work/start.headers" --output "$work/start.body" --write-out '%{http_code}' "${world_origin}/api/auth/start?returnTo=%2Fme")"
 [[ "$status" == "302" ]]
-location="$(awk 'BEGIN{IGNORECASE=1} /^location:/ {sub(/^location:[[:space:]]*/, ""); sub(/\r$/, ""); print; exit}' "$work/start.headers")"
+location="$(header_value Location "$work/start.headers")"
 node - "$location" "$identity_origin" "$world_origin" <<'NODE'
 const [location, identity, world] = process.argv.slice(2);
 const redirect = new URL(location);
@@ -95,4 +96,19 @@ status="$(curl --silent --show-error --max-time 20 --output "$work/profile.json"
 [[ "$status" == "401" ]]
 jq -e '.error.code == "WORLD_SESSION_REQUIRED"' "$work/profile.json" >/dev/null
 
-echo "Verified Hara World at ${world_origin} with trusted Identity at ${identity_origin}."
+logout_return="${world_origin}/me"
+status="$(curl --silent --show-error --max-time 20 --dump-header "$work/identity-logout.headers" --output /dev/null --write-out '%{http_code}' --get --data-urlencode "returnTo=${logout_return}" "${identity_origin}/logout/global")"
+[[ "$status" == "302" ]]
+world_logout="$(header_value Location "$work/identity-logout.headers")"
+node - "$world_logout" "$world_origin" "$logout_return" <<'NODE'
+const [location, world, returnTo] = process.argv.slice(2);
+const url = new URL(location);
+if (url.origin !== world || url.pathname !== "/api/auth/logout") process.exit(1);
+if (url.searchParams.get("source") !== "hara-identity" || url.searchParams.get("returnTo") !== returnTo) process.exit(1);
+NODE
+status="$(curl --silent --show-error --max-time 20 --dump-header "$work/world-logout.headers" --output /dev/null --write-out '%{http_code}' "$world_logout")"
+[[ "$status" == "302" ]]
+[[ "$(header_value Location "$work/world-logout.headers")" == "$logout_return" ]]
+grep -qi '^set-cookie: hara_world_session=;.*Max-Age=0' "$work/world-logout.headers"
+
+echo "Verified Hara World at ${world_origin} with active readiness, account enforcement, and global logout."

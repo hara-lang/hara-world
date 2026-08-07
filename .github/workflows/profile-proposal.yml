@@ -1,0 +1,29 @@
+name: Validate authenticated profile proposal
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "content/profiles/**"
+      - "registry/profiles.json"
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - name: Restrict authenticated proposal scope
+        run: node scripts/validate-profile-pr-scope.mjs
+      - name: Validate profile index
+        run: npm run profiles:check
+      - name: Run profile security tests
+        run: node --test test/profile-index.test.mjs test/profile-proposal.test.mjs test/safe-community-markdown.test.mjs

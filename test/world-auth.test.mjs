@@ -107,7 +107,7 @@ test("rejects callback state mismatch before contacting Identity", async () => {
   assert.match(response.headers.get("location"), /auth_error=/);
 });
 
-test("supports same-origin POST logout and Identity front-channel logout", async () => {
+test("supports same-origin POST logout and an exact Identity front-channel bridge", async () => {
   const rejected = await handle(new Request("https://world.hara-lang.org/api/auth/logout", {
     method: "POST",
     headers: { Origin: "https://evil.example" },
@@ -122,10 +122,17 @@ test("supports same-origin POST logout and Identity front-channel logout", async
   assert.match(local.headers.get("set-cookie"), new RegExp(`${WORLD_SESSION_COOKIE}=;`));
 
   const global = await handle(new Request("https://world.hara-lang.org/api/auth/logout?source=hara-identity&returnTo=https%3A%2F%2Fpackages.hara-lang.org%2F"), { env: ENV });
-  assert.equal(global.status, 302);
-  assert.equal(global.headers.get("location"), "https://packages.hara-lang.org/");
+  assert.equal(global.status, 200);
+  assert.equal(global.headers.get("location"), null);
+  assert.match(global.headers.get("content-type"), /text\/html/);
   assert.match(global.headers.get("set-cookie"), new RegExp(`${WORLD_SESSION_COOKIE}=;`));
+  const globalHtml = await global.text();
+  assert.match(globalHtml, /data-hara-logout-return href="https:\/\/packages\.hara-lang\.org\/"/);
+  assert.match(globalHtml, /location\.replace/);
+  assert.doesNotMatch(globalHtml, /source=hara-identity|returnTo=/);
 
   const crossEnvironment = await handle(new Request("https://world.hara-lang.org/api/auth/logout?source=hara-identity&returnTo=https%3A%2F%2Fpackages.testing.hara-lang.org%2F"), { env: ENV });
-  assert.equal(crossEnvironment.headers.get("location"), "https://world.hara-lang.org/");
+  const crossHtml = await crossEnvironment.text();
+  assert.match(crossHtml, /data-hara-logout-return href="https:\/\/world\.hara-lang\.org\/"/);
+  assert.doesNotMatch(crossHtml, /packages\.testing\.hara-lang\.org/);
 });

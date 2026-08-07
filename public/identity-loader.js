@@ -3,6 +3,14 @@
 
   if (document.querySelector("script[data-hara-identity-client]")) return;
 
+  let mode = document.querySelector('meta[name="hara-identity-mode"]');
+  if (!mode) {
+    mode = document.createElement("meta");
+    mode.name = "hara-identity-mode";
+    mode.content = "popup";
+    document.head.append(mode);
+  }
+
   const configured = document.querySelector('meta[name="hara-identity-origin"]')?.content?.trim();
   let identityOrigin = "";
   if (configured) {

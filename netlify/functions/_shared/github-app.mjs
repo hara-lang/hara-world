@@ -40,9 +40,7 @@ export function readGitHubAppConfig(env = {}) {
     || !/^\d+$/.test(installationId)
     || !privateKey.includes("BEGIN")
     || !privateKey.includes("PRIVATE KEY")
-  ) {
-    throw new Error("The Hara World GitHub App is not configured.");
-  }
+  ) throw new Error("The Hara World GitHub App is not configured.");
   if (!/^[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+$/.test(repository)) {
     throw new Error("HARA_WORLD_GITHUB_REPOSITORY must use owner/name syntax.");
   }
@@ -104,5 +102,11 @@ export async function createGitHubAppClient({
     return payload;
   }
 
-  return { ...resolved, request };
+  return {
+    ...resolved,
+    installationPermissions: tokenPayload.permissions && typeof tokenPayload.permissions === "object"
+      ? { ...tokenPayload.permissions }
+      : {},
+    request,
+  };
 }

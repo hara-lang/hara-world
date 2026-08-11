@@ -7,7 +7,10 @@ const read = (path) => readFile(new URL(`../${path}`, import.meta.url), "utf8");
 test("World has isolated testing and production Netlify deployments", async () => {
   const workflow = await read(".github/workflows/pages.yml");
 
-  assert.match(workflow, /branches: \[main, production\]/);
+  assert.match(workflow, /branches: \[main, testing\]/);
+  assert.match(workflow, /github\.ref_name == 'testing'[\s\S]*NETLIFY_TESTING_SITE_ID/);
+  assert.match(workflow, /github\.ref_name == 'main'[\s\S]*NETLIFY_PRODUCTION_SITE_ID/);
+  assert.doesNotMatch(workflow, /pull_request\.title|\[deploy\]/);
   assert.match(workflow, /NETLIFY_TESTING_SITE_ID/);
   assert.match(workflow, /NETLIFY_PRODUCTION_SITE_ID/);
   assert.match(workflow, /world\.testing\.hara-lang\.org/);

@@ -91,6 +91,7 @@ const activePath = Astro.url.pathname;
       <div>
         <a href="/articles" aria-current={activePath.startsWith("/articles") ? "page" : undefined}>Dispatches</a>
         <a href="/people" aria-current={activePath.startsWith("/people") ? "page" : undefined}>People</a>
+        <a href="/learn/koans/" aria-current={activePath.startsWith("/learn/koans") ? "page" : undefined}>Koans</a>
         <a href="/sources" aria-current={activePath === "/sources" ? "page" : undefined}>Sources</a>
         <a href="/submit" aria-current={activePath === "/submit" ? "page" : undefined}>Submit</a>
         <a href="/about" aria-current={activePath === "/about" ? "page" : undefined}>About</a>

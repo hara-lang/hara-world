@@ -1,0 +1,38 @@
+---
+import SiteLayout from "../../../layouts/SiteLayout.astro";
+import { KOANS } from "../../../lib/koans.mjs";
+---
+<SiteLayout title="Hara Koans" description="Thirty small, executable Hara problems with private progress and post-solve peer solutions.">
+  <header class="page-hero koan-hero"><div class="shell">
+    <p class="eyebrow">Self Learning / browser practice</p>
+    <h1>Hara Koans.</h1>
+    <p class="lede">Thirty small problems. Run them entirely in your browser, keep progress locally, and sign in when you want to sync accepted source or compare approaches.</p>
+    <p class="koan-disclosure">Passing is verified by your browser and reported to World. This is a learning record, not a competitive or tamper-resistant leaderboard.</p>
+  </div></header>
+  <section class="section section--tight"><div class="shell">
+    <div class="koan-progress" data-koan-progress>Loading local progress…</div>
+    <ol class="koan-grid">
+      {KOANS.map((koan) => <li data-koan-id={koan.id}>
+        <a href={`/learn/koans/${koan.slug}/`}>
+          <span class="koan-number">{koan.id}</span>
+          <strong>{koan.title}</strong>
+          <span>{koan.topic} · level {koan.difficulty}</span>
+          <i aria-hidden="true">○</i>
+        </a>
+      </li>)}
+    </ol>
+  </div></section>
+  <script is:inline define:vars={{ total: KOANS.length }}>
+    const solved = new Set(JSON.parse(localStorage.getItem("hara-koans:solved") || "[]"));
+    document.querySelectorAll("[data-koan-id]").forEach((item) => {
+      if (solved.has(item.dataset.koanId)) { item.classList.add("is-solved"); item.querySelector("i").textContent = "✓"; }
+    });
+    document.querySelector("[data-koan-progress]").textContent = `${solved.size} of ${total} solved in this browser`;
+    fetch("/api/koans/progress").then((response) => response.ok ? response.json() : null).then((body) => {
+      if (!body) return;
+      for (const completion of body.completions) solved.add(completion.koan_id);
+      localStorage.setItem("hara-koans:solved", JSON.stringify([...solved]));
+      location.reload();
+    }).catch(() => {});
+  </script>
+</SiteLayout>

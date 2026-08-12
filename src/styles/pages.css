@@ -12,6 +12,74 @@
   margin-bottom: 0;
 }
 
+.koan-disclosure,
+.koan-progress {
+  max-width: 760px;
+  margin-top: 1.5rem;
+  padding: .85rem 1rem;
+  color: var(--hara-muted);
+  border: 1px solid var(--hara-line);
+  border-radius: var(--hara-radius-sm);
+  background: var(--hara-surface);
+  font-size: .82rem;
+}
+
+.koan-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1px;
+  margin: 2rem 0 0;
+  padding: 1px;
+  list-style: none;
+  background: var(--hara-line);
+}
+
+.koan-grid a {
+  position: relative;
+  display: grid;
+  gap: .5rem;
+  min-height: 150px;
+  padding: 1.35rem;
+  color: var(--hara-text);
+  background: var(--hara-surface-solid);
+  text-decoration: none;
+}
+
+.koan-grid a:hover { background: var(--hara-surface-raised); }
+.koan-grid strong { font-size: 1.05rem; }
+.koan-grid span { color: var(--hara-muted); font-size: .75rem; }
+.koan-grid .koan-number { color: var(--hara-signal); font-family: var(--hara-font-mono); }
+.koan-grid i { position: absolute; top: 1.2rem; right: 1.2rem; color: var(--hara-muted); font-style: normal; }
+.koan-grid .is-solved i { color: var(--hara-signal); }
+
+.koan-workspace { padding-top: clamp(40px, 6vw, 80px); }
+.koan-breadcrumb, .koan-pager { display: flex; justify-content: space-between; gap: 1rem; color: var(--hara-muted); font-size: .8rem; }
+.koan-breadcrumb a, .koan-pager a { color: var(--hara-signal); }
+.koan-title { max-width: 820px; margin: clamp(3rem, 7vw, 6rem) 0 2.5rem; }
+.koan-title h1 { font-size: clamp(2.8rem, 7vw, 5.8rem); }
+.koan-lab { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(280px, .6fr); border: 1px solid var(--hara-line-strong); background: var(--hara-line); gap: 1px; }
+.koan-editor-panel, .koan-tests { padding: clamp(1.25rem, 3vw, 2rem); background: var(--hara-surface-solid); }
+.koan-editor-panel label, .koan-tests h2 { display: block; margin-bottom: .9rem; font-size: .78rem; text-transform: uppercase; letter-spacing: .08em; }
+.koan-editor-panel textarea { width: 100%; min-height: 330px; resize: vertical; padding: 1.25rem; color: var(--hara-frost); border: 1px solid var(--hara-line-strong); border-radius: var(--hara-radius-sm); background: #080a0d; font: .92rem/1.65 var(--hara-font-mono); tab-size: 2; }
+.koan-tests ol { display: grid; gap: .8rem; padding: 0; list-style: none; }
+.koan-tests li { display: grid; gap: .45rem; padding-bottom: .8rem; border-bottom: 1px solid var(--hara-line); }
+.koan-tests code { overflow-wrap: anywhere; font-size: .75rem; }
+.koan-tests span { color: var(--hara-muted); font-size: .7rem; text-transform: uppercase; }
+.koan-tests .is-passed span { color: var(--hara-signal); }
+.koan-peers { margin-top: 3rem; }
+.koan-peers [data-peer-list] { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem; }
+.koan-peers article { padding: 1.25rem; border: 1px solid var(--hara-line); background: var(--hara-surface); }
+.koan-peers pre { overflow-x: auto; }
+.koan-pager { margin-top: 3rem; padding-top: 1.5rem; border-top: 1px solid var(--hara-line); }
+
+@media (max-width: 800px) {
+  .koan-grid { grid-template-columns: 1fr 1fr; }
+  .koan-lab { grid-template-columns: 1fr; }
+  .koan-peers [data-peer-list] { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 520px) { .koan-grid { grid-template-columns: 1fr; } }
+
 .article-page {
   padding-block: clamp(70px, 9vw, 120px);
 }
@@ -273,4 +341,3 @@
 .site-footer__links a:hover {
   color: var(--hara-text);
 }
-

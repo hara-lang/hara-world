@@ -1,0 +1,30 @@
+---
+import SiteLayout from "../../../layouts/SiteLayout.astro";
+import { KOANS } from "../../../lib/koans.mjs";
+export function getStaticPaths() { return KOANS.map((koan) => ({ params: { slug: koan.slug }, props: { koan } })); }
+const { koan } = Astro.props;
+const index = KOANS.findIndex((item) => item.id === koan.id);
+const previous = KOANS[index - 1];
+const next = KOANS[index + 1];
+---
+<SiteLayout title={`${koan.id} · ${koan.title}`} description={koan.prompt}>
+  <section class="section koan-workspace"><div class="shell">
+    <nav class="koan-breadcrumb" aria-label="Koan navigation"><a href="/learn/koans/">← All koans</a><span>{koan.topic} / level {koan.difficulty}</span></nav>
+    <header class="koan-title"><p class="eyebrow">Koan {koan.id}</p><h1>{koan.title}</h1><p class="lede">{koan.prompt}</p></header>
+    <div class="koan-lab" data-koan={JSON.stringify(koan)}>
+      <div class="koan-editor-panel">
+        <label for="koan-source">Your Hara expression</label>
+        <textarea id="koan-source" spellcheck="false" autocomplete="off">{koan.starter}</textarea>
+        <div class="hero-actions"><button class="button" type="button" data-run>Run tests</button><button class="button button--quiet" type="button" data-reset>Reset</button></div>
+        <p class="form-status" data-status aria-live="polite">The Hara kernel loads when you run the tests.</p>
+      </div>
+      <aside class="koan-tests"><h2>Checks</h2><ol>{koan.tests.map((test) => <li><code>{test}</code><span>waiting</span></li>)}</ol></aside>
+    </div>
+    <section class="koan-peers" data-peers hidden><h2>Other accepted approaches</h2><p>Solutions appear only after you solve this version.</p><div data-peer-list></div></section>
+    <nav class="koan-pager">
+      {previous ? <a href={`/learn/koans/${previous.slug}/`}>← {previous.title}</a> : <span></span>}
+      {next ? <a href={`/learn/koans/${next.slug}/`}>{next.title} →</a> : <a href="/learn/koans/">Finish</a>}
+    </nav>
+  </div></section>
+  <script src="/koans.js" type="module"></script>
+</SiteLayout>

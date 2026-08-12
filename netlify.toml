@@ -14,7 +14,17 @@
   command = "npm run dev -- --host 0.0.0.0"
   targetPort = 4321
   port = 8888
-  framework = "#custom"
+framework = "#custom"
+
+[[redirects]]
+  from = "/runtime/*"
+  to = "https://www.hara-lang.org/runtime/:splat"
+  status = 200
+
+[[redirects]]
+  from = "/docs-assets/*"
+  to = "https://www.hara-lang.org/docs-assets/:splat"
+  status = 200
 
 [[headers]]
   for = "/*"

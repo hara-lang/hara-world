@@ -28,6 +28,47 @@ function sourcePull({ number = 44, owner = "6685337", sourceId = "hara-notes", s
   };
 }
 
+function profilePull({ number = 51, owner = "6685337" } = {}) {
+  return {
+    number,
+    title: "Profile: @zcaudate",
+    body: `<!-- hara-world-profile-proposal -->\n<!-- hara-world-profile:github:${owner} -->`,
+    state: "open",
+    draft: true,
+    merged: false,
+    merged_at: null,
+    closed_at: null,
+    created_at: "2026-08-18T00:00:00Z",
+    updated_at: "2026-08-18T02:00:00Z",
+    html_url: `https://github.com/${REPOSITORY}/pull/${number}`,
+    base: { ref: "main", repo: { full_name: REPOSITORY } },
+    head: { ref: `profile/github-${owner}`, sha: SHA, repo: { full_name: REPOSITORY } },
+  };
+}
+
+function postPull({ number = 52, owner = "6685337" } = {}) {
+  const draftId = "11111111-1111-4111-8111-111111111111";
+  return {
+    number,
+    title: "Post: Small Hara agent",
+    body: [
+      "<!-- hara-world-post-proposal -->",
+      `<!-- hara-world-post:draft:${draftId} -->`,
+      `<!-- hara-world-author:github:${owner} -->`,
+    ].join("\n"),
+    state: "open",
+    draft: true,
+    merged: false,
+    merged_at: null,
+    closed_at: null,
+    created_at: "2026-08-18T00:00:00Z",
+    updated_at: "2026-08-18T02:00:00Z",
+    html_url: `https://github.com/${REPOSITORY}/pull/${number}`,
+    base: { ref: "main", repo: { full_name: REPOSITORY } },
+    head: { ref: `post/github-${owner}/1111111111114111`, sha: SHA, repo: { full_name: REPOSITORY } },
+  };
+}
+
 function recordedProposal() {
   return {
     proposalId: proposalIdFor("source", "hara-notes"),
@@ -76,6 +117,39 @@ test("discovers recent managed pull requests and filters them by stable owner", 
   assert.equal(recorded[0].descriptor.ownerGithubUserId, "6685337");
   assert.equal(recorded[0].options.recordEvent, false);
   assert.equal(recorded[0].options.resetState, false);
+});
+
+test("repairs profile and post public paths from server-controlled pull-request file paths", async () => {
+  const recorded = [];
+  const client = {
+    repository: REPOSITORY,
+    async request(path) {
+      if (path.includes("pulls?state=all")) return [profilePull(), postPull()];
+      if (path === `/repos/${REPOSITORY}/pulls/51/files?per_page=100`) {
+        return [
+          { filename: "registry/profiles.json" },
+          { filename: "content/profiles/chris-zheng.md" },
+        ];
+      }
+      if (path === `/repos/${REPOSITORY}/pulls/52/files?per_page=100`) {
+        return [{ filename: "content/articles/community/2026/08/6685337-small-hara-agent.md" }];
+      }
+      throw new Error(`Unexpected request: ${path}`);
+    },
+  };
+  const result = await discoverManagedProposals(client, {
+    ownerGithubUserId: "6685337",
+    proposalStore: {
+      async recordSubmission(descriptor) {
+        recorded.push(descriptor);
+        return { ...descriptor, proposalId: proposalIdFor(descriptor.proposalType, descriptor.resourceKey) };
+      },
+    },
+  });
+  assert.equal(result.length, 2);
+  assert.equal(result.every((item) => item.ok), true);
+  assert.equal(recorded.find((item) => item.proposalType === "profile").publicPath, "/people/chris-zheng/");
+  assert.equal(recorded.find((item) => item.proposalType === "post").publicPath, "/articles/community/2026/08/6685337-small-hara-agent");
 });
 
 test("reconciles pull, review, and check state after verifying immutable markers", async () => {

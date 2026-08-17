@@ -14,6 +14,10 @@ import {
   updateProfileIndex,
 } from "./_shared/profile-index.mjs";
 import {
+  publicPathForProposal,
+  recordPublishedProposal,
+} from "./_shared/proposal-recording.mjs";
+import {
   clearWorldSessionCookie,
   json,
   readWorldSession,
@@ -186,6 +190,8 @@ async function createOrUpdateProfilePullRequest(client, { identity, proposal, st
     branch,
     pullRequestUrl: pull?.html_url,
     number: pull?.number,
+    headSha: pull?.head?.sha ?? null,
+    submittedAt: pull?.created_at ?? new Date(now).toISOString(),
     reused: Boolean(existingPull),
   };
 }
@@ -240,7 +246,19 @@ export async function handle(request, options = {}) {
 
   try {
     const result = await createOrUpdateProfilePullRequest(client, { identity, proposal, state, now });
-    return json(result.unchanged ? 200 : 201, { ok: true, ...result });
+    const lifecycle = await recordPublishedProposal({
+      proposalType: "profile",
+      identity,
+      resourceKey: `github:${identity.id}`,
+      resourceTitle: proposal.displayName,
+      result,
+      client,
+      publicPath: publicPathForProposal("profile", { slug: proposal.slug }),
+      now,
+      db: options.db,
+      proposalStore: options.proposalLifecycleStore,
+    });
+    return json(result.unchanged ? 200 : 201, { ok: true, ...result, lifecycleRecorded: lifecycle.recorded });
   } catch (error) {
     if (/slug/.test(error?.message ?? "")) return json(409, { error: { code: "PROFILE_SLUG_TAKEN", message: error.message } });
     console.error("World profile proposal failed", { status: error?.status, name: error?.name });

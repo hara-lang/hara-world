@@ -54,6 +54,10 @@ function optionalSha(value) {
   return sha;
 }
 
+function databaseBoolean(value) {
+  return value === true || String(value).toLowerCase() === "true";
+}
+
 export function proposalIdFor(proposalType, resourceKey) {
   const type = text(proposalType, 20, "Proposal type").toLowerCase();
   if (!TYPE_SET.has(type)) throw new TypeError(`Proposal type must be one of: ${PROPOSAL_TYPES.join(", ")}.`);
@@ -112,7 +116,7 @@ function mapProposal(row = {}) {
     state: row.state,
     reviewState: row.review_state,
     checksState: row.checks_state,
-    isDraft: row.is_draft === true,
+    isDraft: databaseBoolean(row.is_draft),
     submittedAt: row.submitted_at,
     updatedAt: row.updated_at,
     mergedAt: row.merged_at ?? null,
@@ -151,14 +155,13 @@ export async function recordProposalSubmission(input, {
       $14::timestamptz, $15::timestamptz
     )
     ON CONFLICT (proposal_type, resource_key) DO UPDATE SET
-      owner_github_user_id = EXCLUDED.owner_github_user_id,
       resource_title = EXCLUDED.resource_title,
       repository = EXCLUDED.repository,
       branch = EXCLUDED.branch,
       base_branch = EXCLUDED.base_branch,
       pull_request_number = EXCLUDED.pull_request_number,
       pull_request_url = EXCLUDED.pull_request_url,
-      public_path = EXCLUDED.public_path,
+      public_path = COALESCE(EXCLUDED.public_path, hara_world.community_proposals.public_path),
       head_sha = COALESCE(EXCLUDED.head_sha, hara_world.community_proposals.head_sha),
       state = CASE WHEN $16::boolean THEN 'submitted' ELSE hara_world.community_proposals.state END,
       review_state = CASE WHEN $16::boolean THEN 'pending' ELSE hara_world.community_proposals.review_state END,
@@ -172,6 +175,7 @@ export async function recordProposalSubmission(input, {
       updated_at = EXCLUDED.updated_at,
       merged_at = CASE WHEN $16::boolean THEN NULL ELSE hara_world.community_proposals.merged_at END,
       closed_at = CASE WHEN $16::boolean THEN NULL ELSE hara_world.community_proposals.closed_at END
+    WHERE hara_world.community_proposals.owner_github_user_id = EXCLUDED.owner_github_user_id
     RETURNING ${RETURNING}`,
     params: [
       proposal.proposalId,
@@ -195,7 +199,9 @@ export async function recordProposalSubmission(input, {
 
   if (!recordEvent) {
     const result = await db.query(upsert.text, upsert.params);
-    return mapProposal(result.rows[0]);
+    const recorded = mapProposal(result.rows[0]);
+    if (!recorded) throw new Error("Proposal lifecycle owner does not match the existing resource record.");
+    return recorded;
   }
 
   const actorId = actorGithubUserId === undefined || actorGithubUserId === null
@@ -204,7 +210,14 @@ export async function recordProposalSubmission(input, {
   const event = {
     text: `INSERT INTO hara_world.community_proposal_events (
       proposal_id, provider, event_type, actor_github_user_id, actor_login, payload, created_at
-    ) VALUES ($1, 'world', $2, $3::bigint, $4, $5::jsonb, $6::timestamptz)`,
+    )
+    SELECT $1, 'world', $2, $3::bigint, $4, $5::jsonb, $6::timestamptz
+     WHERE EXISTS (
+       SELECT 1
+         FROM hara_world.community_proposals
+        WHERE proposal_id = $1
+          AND owner_github_user_id = $3::bigint
+     )`,
     params: [
       proposal.proposalId,
       text(eventType, 100, "Proposal event type"),
@@ -219,7 +232,9 @@ export async function recordProposalSubmission(input, {
     ],
   };
   const results = await db.transaction([upsert, event]);
-  return mapProposal(results[0].rows[0]);
+  const recorded = mapProposal(results[0].rows[0]);
+  if (!recorded) throw new Error("Proposal lifecycle owner does not match the existing resource record.");
+  return recorded;
 }
 
 export async function listProposalsForOwner(ownerGithubUserId, {

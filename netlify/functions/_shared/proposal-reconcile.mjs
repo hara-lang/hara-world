@@ -39,6 +39,38 @@ async function optionalGitHubRead(operation, fallback) {
   }
 }
 
+function publicPathFromChangedFiles(proposalType, files) {
+  const filenames = (Array.isArray(files) ? files : [])
+    .map((file) => String(file?.filename ?? ""))
+    .filter(Boolean);
+
+  if (proposalType === "profile") {
+    for (const filename of filenames) {
+      const match = filename.match(/^content\/profiles\/([a-z0-9](?:[a-z0-9-]{0,62}[a-z0-9])?)\.md$/);
+      if (match) return `/people/${match[1]}/`;
+    }
+  }
+
+  if (proposalType === "post") {
+    for (const filename of filenames) {
+      const match = filename.match(/^content\/articles\/(community\/\d{4}\/\d{2}\/\d+-[a-z0-9](?:[a-z0-9-]{0,62}[a-z0-9])?)\.md$/);
+      if (match) return `/articles/${match[1]}`;
+    }
+  }
+
+  return null;
+}
+
+async function recoverPublicPath(client, pull, descriptor) {
+  if (descriptor.publicPath || !["post", "profile"].includes(descriptor.proposalType)) return descriptor;
+  const files = await optionalGitHubRead(
+    () => client.request(`/repos/${client.repository}/pulls/${pull.number}/files?per_page=100`),
+    [],
+  );
+  const publicPath = publicPathFromChangedFiles(descriptor.proposalType, files);
+  return publicPath ? { ...descriptor, publicPath } : descriptor;
+}
+
 export async function discoverManagedProposals(client, {
   ownerGithubUserId,
   proposalStore,
@@ -59,9 +91,10 @@ export async function discoverManagedProposals(client, {
   const discovered = [];
 
   for (const pull of Array.isArray(pulls) ? pulls : []) {
-    const descriptor = proposalDescriptorFromPullRequest(pull);
+    let descriptor = proposalDescriptorFromPullRequest(pull);
     if (!descriptor || (owner !== null && descriptor.ownerGithubUserId !== owner)) continue;
     try {
+      descriptor = await recoverPublicPath(client, pull, descriptor);
       const proposal = await record(descriptor, {
         db,
         now,

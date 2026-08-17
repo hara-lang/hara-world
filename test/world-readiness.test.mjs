@@ -5,8 +5,9 @@ import { checkWorldReadiness } from "../netlify/functions/world-readiness.mjs";
 const ENV = {
   HARA_WORLD_HANDOFF_SECRET: "h".repeat(64),
   HARA_WORLD_SESSION_SECRET: "s".repeat(64),
+  HARA_WORLD_GITHUB_WEBHOOK_SECRET: "w".repeat(64),
 };
-const NOW = Date.parse("2026-08-07T00:00:00Z");
+const NOW = Date.parse("2026-08-18T00:00:00Z");
 
 function identityDiscovery(origin = "https://id.hara-lang.org", world = "https://world.hara-lang.org") {
   return Response.json({
@@ -37,11 +38,13 @@ const migratedDb = {
       handoffs: "hara_world.community_identity_handoffs",
       post_drafts: "hara_world.community_post_drafts",
       post_events: "hara_world.community_post_events",
+      proposals: "hara_world.community_proposals",
+      proposal_events: "hara_world.community_proposal_events",
     }] };
   },
 };
 
-test("actively proves Identity, post storage migrations, GitHub permissions, repository, and branch", async () => {
+test("actively proves Identity, lifecycle migrations, webhook, GitHub permissions, repository, and branch", async () => {
   const result = await checkWorldReadiness(new Request("https://world.hara-lang.org/.well-known/hara-world-readiness"), {
     env: ENV,
     now: NOW,
@@ -53,23 +56,30 @@ test("actively proves Identity, post storage migrations, GitHub permissions, rep
   assert.equal(result.checks.every((item) => item.ready), true);
   assert.equal(result.centralIssuer, "https://id.hara-lang.org");
   assert.equal(result.checks.find((item) => item.name === "github-community-publisher").ready, true);
-  assert.doesNotMatch(JSON.stringify(result), /hhhhhhhh|ssssssss|postgresql|PRIVATE KEY/);
+  assert.equal(result.checks.find((item) => item.name === "github-proposal-webhook").ready, true);
+  assert.doesNotMatch(JSON.stringify(result), /hhhhhhhh|ssssssss|wwwwwwww|postgresql|PRIVATE KEY/);
 });
 
-test("fails closed for missing post migrations or insufficient GitHub App permissions", async () => {
+test("fails closed for missing proposal migrations, webhook secret, or insufficient GitHub App permissions", async () => {
   const result = await checkWorldReadiness(new Request("https://world.testing.hara-lang.org/.well-known/hara-world-readiness"), {
-    env: ENV,
+    env: {
+      HARA_WORLD_HANDOFF_SECRET: "h".repeat(64),
+      HARA_WORLD_SESSION_SECRET: "s".repeat(64),
+    },
     now: NOW,
     fetchImpl: async () => identityDiscovery("https://id.testing.hara-lang.org", "https://world.testing.hara-lang.org"),
     db: { async query() { return { rows: [{
       accounts: "hara_world.community_accounts",
       handoffs: "hara_world.community_identity_handoffs",
-      post_drafts: null,
-      post_events: null,
+      post_drafts: "hara_world.community_post_drafts",
+      post_events: "hara_world.community_post_events",
+      proposals: null,
+      proposal_events: null,
     }] }; } },
     githubClient: githubClient({ contents: "read", pull_requests: "write" }),
   });
   assert.equal(result.ready, false);
-  assert.equal(result.checks.find((item) => item.name === "database").code, "community-post-migration-missing");
+  assert.equal(result.checks.find((item) => item.name === "database").code, "proposal-lifecycle-migration-missing");
+  assert.equal(result.checks.find((item) => item.name === "github-proposal-webhook").code, "github-webhook-not-configured");
   assert.equal(result.checks.find((item) => item.name === "github-community-publisher").code, "github-permissions-insufficient");
 });

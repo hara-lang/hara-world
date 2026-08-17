@@ -1,9 +1,16 @@
-import { getDatabase } from "./_shared/neon-http.mjs";
+import { getEnv } from "./_shared/env.mjs";
 import { createGitHubAppClient } from "./_shared/github-app.mjs";
+import { getDatabase } from "./_shared/neon-http.mjs";
 import { identityOriginForRequest, readWorldAuthConfig, worldOrigin } from "./_shared/world-auth.mjs";
 
 function check(name, ok, code = ok ? "ready" : "unavailable") {
   return { name, ready: Boolean(ok), code };
+}
+
+function envValue(env, name, fallback = "") {
+  const injected = env?.[name];
+  if (typeof injected === "string" && injected.trim()) return injected.trim();
+  return String(getEnv(name, fallback) ?? fallback).trim();
 }
 
 function permissionsReady(permissions = {}) {
@@ -51,17 +58,25 @@ export async function checkWorldReadiness(request, options = {}) {
          to_regclass('hara_world.community_accounts')::text AS accounts,
          to_regclass('hara_world.community_identity_handoffs')::text AS handoffs,
          to_regclass('hara_world.community_post_drafts')::text AS post_drafts,
-         to_regclass('hara_world.community_post_events')::text AS post_events`,
+         to_regclass('hara_world.community_post_events')::text AS post_events,
+         to_regclass('hara_world.community_proposals')::text AS proposals,
+         to_regclass('hara_world.community_proposal_events')::text AS proposal_events`,
     );
     const row = result.rows[0] ?? {};
     const migrated = row.accounts === "hara_world.community_accounts"
       && row.handoffs === "hara_world.community_identity_handoffs"
       && row.post_drafts === "hara_world.community_post_drafts"
-      && row.post_events === "hara_world.community_post_events";
-    checks.push(check("database", migrated, migrated ? "ready" : "community-post-migration-missing"));
+      && row.post_events === "hara_world.community_post_events"
+      && row.proposals === "hara_world.community_proposals"
+      && row.proposal_events === "hara_world.community_proposal_events";
+    checks.push(check("database", migrated, migrated ? "ready" : "proposal-lifecycle-migration-missing"));
   } catch {
     checks.push(check("database", false, "database-unreachable"));
   }
+
+  const webhookSecret = envValue(env, "HARA_WORLD_GITHUB_WEBHOOK_SECRET");
+  const webhookReady = webhookSecret.length >= 32;
+  checks.push(check("github-proposal-webhook", webhookReady, webhookReady ? "ready" : "github-webhook-not-configured"));
 
   try {
     const client = options.githubClient ?? await createGitHubAppClient({

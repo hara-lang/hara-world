@@ -1,19 +1,21 @@
 export const SITE = {
   name: "Hara World",
   shortName: "World",
-  description: "Independent dispatches, demonstrations, and community writing from the Hara Lisp world.",
+  description: "Community posts, people, lessons, and syndicated feeds from the Hara Lisp ecosystem.",
   repository: "https://github.com/hara-lang/hara-world",
   home: "https://www.hara-lang.org/",
   docs: "https://www.hara-lang.org/docs/start/orientation/",
   playground: "https://playground.hara-lang.org/",
   specs: "https://specs.hara-lang.org/",
   packages: "https://packages.hara-lang.org/",
-  identity: "https://id.hara-lang.org/"
+  identity: "https://id.hara-lang.org/",
+  post: "https://github.com/hara-lang/hara-world/issues/new?template=article-proposal.yml",
+  profile: "https://github.com/hara-lang/hara-world/issues/new?template=profile.yml"
 } as const;
 
 export const kindLabels = {
-  dispatch: "Dispatch",
-  syndicated: "Syndicated",
+  dispatch: "Post",
+  syndicated: "From the web",
   release: "Release",
   "field-note": "Field note"
 } as const;

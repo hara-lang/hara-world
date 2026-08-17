@@ -32,11 +32,16 @@ function githubClient(permissions = { contents: "write", pull_requests: "write" 
 
 const migratedDb = {
   async query() {
-    return { rows: [{ accounts: "hara_world.community_accounts", handoffs: "hara_world.community_identity_handoffs" }] };
+    return { rows: [{
+      accounts: "hara_world.community_accounts",
+      handoffs: "hara_world.community_identity_handoffs",
+      post_drafts: "hara_world.community_post_drafts",
+      post_events: "hara_world.community_post_events",
+    }] };
   },
 };
 
-test("actively proves Identity, database migrations, GitHub permissions, repository, and branch", async () => {
+test("actively proves Identity, post storage migrations, GitHub permissions, repository, and branch", async () => {
   const result = await checkWorldReadiness(new Request("https://world.hara-lang.org/.well-known/hara-world-readiness"), {
     env: ENV,
     now: NOW,
@@ -47,18 +52,24 @@ test("actively proves Identity, database migrations, GitHub permissions, reposit
   assert.equal(result.ready, true);
   assert.equal(result.checks.every((item) => item.ready), true);
   assert.equal(result.centralIssuer, "https://id.hara-lang.org");
+  assert.equal(result.checks.find((item) => item.name === "github-community-publisher").ready, true);
   assert.doesNotMatch(JSON.stringify(result), /hhhhhhhh|ssssssss|postgresql|PRIVATE KEY/);
 });
 
-test("fails closed for missing migrations or insufficient GitHub App permissions", async () => {
+test("fails closed for missing post migrations or insufficient GitHub App permissions", async () => {
   const result = await checkWorldReadiness(new Request("https://world.testing.hara-lang.org/.well-known/hara-world-readiness"), {
     env: ENV,
     now: NOW,
     fetchImpl: async () => identityDiscovery("https://id.testing.hara-lang.org", "https://world.testing.hara-lang.org"),
-    db: { async query() { return { rows: [{ accounts: null, handoffs: null }] }; } },
+    db: { async query() { return { rows: [{
+      accounts: "hara_world.community_accounts",
+      handoffs: "hara_world.community_identity_handoffs",
+      post_drafts: null,
+      post_events: null,
+    }] }; } },
     githubClient: githubClient({ contents: "read", pull_requests: "write" }),
   });
   assert.equal(result.ready, false);
-  assert.equal(result.checks.find((item) => item.name === "database").code, "community-migration-missing");
-  assert.equal(result.checks.find((item) => item.name === "github-profile-publisher").code, "github-permissions-insufficient");
+  assert.equal(result.checks.find((item) => item.name === "database").code, "community-post-migration-missing");
+  assert.equal(result.checks.find((item) => item.name === "github-community-publisher").code, "github-permissions-insufficient");
 });

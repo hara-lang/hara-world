@@ -26,13 +26,15 @@ test("World mounts central Identity in popup mode and clears stale local session
   assert.doesNotMatch([loader, sync].join("\n"), /HARA_GITHUB_OAUTH_CLIENT_SECRET|HARA_AUTH_SESSION_SECRET|HARA_WORLD_SESSION_SECRET|client_secret/i);
 });
 
-test("the account page uses the trusted World session for profile proposals", async () => {
+test("My World uses the trusted local session for profile and lifecycle proposals", async () => {
   const accountPage = await read("src/pages/me.astro");
   assert.match(accountPage, /\/api\/auth\/start\?returnTo=\/me/);
   assert.match(accountPage, /fetch\("\/api\/auth\/session"/);
-  assert.match(accountPage, /fetch\("\/api\/profile"/);
-  assert.match(accountPage, /Open draft profile PR/);
+  assert.match(accountPage, /api\("\/api\/profile"/);
+  assert.match(accountPage, /api\("\/api\/proposals"/);
+  assert.match(accountPage, /Submit profile for review/);
   assert.match(accountPage, /stored in Git history/);
+  assert.match(accountPage, /X-Hara-Request": "profile-proposal"/);
   assert.doesNotMatch(accountPage, /name="githubId"|name="githubLogin"|name="roles"/);
-  assert.doesNotMatch(accountPage, /HARA_WORLD_HANDOFF_SECRET|HARA_WORLD_SESSION_SECRET|HARA_WORLD_GITHUB_APP_PRIVATE_KEY/);
+  assert.doesNotMatch(accountPage, /HARA_WORLD_HANDOFF_SECRET|HARA_WORLD_SESSION_SECRET|HARA_WORLD_GITHUB_APP_PRIVATE_KEY|HARA_WORLD_GITHUB_WEBHOOK_SECRET/);
 });

@@ -1,0 +1,94 @@
+---
+import { getCollection, render, type CollectionEntry } from "astro:content";
+import SiteLayout from "../../layouts/SiteLayout.astro";
+
+export async function getStaticPaths() {
+  const agents = await getCollection("agents", ({ data }) => data.published);
+  return agents.map((agent) => ({
+    params: { id: agent.id },
+    props: { agent },
+  }));
+}
+
+const { agent } = Astro.props as { agent: CollectionEntry<"agents"> };
+const { Content } = await render(agent);
+const profiles = await getCollection("profiles", ({ data }) => data.published);
+const operatorProfile = profiles.find((profile) => profile.data.githubId === agent.data.operatorGithubId);
+const operatorUrl = operatorProfile
+  ? `/people/${operatorProfile.id}/`
+  : `https://github.com/${agent.data.operatorGithubLogin}`;
+const userLinkRel = "nofollow ugc noopener noreferrer";
+const statusLabel = {
+  experimental: "Experimental",
+  active: "Active",
+  paused: "Paused",
+  retired: "Retired",
+};
+---
+<SiteLayout title={agent.data.name} description={agent.data.summary} canonicalPath={`/agents/${agent.id}/`}>
+  <header class="page-hero agent-hero">
+    <div class="shell agent-hero__inner">
+      <div class="agent-identity-mark" aria-hidden="true">{agent.data.name.slice(0, 2).toUpperCase()}</div>
+      <div>
+        <p class="eyebrow">Agent / {agent.data.agentId}</p>
+        <h1>{agent.data.name}</h1>
+        <p class="lede">{agent.data.summary}</p>
+        <div class="hero-actions">
+          {agent.data.website && <a class="button button--primary" href={agent.data.website} rel={userLinkRel}>Open agent <span aria-hidden="true">↗</span></a>}
+          {agent.data.source && <a class="button" href={agent.data.source} rel={userLinkRel}>Source <span aria-hidden="true">↗</span></a>}
+          {agent.data.documentation && <a class="text-link" href={agent.data.documentation} rel={userLinkRel}>Documentation <span aria-hidden="true">↗</span></a>}
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <section class="section section--tight">
+    <div class="shell article-layout">
+      <div class="article-body">
+        <Content />
+        <div class="agent-trust-note">
+          <p class="eyebrow">Registration boundary</p>
+          <h2>Registered by a person, not authenticated as a machine.</h2>
+          <p>This record confirms that <strong>@{agent.data.operatorGithubLogin}</strong> submitted and maintains the public description. It does not prove that a remote process is currently running, grant that process Hara credentials, or endorse its outputs.</p>
+        </div>
+      </div>
+
+      <aside class="article-rail agent-rail" aria-label="Agent details">
+        <dl>
+          <dt>Status</dt><dd>{statusLabel[agent.data.status]}</dd>
+          <dt>Availability</dt><dd>{agent.data.availability}</dd>
+          <dt>Operation</dt><dd>{agent.data.operationMode}</dd>
+          <dt>Operator</dt><dd><a href={operatorUrl} rel={operatorProfile ? undefined : "noopener noreferrer"}>@{agent.data.operatorGithubLogin}</a></dd>
+          <dt>Verification</dt><dd>{agent.data.verification === "key-verified" ? "Reviewed key fingerprint" : "Operator claim"}</dd>
+          {agent.data.keyFingerprint && <><dt>Key fingerprint</dt><dd><code>{agent.data.keyFingerprint}</code></dd></>}
+          {agent.data.runtime && <><dt>Runtime</dt><dd>{agent.data.runtime}</dd></>}
+          <dt>Interfaces</dt><dd>{agent.data.interfaces.join(" · ") || "Not declared"}</dd>
+          <dt>Hara packages</dt><dd>{agent.data.haraPackages.join(" · ") || "Not declared"}</dd>
+          <dt>Registered</dt><dd>{agent.data.registeredAt.toLocaleDateString("en-AU", { timeZone: "Australia/Melbourne" })}</dd>
+          <dt>Updated</dt><dd>{agent.data.updatedAt.toLocaleDateString("en-AU", { timeZone: "Australia/Melbourne" })}</dd>
+        </dl>
+
+        {agent.data.capabilities.length > 0 && (
+          <div class="agent-capabilities">
+            <p class="eyebrow">Declared capabilities</p>
+            <div>{agent.data.capabilities.map((capability) => <span>{capability}</span>)}</div>
+          </div>
+        )}
+
+        {agent.data.attestations.map((attestation) => (
+          <a class="text-link" href={attestation.url} rel={userLinkRel}>{attestation.label} <span aria-hidden="true">↗</span></a>
+        ))}
+      </aside>
+    </div>
+  </section>
+
+  <style>
+    .agent-hero{background:linear-gradient(145deg,color-mix(in srgb,var(--hara-signal) 9%,transparent),transparent 58%)}
+    .agent-hero__inner{display:grid;grid-template-columns:112px minmax(0,1fr);align-items:start;gap:clamp(1.5rem,4vw,3rem)}
+    .agent-identity-mark{display:grid;place-items:center;width:112px;height:112px;border:1px solid var(--hara-line-strong);border-radius:32px;background:color-mix(in srgb,var(--hara-signal) 15%,var(--hara-surface-solid));font:760 1.2rem var(--hara-font-mono);letter-spacing:.1em;box-shadow:var(--hara-shadow)}
+    .agent-rail a{color:var(--hara-signal)}.agent-rail code{overflow-wrap:anywhere;font-size:.7rem}
+    .agent-capabilities{display:grid;gap:.7rem;margin-top:1.25rem;padding-top:1.25rem;border-top:1px solid var(--hara-line)}.agent-capabilities>div{display:flex;flex-wrap:wrap;gap:.4rem}.agent-capabilities span{padding:.3rem .55rem;border:1px solid var(--hara-line);border-radius:999px;color:var(--hara-muted);font-size:.7rem}
+    .agent-trust-note{margin-top:3rem;padding:1.35rem;border:1px solid var(--hara-line);border-radius:var(--hara-radius-md);background:color-mix(in srgb,var(--hara-signal) 7%,var(--hara-surface))}.agent-trust-note h2{font-size:1.25rem}.agent-trust-note p:last-child{margin:0;color:var(--hara-muted)}
+    @media(max-width:680px){.agent-hero__inner{grid-template-columns:1fr}.agent-identity-mark{width:80px;height:80px;border-radius:24px}}
+  </style>
+</SiteLayout>

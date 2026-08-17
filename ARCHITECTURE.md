@@ -2,36 +2,35 @@
 
 ## Product boundary
 
-Hara World is not a universal social-media dashboard. It is an editorial publication with an outbox.
+Hara World is the community and syndication layer for the Hara ecosystem.
+
+People may publish native community posts, maintain reviewed public profiles, work through shared lessons, or connect an RSS/Atom publication they already control. The public homepage is a chronological community stream that mixes those native and syndicated posts with clear provenance.
+
+Hara World is not a closed social network and does not require writers to surrender their own sites. Canonical ownership stays with the author: a native World post has a portable Markdown record, while a syndicated post points back to its canonical URL. Review protects attribution, relevance, permissions, and the shared feed; it is not meant to turn the community into a single editorial voice.
 
 ```text
-writers and feeds
-       │
-       ▼
-source registry ──► generated article PRs
-       │                    │
-       │                    ▼
-       └──────────────► editorial review
-                            │ merge
-                            ▼
-                    canonical article
-                            │
-           ┌────────────────┼─────────────────┐
-           ▼                ▼                 ▼
-       RSS / JSON       newsletter        release bundle
-                                                │
-                         ┌───────────────┬──────┼──────────────┐
-                         ▼               ▼      ▼              ▼
-                      Bluesky         Mastodon YouTube   managed publisher
+people ──────────────► native posts ───────┐
+  │                                         │
+  ├──────────────────► public profiles      ├──► community stream
+  │                                         │          │
+own sites ───────────► RSS / Atom intake ──┘          │
+                                                        ▼
+                                           web / RSS / JSON / OPML
+                                                        │
+                                      ┌─────────────────┴──────────────┐
+                                      ▼                                ▼
+                                weekly digest                    release outbox
 ```
 
-The canonical Markdown article is human-readable, diffable, portable, and independent of any distribution vendor.
+The community stream, people directory, and learning surfaces are the product centre. Newsletter, video, and social projections are downstream distribution mechanisms rather than the identity of the site.
 
 ## Four layers
 
-### 1. Publication
+### 1. Community publication
 
-Astro content collections render articles and expose RSS 2.0 and JSON Feed 1.1. The website carries provenance, labels, dates, corrections, licensing, and automation disclosures.
+Astro content collections render native and syndicated posts, public profiles, and lessons. Posts expose RSS 2.0 and JSON Feed 1.1; registered sources are also available as OPML. The website carries provenance, labels, dates, corrections, licensing, and automation disclosures.
+
+Native posts and profiles are portable Git-reviewed records. Syndicated entries preserve their source identity and canonical URL. The homepage presents all approved posts through one chronological community feed.
 
 ### 2. Intake
 
@@ -44,13 +43,15 @@ Astro content collections render articles and expose RSS 2.0 and JSON Feed 1.1. 
 - sanitises imported content into Markdown;
 - writes deterministic article filenames and fingerprints;
 - updates `registry/sync-state.json`;
-- leaves publication to a draft PR and editorial merge.
+- leaves inclusion in the community feed to a draft PR and review.
 
 The importer cannot infer permission. Rights live in the registry.
 
+Native community posts enter through the article proposal path and become portable Markdown records. Profiles follow the same reviewable model and are keyed by stable GitHub identity.
+
 ### 3. Release algebra
 
-`scripts/build-release.mjs` maps one approved article into a release directory. The release manifest separates article facts from channel policy:
+`scripts/build-release.mjs` maps one approved post into a release directory. The release manifest separates article facts from channel policy:
 
 ```json
 {
@@ -72,7 +73,7 @@ This is intentionally provider-independent. A new publisher consumes the release
 
 ### 4. Outbox
 
-Each publisher is a small credentialed adapter. It receives a release bundle and returns a receipt. Credentials never enter article content or the static site build.
+Each publisher is a small credentialed adapter. It receives a release bundle and returns a receipt. Credentials never enter post content or the static site build.
 
 Direct adapters:
 
@@ -91,7 +92,7 @@ Managed adapter:
 
 The vertical-video path is deterministic:
 
-1. article body is reduced to a short narration sequence;
+1. post body is reduced to a short narration sequence;
 2. a timed storyboard and SRT captions are generated;
 3. `sharp` renders material Hara frames from SVG;
 4. an optional TTS endpoint returns narration audio;
@@ -102,22 +103,27 @@ This first version favours typography, diagrams, code, and product captures over
 
 ## Trust model
 
-- **Merge is approval.** Feed polling is not approval.
+- **Merge is approval.** Feed polling and form submission are not approval.
+- **Canonical ownership is visible.** Syndicated posts retain attribution and point back to the author’s site.
 - **Publish is explicit.** Adapter scripts default to dry-run.
-- **Closed networks are not the source of truth.** Public posts point back to the canonical article.
+- **Closed networks are not the source of truth.** Public projections point back to the canonical post.
 - **Receipts are data.** Platform identifiers and URLs are written as structured files and can later be signed into Hestia.
-- **Automation is disclosed.** Generated copy, synthetic narration, and imported text are visible in article or release metadata.
+- **Automation is disclosed.** Generated copy, synthetic narration, and imported text are visible in post or release metadata.
 - **Rights are revocable.** Pausing a source stops future intake; corrections and takedowns are handled in the canonical record.
 
 ## Future modules
 
 The core should remain small. Likely add-ons are:
 
-- GitHub OAuth submission UI backed by issues or pull requests;
+- a first-party post composer backed by reviewed Markdown pull requests;
+- follows and topic-specific views derived from open feed data;
+- community prompts, replies, and lightweight reactions without creating a closed content silo;
+- an expanded “Who’s using Hara?” directory organised by projects and use cases;
+- an authored lesson stream alongside the existing koan catalogue;
 - editorial queue and preview dashboard;
-- digest composer for multi-article weekly editions;
+- digest composer for multi-post weekly editions;
 - long-form Kernel Sessions renderer;
-- analytics importer using platform receipts rather than tracking pixels in articles;
+- analytics importer using platform receipts rather than tracking pixels in posts;
 - Hestia-signed release manifests and publication receipts;
 - multilingual projections with human review;
 - podcast RSS generated from approved narration editions.

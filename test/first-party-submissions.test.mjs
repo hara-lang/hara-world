@@ -26,7 +26,8 @@ test("profile calls-to-action stay on Hara World and use the existing profile AP
   assert.doesNotMatch(people, /issues\/new\?template=profile/);
   assert.match(site, /profile: "\/me"/);
   assert.doesNotMatch(site, /issues\/new\?template/);
-  assert.match(me, /fetch\("\/api\/profile"/);
+  assert.match(me, /api\("\/api\/profile"/);
+  assert.match(me, /X-Hara-Request": "profile-proposal"/);
   assert.match(home, /href=\{SITE\.profile\}/);
 });
 

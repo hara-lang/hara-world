@@ -1,12 +1,28 @@
-# Authentication, account, and profile publication boundaries require explicit review.
+# Authentication and community publication boundaries require explicit review.
 /netlify/functions/world-auth.mjs @hoebat
 /netlify/functions/world-readiness.mjs @hoebat
 /netlify/functions/profile-proposal.mjs @hoebat
+/netlify/functions/agent-proposal.mjs @hoebat
+/netlify/functions/community-posts.mjs @hoebat
+/netlify/functions/source-proposal.mjs @hoebat
 /netlify/functions/_shared/world-auth.mjs @hoebat
 /netlify/functions/_shared/community-accounts.mjs @hoebat
 /netlify/functions/_shared/github-app.mjs @hoebat
 /netlify/functions/_shared/profile-*.mjs @hoebat
+/netlify/functions/_shared/agent-*.mjs @hoebat
+/netlify/functions/_shared/community-posts.mjs @hoebat
+/netlify/functions/_shared/post-proposal.mjs @hoebat
+/netlify/functions/_shared/source-proposal.mjs @hoebat
+/netlify/functions/_shared/feed-probe.mjs @hoebat
 /database/migrations/*community* @hoebat
 /content/profiles/** @hoebat
+/content/agents/** @hoebat
+/content/articles/community/** @hoebat
 /registry/profiles.json @hoebat
+/registry/agents.json @hoebat
+/registry/sources.json @hoebat
+/scripts/lib/source-registry.mjs @hoebat
+/scripts/validate-profile-pr-scope.mjs @hoebat
+/scripts/validate-source-pr-scope.mjs @hoebat
 /.github/workflows/profile-proposal.yml @hoebat
+/.github/workflows/source-proposal.yml @hoebat

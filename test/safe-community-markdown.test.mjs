@@ -36,16 +36,20 @@ test("allows relative and HTTPS links while marking external user content", () =
   assert.equal(tree.children[3].tagName, "span");
 });
 
-test("applies the renderer allowlist to profiles and native community posts only", () => {
+test("applies the renderer allowlist to profiles, agents, and native community posts only", () => {
   const transform = safeCommunityMarkdown();
   const profileTree = { type: "root", children: [{ type: "raw", value: "<b>unsafe</b>" }] };
+  const agentTree = { type: "root", children: [{ type: "raw", value: "<b>unsafe agent</b>" }] };
   const communityTree = { type: "root", children: [{ type: "raw", value: "<b>unsafe post</b>" }] };
   const editorialTree = { type: "root", children: [{ type: "raw", value: "<b>editorial</b>" }] };
   transform(profileTree, { path: "/repo/content/profiles/chris.md" });
+  transform(agentTree, { path: "/repo/content/agents/atlas.md" });
   transform(communityTree, { path: "/repo/content/articles/community/2026/08/6685337-note.md" });
   transform(editorialTree, { path: "/repo/content/articles/2026-08-06-editorial.md" });
   assert.deepEqual(profileTree.children, []);
+  assert.deepEqual(agentTree.children, []);
   assert.deepEqual(communityTree.children, []);
   assert.equal(editorialTree.children.length, 1);
+  assert.equal(isCommunityDocument({ data: { astro: { frontmatter: { operatorGithubId: "6685337", agentId: "agent:github:6685337:atlas" } } } }), true);
   assert.equal(isCommunityDocument({ data: { astro: { frontmatter: { authorGithubId: "6685337", postType: "note" } } } }), true);
 });

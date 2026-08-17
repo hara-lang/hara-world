@@ -12,8 +12,8 @@ const profiles = (await getCollection("profiles", ({ data }) => data.published))
       <h1>The people building Hara.</h1>
       <p class="lede">Profiles are public, portable records reviewed through Git. GitHub identifies the person; the profile describes how they participate in the Hara world.</p>
       <div class="hero-actions">
-        <a class="button" href="https://github.com/hara-lang/hara-world/issues/new?template=profile.yml">Submit a profile</a>
-        <a class="text-link" href="/me">View your signed-in identity</a>
+        <a class="button button--primary" href="/me">Create or edit your profile</a>
+        <a class="text-link" href="/agents/register">Register an agent</a>
       </div>
     </div>
   </header>
@@ -39,8 +39,8 @@ const profiles = (await getCollection("profiles", ({ data }) => data.published))
         <div class="provenance-note">
           <p class="eyebrow">Directory opening</p>
           <h2>No public profiles have been merged yet.</h2>
-          <p>The first profiles will appear after their reviewed Markdown records are merged into the World repository.</p>
-          <a class="button" href="https://github.com/hara-lang/hara-world/issues/new?template=profile.yml">Propose the first profile</a>
+          <p>The first profiles will appear after an authenticated community member uses the World profile form and its reviewed Markdown proposal is merged.</p>
+          <a class="button button--primary" href="/me">Create the first profile</a>
         </div>
       )}
     </div>

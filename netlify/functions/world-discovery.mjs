@@ -22,10 +22,12 @@ export function discoveryPayload(request, env = {}) {
     gitPublisherConfigured = true;
   } catch {}
   const databaseConfigured = Boolean(envValue(env, "DATABASE_URL"));
+  const webhookConfigured = envValue(env, "HARA_WORLD_GITHUB_WEBHOOK_SECRET").length >= 32;
+  const lifecycleConfigured = authConfigured && gitPublisherConfigured && databaseConfigured && webhookConfigured;
   return {
     issuer,
     centralIssuer,
-    configured: authConfigured && gitPublisherConfigured && databaseConfigured,
+    configured: lifecycleConfigured,
     readinessEndpoint: `${issuer}/.well-known/hara-world-readiness`,
     authentication: {
       configured: authConfigured,
@@ -40,7 +42,7 @@ export function discoveryPayload(request, env = {}) {
     profiles: {
       configured: gitPublisherConfigured,
       endpoint: `${issuer}/api/profile`,
-      editor: `${issuer}/me`,
+      editor: `${issuer}/me#profile`,
       index: "registry/profiles.json",
       management: "git-pull-request",
       publicationBoundary: "merge",
@@ -78,6 +80,20 @@ export function discoveryPayload(request, env = {}) {
       composer: `${issuer}/post`,
       draftAuthority: "neon-postgresql",
       publicationAuthority: "git-merge",
+    },
+    proposals: {
+      configured: lifecycleConfigured,
+      dashboard: `${issuer}/me`,
+      endpoint: `${issuer}/api/proposals`,
+      reconcileEndpoint: `${issuer}/api/proposals/reconcile`,
+      reviewQueue: `${issuer}/review`,
+      reviewEndpoint: `${issuer}/api/review/proposals`,
+      webhookEndpoint: `${issuer}/api/github/events`,
+      webhookConfigured,
+      authority: "github-pull-request",
+      publicationBoundary: "merge",
+      deliveryDeduplication: true,
+      reconciliationFallback: true,
     },
     database: {
       configured: databaseConfigured,

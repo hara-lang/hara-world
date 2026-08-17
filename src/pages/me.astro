@@ -1,55 +1,84 @@
 ---
 import SiteLayout from "../layouts/SiteLayout.astro";
 ---
-<SiteLayout title="Account" description="Your trusted Hara World session and Git-reviewed community profile.">
-  <header class="page-hero">
+<SiteLayout title="My World" description="Your Hara World identity, proposals, publications, agents, feeds, lessons, and profile.">
+  <header class="page-hero my-world-hero">
     <div class="shell">
-      <p class="eyebrow">Community identity / trusted handoff</p>
-      <h1>Your Hara World account.</h1>
-      <p class="lede">GitHub sign-in remains centralized at Hara Identity. World exchanges a short-lived, PKCE-bound code for its own host-only session before it accepts a profile proposal.</p>
+      <p class="eyebrow">Community account / proposal lifecycle</p>
+      <h1>My World.</h1>
+      <p class="lede">Write, register, and follow everything you contribute to Hara World without treating GitHub as the user interface. Git still holds the review history; this page tells you what is waiting, changing, approved, and published.</p>
+      <div class="hero-actions">
+        <a class="button button--primary" href="/post">Write a post</a>
+        <a class="button" href="/agents/register">Register an agent</a>
+        <a class="button" href="/submit">Add a feed</a>
+        <a class="text-link" href="#profile">Edit profile <span aria-hidden="true">↓</span></a>
+      </div>
     </div>
   </header>
 
   <section class="section section--tight">
     <div class="shell account-stack">
-      <article class="account-panel">
+      <article class="account-panel identity-panel">
         <div class="section-heading">
           <div>
-            <p class="eyebrow">Central identity</p>
-            <h2 data-world-account-title>Checking Identity…</h2>
+            <p class="eyebrow">Identity and World session</p>
+            <h2 data-world-session-title>Checking World…</h2>
           </div>
-          <p data-world-account-copy>The shared account control is reading the central GitHub-backed Hara session.</p>
+          <p data-world-session-copy>World is checking for its audience-bound local session.</p>
         </div>
         <dl class="definition-list" data-world-account-details hidden>
           <dt>Provider</dt><dd>GitHub through <code>id.hara-lang.org</code></dd>
           <dt>Stable subject</dt><dd data-world-account-id>—</dd>
           <dt>Current login</dt><dd data-world-account-login>—</dd>
-          <dt>Authority</dt><dd>Human identity only. Package, specification, repository, and editorial grants remain separate.</dd>
+          <dt>Authority</dt><dd>Human identity only. Review, packages, repositories, agents, and publication remain separate capabilities.</dd>
         </dl>
-      </article>
-
-      <article class="account-panel">
-        <div class="section-heading">
-          <div>
-            <p class="eyebrow">World session</p>
-            <h2 data-world-session-title>Checking World…</h2>
-          </div>
-          <p data-world-session-copy>World is checking for its audience-bound local session.</p>
-        </div>
         <div class="hero-actions">
-          <a class="button" href="/api/auth/start?returnTo=/me" data-world-authorize hidden>Enable profile editing</a>
+          <a class="button button--primary" href="/api/auth/start?returnTo=/me" data-world-authorize hidden>Enable My World</a>
           <button class="button button--quiet" type="button" data-world-logout hidden>End World session</button>
+          <a class="text-link" href="/review" data-review-link hidden>Open review queue <span aria-hidden="true">→</span></a>
         </div>
         <p class="form-status" data-world-session-status aria-live="polite"></p>
       </article>
 
-      <article class="account-panel" data-profile-editor hidden>
+      <article class="account-panel proposal-dashboard" data-proposal-dashboard hidden>
+        <div class="section-heading proposal-dashboard__heading">
+          <div>
+            <p class="eyebrow">Posts / profiles / agents / feeds</p>
+            <h2>Your proposal activity.</h2>
+          </div>
+          <div class="proposal-dashboard__controls">
+            <button class="button" type="button" data-reconcile>Refresh from GitHub</button>
+          </div>
+        </div>
+
+        <div class="proposal-counts" aria-label="Proposal totals">
+          <div><strong data-count-open>0</strong><span>Open</span></div>
+          <div><strong data-count-changes>0</strong><span>Changes requested</span></div>
+          <div><strong data-count-approved>0</strong><span>Approved</span></div>
+          <div><strong data-count-merged>0</strong><span>Published</span></div>
+          <div><strong data-count-failing>0</strong><span>Checks failing</span></div>
+        </div>
+
+        <div class="proposal-list" data-proposal-list></div>
+        <div class="proposal-empty" data-proposal-empty hidden>
+          <p class="eyebrow">No proposals yet</p>
+          <h3>Start with one small contribution.</h3>
+          <p>Write a working note, create your public profile, register an agent, or connect a publication feed. World will keep the resulting review state here.</p>
+          <div class="hero-actions">
+            <a class="button button--primary" href="/post">Write a post</a>
+            <a class="button" href="#profile">Create profile</a>
+          </div>
+        </div>
+        <p class="form-status" data-proposal-status aria-live="polite"></p>
+      </article>
+
+      <article class="account-panel" id="profile" data-profile-editor hidden>
         <div class="section-heading">
           <div>
-            <p class="eyebrow">Git-reviewed profile</p>
-            <h2>Propose your public profile.</h2>
+            <p class="eyebrow">Public identity</p>
+            <h2>Create or edit your profile.</h2>
           </div>
-          <p>Your stable GitHub ID, current login, reviewed roles, and existing verified links are supplied server-side. The form cannot override them.</p>
+          <p>Your stable GitHub ID, current login, reviewed roles, and verified links are supplied server-side. The form can change only your public descriptive fields.</p>
         </div>
 
         <form class="profile-form" data-profile-form>
@@ -85,119 +114,242 @@ import SiteLayout from "../layouts/SiteLayout.astro";
           </label>
           <label class="profile-form__wide profile-consent">
             <input name="consent" type="checkbox" required />
-            <span>I understand that the proposed profile is public, stored in Git history, and published only after review and merge.</span>
+            <span>I understand that the proposal and merged profile are public, stored in Git history, and published only after review.</span>
           </label>
           <div class="profile-form__wide hero-actions">
-            <button class="button" type="submit" data-profile-submit>Open draft profile PR</button>
-            <a class="text-link" href="/people">View the contributor directory</a>
+            <button class="button button--primary" type="submit" data-profile-submit>Submit profile for review</button>
+            <a class="text-link" href="/people">View people</a>
           </div>
           <p class="profile-form__wide form-status" data-profile-status aria-live="polite"></p>
+          <p class="profile-form__wide form-status" data-profile-proposal hidden></p>
         </form>
       </article>
 
       <div class="policy-grid account-boundaries">
-        <article class="policy-card">
-          <h3>One-time exchange</h3>
-          <p>The browser carries only a short-lived authorization code bound to a PKCE verifier. World exchanges it directly with Identity.</p>
-        </article>
-        <article class="policy-card">
-          <h3>Separate session key</h3>
-          <p>World signs its own two-hour host-only cookie. It never receives the central Identity session-signing secret.</p>
-        </article>
-        <article class="policy-card">
-          <h3>Git remains management</h3>
-          <p>Profile edits create draft pull requests through a narrowly scoped GitHub App. Merge remains the publication event.</p>
-        </article>
-        <article class="policy-card">
-          <h3>Consent remains separate</h3>
-          <p>A GitHub identity is not automatically linked to a newsletter email or to package-publishing authority.</p>
-        </article>
+        <article class="policy-card"><h3>One dashboard</h3><p>Posts, profiles, agents, and sources use one lifecycle vocabulary even though their public records remain separate.</p></article>
+        <article class="policy-card"><h3>Git remains review</h3><p>World reads GitHub review, check, close, and merge events. It does not replace the canonical pull-request history.</p></article>
+        <article class="policy-card"><h3>Webhook plus repair</h3><p>Signed events update quickly; explicit reconciliation repairs missed or delayed deliveries from GitHub.</p></article>
+        <article class="policy-card"><h3>Merge remains authority</h3><p>A dashboard state never publishes content by itself. The reviewed merge is still the publication or registration event.</p></article>
       </div>
     </div>
   </section>
 
   <script>
-    const accountTitle = document.querySelector("[data-world-account-title]");
-    const accountCopy = document.querySelector("[data-world-account-copy]");
-    const accountDetails = document.querySelector("[data-world-account-details]");
-    const accountId = document.querySelector("[data-world-account-id]");
-    const accountLogin = document.querySelector("[data-world-account-login]");
-    const sessionTitle = document.querySelector("[data-world-session-title]");
-    const sessionCopy = document.querySelector("[data-world-session-copy]");
-    const sessionStatus = document.querySelector("[data-world-session-status]");
-    const authorize = document.querySelector("[data-world-authorize]");
-    const logout = document.querySelector("[data-world-logout]");
-    const editor = document.querySelector("[data-profile-editor]");
-    const form = document.querySelector("[data-profile-form]");
-    const profileStatus = document.querySelector("[data-profile-status]");
-    const submit = document.querySelector("[data-profile-submit]");
+    const $ = (selector) => document.querySelector(selector);
+    const sessionTitle = $("[data-world-session-title]");
+    const sessionCopy = $("[data-world-session-copy]");
+    const sessionStatus = $("[data-world-session-status]");
+    const accountDetails = $("[data-world-account-details]");
+    const accountId = $("[data-world-account-id]");
+    const accountLogin = $("[data-world-account-login]");
+    const authorize = $("[data-world-authorize]");
+    const logout = $("[data-world-logout]");
+    const reviewLink = $("[data-review-link]");
+    const dashboard = $("[data-proposal-dashboard]");
+    const proposalList = $("[data-proposal-list]");
+    const proposalEmpty = $("[data-proposal-empty]");
+    const proposalStatus = $("[data-proposal-status]");
+    const reconcile = $("[data-reconcile]");
+    const editor = $("[data-profile-editor]");
+    const form = $("[data-profile-form]");
+    const profileStatus = $("[data-profile-status]");
+    const profileProposal = $("[data-profile-proposal]");
+    const profileSubmit = $("[data-profile-submit]");
+    let initialised = false;
 
-    const renderCentral = (session) => {
-      const profile = session?.profile || session?.user;
-      const signedIn = Boolean(session?.authenticated && profile?.id && profile?.login);
-      if (!accountTitle || !accountCopy || !accountDetails || !accountId || !accountLogin) return;
-      if (signedIn) {
-        accountTitle.textContent = `Signed in as @${profile.login}`;
-        accountCopy.textContent = "This central identity can be handed to World without exposing the GitHub provider token or central session key.";
-        accountId.textContent = `github:${profile.id}`;
-        accountLogin.textContent = `@${profile.login}`;
-        accountDetails.hidden = false;
-      } else {
-        accountTitle.textContent = session?.configured === false ? "GitHub sign-in is not configured" : "Not signed in";
-        accountCopy.textContent = session?.configured === false
-          ? "The central Identity deployment is reachable, but OAuth or its session secret is not configured."
-          : "Use the Sign in control in the header, then establish a World session below.";
-        accountDetails.hidden = true;
+    const stateLabels = {
+      draft: "Draft",
+      submitted: "Waiting for review",
+      "changes-requested": "Changes requested",
+      approved: "Approved",
+      merged: "Published",
+      closed: "Closed",
+      withdrawn: "Withdrawn",
+      error: "Needs attention",
+    };
+    const typeLabels = { post: "Post", profile: "Profile", agent: "Agent", source: "Feed" };
+    const editorPaths = { post: "/post", profile: "/me#profile", agent: "/agents/register", source: "/submit" };
+
+    const api = async (path, options = {}) => {
+      const response = await fetch(path, {
+        credentials: "include",
+        cache: "no-store",
+        ...options,
+        headers: { Accept: "application/json", ...(options.headers || {}) },
+      });
+      const body = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        const error = new Error(body?.error?.message || `World returned HTTP ${response.status}.`);
+        error.status = response.status;
+        error.code = body?.error?.code;
+        throw error;
+      }
+      return body;
+    };
+
+    const setCount = (selector, value) => {
+      const node = $(selector);
+      if (node) node.textContent = String(value ?? 0);
+    };
+
+    const renderCounts = (counts = {}) => {
+      setCount("[data-count-open]", counts.open);
+      setCount("[data-count-changes]", counts.changesRequested);
+      setCount("[data-count-approved]", counts.approved);
+      setCount("[data-count-merged]", counts.merged);
+      setCount("[data-count-failing]", counts.failing);
+    };
+
+    const proposalAction = (href, label, className = "text-link") => {
+      const link = document.createElement("a");
+      link.href = href;
+      link.className = className;
+      link.textContent = label;
+      if (href.startsWith("https://github.com/")) {
+        link.target = "_blank";
+        link.rel = "noopener noreferrer";
+      }
+      return link;
+    };
+
+    const renderProposal = (proposal) => {
+      const card = document.createElement("article");
+      card.className = `proposal-card proposal-card--${proposal.state}`;
+
+      const header = document.createElement("header");
+      const identity = document.createElement("div");
+      const eyebrow = document.createElement("p");
+      eyebrow.className = "eyebrow";
+      eyebrow.textContent = `${typeLabels[proposal.proposalType] || proposal.proposalType} / PR #${proposal.pullRequestNumber}`;
+      const title = document.createElement("h3");
+      title.textContent = proposal.resourceTitle;
+      identity.append(eyebrow, title);
+      const state = document.createElement("span");
+      state.className = `proposal-state proposal-state--${proposal.state}`;
+      state.textContent = stateLabels[proposal.state] || proposal.state;
+      header.append(identity, state);
+
+      const meta = document.createElement("dl");
+      const facts = [
+        ["Review", proposal.reviewState || "pending"],
+        ["Checks", proposal.checksState || "unknown"],
+        ["Updated", proposal.updatedAt ? new Date(proposal.updatedAt).toLocaleString() : "—"],
+      ];
+      facts.forEach(([label, value]) => {
+        const dt = document.createElement("dt");
+        dt.textContent = label;
+        const dd = document.createElement("dd");
+        dd.textContent = value;
+        meta.append(dt, dd);
+      });
+
+      const actions = document.createElement("footer");
+      const editorPath = editorPaths[proposal.proposalType];
+      if (!["merged", "closed", "withdrawn"].includes(proposal.state) && editorPath) {
+        actions.append(proposalAction(editorPath, "Continue editing"));
+      }
+      if (proposal.state === "merged" && proposal.publicPath) {
+        actions.append(proposalAction(proposal.publicPath, "Open published record", "button"));
+      }
+      actions.append(proposalAction(proposal.pullRequestUrl, "Technical review ↗"));
+      card.append(header, meta, actions);
+      return card;
+    };
+
+    const renderProposals = (body) => {
+      proposalList.replaceChildren();
+      const proposals = Array.isArray(body?.proposals) ? body.proposals : [];
+      proposalEmpty.hidden = proposals.length > 0;
+      proposals.forEach((proposal) => proposalList.append(renderProposal(proposal)));
+      renderCounts(body?.counts || {});
+    };
+
+    const loadProposals = async ({ reconcileNow = false } = {}) => {
+      if (!proposalStatus) return;
+      proposalStatus.textContent = reconcileNow ? "Refreshing proposal state from GitHub…" : "Loading proposal activity…";
+      const body = await api(reconcileNow ? "/api/proposals/reconcile" : "/api/proposals", reconcileNow ? {
+        method: "POST",
+        headers: { "X-Hara-Request": "proposal-reconcile" },
+      } : {});
+      renderProposals(body);
+      const failures = Array.isArray(body.reconciled) ? body.reconciled.filter((item) => !item.ok).length : 0;
+      proposalStatus.textContent = reconcileNow
+        ? failures ? `${failures} proposal${failures === 1 ? "" : "s"} could not be refreshed; existing state is still shown.` : "Proposal state refreshed from GitHub."
+        : "Lifecycle state is updated by signed GitHub events and can be refreshed manually.";
+    };
+
+    const checkReviewAccess = async () => {
+      try {
+        await api("/api/review/proposals");
+        reviewLink.hidden = false;
+      } catch {
+        reviewLink.hidden = true;
       }
     };
 
     const loadProfile = async () => {
       if (!form || !profileStatus) return;
-      const response = await fetch("/api/profile", { credentials: "include", headers: { Accept: "application/json" }, cache: "no-store" });
-      const body = await response.json().catch(() => ({}));
-      if (!response.ok) throw new Error(body?.error?.message || "The profile registry could not be loaded.");
+      const body = await api("/api/profile");
       const profile = body.profile;
       for (const name of ["slug", "displayName", "summary", "location", "website", "bio"]) {
-        const field = form.elements.namedItem(name);
-        if (field) field.value = profile?.[name] ?? "";
+        const input = form.elements.namedItem(name);
+        if (input) input.value = profile?.[name] ?? "";
       }
       const interests = form.elements.namedItem("interests");
       if (interests) interests.value = Array.isArray(profile?.interests) ? profile.interests.join(", ") : "";
       const slug = form.elements.namedItem("slug");
       if (slug) slug.readOnly = Boolean(profile?.exists);
       profileStatus.textContent = profile?.exists
-        ? `Editing the Git-reviewed profile at ${profile.path}. Reviewed roles are preserved.`
-        : "No public profile exists yet. Submitting will create a draft pull request.";
+        ? `Editing the merged profile at ${profile.path}. Reviewed roles and links are preserved.`
+        : "No merged profile exists yet. Submission will create a review proposal.";
     };
 
-    const renderWorld = async (session) => {
+    const renderSession = async (session) => {
       const signedIn = Boolean(session?.authenticated && session?.profile?.id);
-      if (!sessionTitle || !sessionCopy || !authorize || !logout || !editor || !sessionStatus) return;
       authorize.hidden = signedIn || session?.configured === false;
       logout.hidden = !signedIn;
+      dashboard.hidden = !signedIn;
       editor.hidden = !signedIn;
+      accountDetails.hidden = !signedIn;
       if (signedIn) {
-        sessionTitle.textContent = `World session active for @${session.profile.login}`;
-        sessionCopy.textContent = `Host-only World access expires at ${new Date(session.profile.expiresAt).toLocaleString()}.`;
-        sessionStatus.textContent = "Profile proposals are now authorized by the server-verified GitHub identity.";
-        await loadProfile().catch((error) => { if (profileStatus) profileStatus.textContent = error.message; });
+        sessionTitle.textContent = `Signed in as @${session.profile.login}`;
+        sessionCopy.textContent = `World access expires at ${new Date(session.profile.expiresAt).toLocaleString()}.`;
+        sessionStatus.textContent = "Your server-verified identity can create proposals; each proposal still passes through review and merge.";
+        accountId.textContent = `github:${session.profile.id}`;
+        accountLogin.textContent = `@${session.profile.login}`;
+        await Promise.allSettled([loadProfile(), loadProposals(), checkReviewAccess()]);
       } else {
-        sessionTitle.textContent = session?.configured === false ? "World handoff is not configured" : "No World session";
+        sessionTitle.textContent = session?.configured === false ? "World is not configured" : "Sign in to open My World";
         sessionCopy.textContent = session?.configured === false
-          ? "World still needs its handoff, session, and GitHub App deployment secrets."
-          : "Enable profile editing to exchange the central identity for a local World session.";
+          ? "World still needs its handoff, database, GitHub App, lifecycle migration, and webhook deployment configuration."
+          : "Use Hara Identity to establish a local World session.";
         sessionStatus.textContent = "The central header identity alone cannot authorize World writes.";
+        reviewLink.hidden = true;
       }
     };
 
     const refreshWorld = async () => {
       const response = await fetch("/api/auth/session", { credentials: "include", headers: { Accept: "application/json" }, cache: "no-store" });
       const body = await response.json().catch(() => ({ authenticated: false, configured: false }));
-      await renderWorld(body);
+      await renderSession(body);
       return body;
     };
 
-    addEventListener("hara:identity-change", (event) => renderCentral(event.detail));
+    addEventListener("hara:identity-change", (event) => {
+      const profile = event.detail?.profile || event.detail?.user;
+      if (event.detail?.authenticated && profile?.id && profile?.login) {
+        accountId.textContent = `github:${profile.id}`;
+        accountLogin.textContent = `@${profile.login}`;
+      }
+    });
+
+    reconcile?.addEventListener("click", async () => {
+      reconcile.disabled = true;
+      try { await loadProposals({ reconcileNow: true }); }
+      catch (error) { proposalStatus.textContent = error.message; }
+      finally { reconcile.disabled = false; }
+    });
+
     logout?.addEventListener("click", async () => {
       logout.disabled = true;
       await fetch("/api/auth/logout", {
@@ -211,9 +363,11 @@ import SiteLayout from "../layouts/SiteLayout.astro";
 
     form?.addEventListener("submit", async (event) => {
       event.preventDefault();
-      if (!profileStatus || !submit) return;
-      submit.disabled = true;
-      profileStatus.textContent = "Preparing a Git-reviewed profile proposal…";
+      if (!profileStatus || !profileSubmit) return;
+      profileSubmit.disabled = true;
+      profileProposal.hidden = true;
+      profileProposal.replaceChildren();
+      profileStatus.textContent = "Preparing the Git-reviewed profile proposal…";
       const data = new FormData(form);
       const payload = {
         slug: data.get("slug"),
@@ -226,59 +380,51 @@ import SiteLayout from "../layouts/SiteLayout.astro";
         consent: data.get("consent") === "on",
       };
       try {
-        const response = await fetch("/api/profile", {
+        const body = await api("/api/profile", {
           method: "POST",
-          credentials: "include",
-          headers: {
-            Accept: "application/json",
-            "Content-Type": "application/json",
-            "X-Hara-Request": "profile-proposal",
-          },
+          headers: { "Content-Type": "application/json", "X-Hara-Request": "profile-proposal" },
           body: JSON.stringify(payload),
         });
-        const body = await response.json().catch(() => ({}));
-        if (!response.ok) throw new Error(body?.error?.message || "The profile proposal could not be created.");
         if (body.unchanged) {
-          profileStatus.textContent = "The profile already matches the reviewed Git record; no pull request was needed.";
+          profileStatus.textContent = "The profile already matches the reviewed record; no new proposal was needed.";
         } else {
-          profileStatus.innerHTML = "Draft pull request created: ";
-          const link = document.createElement("a");
-          link.href = body.pullRequestUrl;
-          link.target = "_blank";
-          link.rel = "noopener noreferrer";
-          link.textContent = `#${body.number}`;
-          profileStatus.append(link);
+          profileStatus.textContent = body.lifecycleRecorded === false
+            ? "The GitHub proposal was prepared, but its dashboard state could not yet be recorded. Refresh after the lifecycle migration is available."
+            : "Profile proposal submitted. Its review state now appears above.";
+          profileProposal.hidden = false;
+          profileProposal.replaceChildren("Technical review: ");
+          profileProposal.append(proposalAction(body.pullRequestUrl, `GitHub PR #${body.number}`));
         }
+        const consent = form.elements.namedItem("consent");
+        if (consent) consent.checked = false;
+        await loadProposals().catch(() => {});
       } catch (error) {
         profileStatus.textContent = error.message;
       } finally {
-        submit.disabled = false;
+        profileSubmit.disabled = false;
       }
     });
 
     const initialise = () => {
+      if (initialised) return;
+      initialised = true;
       const query = new URLSearchParams(location.search);
-      if (query.get("auth_error") && sessionStatus) sessionStatus.textContent = query.get("auth_error");
-      globalThis.HaraIdentity?.refresh?.().then(renderCentral).catch(() => renderCentral(null));
-      refreshWorld().catch(() => renderWorld({ authenticated: false, configured: false }));
+      if (query.get("auth_error")) sessionStatus.textContent = query.get("auth_error");
+      refreshWorld().catch(() => renderSession({ authenticated: false, configured: false }));
     };
+
     document.addEventListener("astro:page-load", initialise);
     if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", initialise, { once: true });
     else initialise();
   </script>
 
   <style>
-    .account-stack { display: grid; gap: 1.25rem; }
-    .account-panel { padding: clamp(1.1rem, 2vw, 1.75rem); border: 1px solid var(--hara-line); background: color-mix(in srgb, var(--hara-surface) 84%, transparent); }
-    .profile-form { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; }
-    .profile-form label { display: grid; gap: .45rem; color: var(--hara-text); font-weight: 620; }
-    .profile-form input, .profile-form textarea { width: 100%; padding: .75rem .8rem; border: 1px solid var(--hara-line); background: var(--hara-abyss); color: var(--hara-text); font: inherit; }
-    .profile-form input:focus-visible, .profile-form textarea:focus-visible { outline: 2px solid var(--hara-signal); outline-offset: 2px; }
-    .profile-form small, .form-status { color: var(--hara-text-muted); font-weight: 400; line-height: 1.55; }
-    .profile-form__wide { grid-column: 1 / -1; }
-    .profile-consent { grid-template-columns: auto 1fr; align-items: start; }
-    .profile-consent input { width: 1rem; margin-top: .25rem; }
-    .button--quiet { background: transparent; }
-    @media (max-width: 720px) { .profile-form { grid-template-columns: 1fr; } .profile-form__wide { grid-column: auto; } }
+    .my-world-hero{background:linear-gradient(145deg,color-mix(in srgb,var(--hara-signal) 8%,transparent),transparent 56%)}
+    .account-stack{display:grid;gap:1.25rem}.account-panel{padding:clamp(1.1rem,2vw,1.75rem);border:1px solid var(--hara-line);background:color-mix(in srgb,var(--hara-surface) 84%,transparent)}.button--quiet{background:transparent}
+    .proposal-dashboard__heading{align-items:flex-end}.proposal-dashboard__controls{display:flex;gap:.7rem}.proposal-counts{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));margin-bottom:1.25rem;border-top:1px solid var(--hara-line);border-left:1px solid var(--hara-line)}.proposal-counts>div{display:grid;gap:.25rem;padding:1rem;border-right:1px solid var(--hara-line);border-bottom:1px solid var(--hara-line)}.proposal-counts strong{font-size:1.65rem}.proposal-counts span{color:var(--hara-muted);font-size:.72rem;text-transform:uppercase;letter-spacing:.06em}
+    .proposal-list{display:grid;gap:.75rem}.proposal-card{display:grid;gap:1rem;padding:1rem;border:1px solid var(--hara-line);border-left:4px solid var(--hara-line-strong);background:var(--hara-surface-solid)}.proposal-card--changes-requested,.proposal-card--error{border-left-color:#c86d3c}.proposal-card--approved{border-left-color:var(--hara-signal)}.proposal-card--merged{border-left-color:#419b68}.proposal-card header{display:flex;align-items:flex-start;justify-content:space-between;gap:1rem}.proposal-card h3{margin:0;font-size:1.1rem}.proposal-card .eyebrow{margin-bottom:.35rem}.proposal-state{padding:.32rem .55rem;border:1px solid var(--hara-line);border-radius:999px;color:var(--hara-muted);font:650 .62rem var(--hara-font-mono);text-transform:uppercase;white-space:nowrap}.proposal-state--changes-requested,.proposal-state--error{color:#c86d3c}.proposal-state--approved,.proposal-state--merged{color:var(--hara-signal)}.proposal-card dl{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:.65rem;margin:0}.proposal-card dt{color:var(--hara-faint);font:650 .62rem var(--hara-font-mono);text-transform:uppercase}.proposal-card dd{margin:0;color:var(--hara-muted);font-size:.78rem}.proposal-card footer{display:flex;align-items:center;flex-wrap:wrap;gap:1rem;padding-top:.8rem;border-top:1px solid var(--hara-line)}.proposal-empty{padding:2rem;border:1px dashed var(--hara-line-strong);text-align:center}.proposal-empty h3{font-size:1.4rem}.proposal-empty .hero-actions{justify-content:center}
+    .profile-form{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:1rem}.profile-form label{display:grid;gap:.45rem;color:var(--hara-text);font-weight:620}.profile-form input,.profile-form textarea{width:100%;padding:.75rem .8rem;border:1px solid var(--hara-line);background:var(--hara-abyss);color:var(--hara-text);font:inherit}.profile-form input:focus-visible,.profile-form textarea:focus-visible{outline:2px solid var(--hara-signal);outline-offset:2px}.profile-form small,.form-status{color:var(--hara-text-muted);font-weight:400;line-height:1.55}.profile-form__wide{grid-column:1/-1}.profile-consent{grid-template-columns:auto 1fr;align-items:start}.profile-consent input{width:1rem;margin-top:.25rem}
+    @media(max-width:900px){.proposal-counts{grid-template-columns:repeat(3,minmax(0,1fr))}}
+    @media(max-width:720px){.profile-form{grid-template-columns:1fr}.profile-form__wide{grid-column:auto}.proposal-counts{grid-template-columns:repeat(2,minmax(0,1fr))}.proposal-card header{align-items:flex-start;flex-direction:column}.proposal-card dl{grid-template-columns:1fr}.proposal-dashboard__heading{align-items:flex-start}.proposal-dashboard__controls{width:100%}.proposal-dashboard__controls .button{width:100%}}
   </style>
 </SiteLayout>

@@ -15,6 +15,10 @@ import {
   parseAgentDocument,
 } from "./_shared/agent-proposal.mjs";
 import {
+  publicPathForProposal,
+  recordPublishedProposal,
+} from "./_shared/proposal-recording.mjs";
+import {
   clearWorldSessionCookie,
   json,
   readWorldSession,
@@ -203,6 +207,8 @@ async function createOrUpdateAgentPullRequest(client, { identity, proposal, stat
     branch,
     pullRequestUrl: pull?.html_url,
     number: pull?.number,
+    headSha: pull?.head?.sha ?? null,
+    submittedAt: pull?.created_at ?? new Date(now).toISOString(),
     reused: Boolean(existingPull),
   };
 }
@@ -265,7 +271,19 @@ export async function handle(request, options = {}) {
 
   try {
     const result = await createOrUpdateAgentPullRequest(client, { identity, proposal, state, now });
-    return json(result.unchanged ? 200 : 201, { ok: true, ...result });
+    const lifecycle = await recordPublishedProposal({
+      proposalType: "agent",
+      identity,
+      resourceKey: `agent:github:${identity.id}:${proposal.slug}`,
+      resourceTitle: proposal.name,
+      result,
+      client,
+      publicPath: publicPathForProposal("agent", { slug: proposal.slug }),
+      now,
+      db: options.db,
+      proposalStore: options.proposalLifecycleStore,
+    });
+    return json(result.unchanged ? 200 : 201, { ok: true, ...result, lifecycleRecorded: lifecycle.recorded });
   } catch (error) {
     if (/slug|at most/.test(error?.message ?? "")) return json(409, { error: { code: "AGENT_CONFLICT", message: error.message } });
     console.error("World agent proposal failed", { status: error?.status, name: error?.name });

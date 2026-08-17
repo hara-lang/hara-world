@@ -21,6 +21,11 @@ import {
   POST_PROPOSAL_MARKER,
 } from "./_shared/post-proposal.mjs";
 import {
+  publicPathForProposal,
+  recordPublishedProposal,
+} from "./_shared/proposal-recording.mjs";
+import { markProposalWithdrawn as markLifecycleWithdrawn } from "./_shared/proposals.mjs";
+import {
   clearWorldSessionCookie,
   json,
   readWorldSession,
@@ -51,7 +56,6 @@ function routeFor(pathname) {
     return null;
   }
 }
-
 
 function resolvePostStore(options) {
   return options.postStore ?? {
@@ -191,6 +195,7 @@ export async function createOrUpdatePostPullRequest(client, { identity, draft, n
     submittedAt,
     number: Number(pull.number),
     pullRequestUrl: pull.html_url,
+    headSha: pull?.head?.sha ?? null,
     reused: Boolean(existingPull),
   };
 }
@@ -298,11 +303,24 @@ export async function handle(request, options = {}) {
         recorded = false;
         console.error("World post proposal state could not be recorded", { name: cause?.name });
       }
+      const lifecycle = await recordPublishedProposal({
+        proposalType: "post",
+        identity,
+        resourceKey: draft.id,
+        resourceTitle: draft.title,
+        result: proposal,
+        client,
+        publicPath: publicPathForProposal("post", { path: proposal.path }),
+        now,
+        db: options.db,
+        proposalStore: options.proposalLifecycleStore,
+      });
       return json(proposal.reused ? 200 : 201, {
         ok: true,
         proposal,
         draft: nextDraft,
         stateRecorded: recorded,
+        lifecycleRecorded: lifecycle.recorded,
       });
     }
 
@@ -325,7 +343,20 @@ export async function handle(request, options = {}) {
       }
       const withdrawn = await store.markWithdrawn(identity, route.id, { db: options.db, now });
       if (!withdrawn) return error(409, "POST_NOT_WITHDRAWABLE", "This post proposal cannot be withdrawn.");
-      return json(200, { ok: true, draft: withdrawn });
+      let lifecycleRecorded = true;
+      try {
+        const mark = options.proposalLifecycleStore?.markWithdrawn ?? markLifecycleWithdrawn;
+        await mark("post", route.id, {
+          db: options.db,
+          now,
+          actorGithubUserId: identity.id,
+          actorLogin: identity.login,
+        });
+      } catch (cause) {
+        lifecycleRecorded = false;
+        console.error("World post lifecycle withdrawal could not be recorded", { name: cause?.name });
+      }
+      return json(200, { ok: true, draft: withdrawn, lifecycleRecorded });
     }
 
     const allowed = route.type === "collection"

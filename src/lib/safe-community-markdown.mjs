@@ -13,9 +13,11 @@ function documentPaths(file) {
 export function isCommunityDocument(file) {
   const paths = documentPaths(file);
   if (paths.some((value) => /(?:^|[\\/])content[\\/]profiles[\\/][^\\/]+\.md$/i.test(value))) return true;
+  if (paths.some((value) => /(?:^|[\\/])content[\\/]agents[\\/][^\\/]+\.md$/i.test(value))) return true;
   if (paths.some((value) => /(?:^|[\\/])content[\\/]articles[\\/]community[\\/].+\.md$/i.test(value))) return true;
   const frontmatter = file?.data?.astro?.frontmatter ?? {};
   if (/^\d+$/.test(String(frontmatter.githubId ?? ""))) return true;
+  if (/^\d+$/.test(String(frontmatter.operatorGithubId ?? "")) && typeof frontmatter.agentId === "string") return true;
   return /^\d+$/.test(String(frontmatter.authorGithubId ?? "")) && typeof frontmatter.postType === "string";
 }
 

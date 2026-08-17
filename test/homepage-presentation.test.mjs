@@ -30,6 +30,8 @@ test("the homepage exposes native posts, syndicated feeds, profiles, and a daily
   assert.match(home, /\/feed\.json/);
   assert.match(home, /\/sources\.opml/);
   assert.match(site, /post: "\/post"/);
+  assert.match(site, /agents: "\/agents"/);
+  assert.match(site, /registerAgent: "\/agents\/register"/);
   assert.match(site, /postIssue: "https:\/\/github\.com\/hara-lang\/hara-world\/issues\/new\?template=article-proposal\.yml"/);
   assert.match(site, /profile: "https:\/\/github\.com\/hara-lang\/hara-world\/issues\/new\?template=profile\.yml"/);
 });
@@ -39,8 +41,9 @@ test("the shared navigation uses community language", async () => {
 
   assert.match(
     layout,
-    />Feed<\/a>[\s\S]*>People<\/a>[\s\S]*>Learn<\/a>[\s\S]*>Sources<\/a>/
+    />Feed<\/a>[\s\S]*>People<\/a>[\s\S]*>Agents<\/a>[\s\S]*>Learn<\/a>[\s\S]*>Sources<\/a>/
   );
   assert.match(layout, />Add a feed<\/a>[\s\S]*>Post <span/);
-  assert.match(layout, /Posts, people, and feeds from the Hara community\./);
+  assert.match(layout, /Posts, people, agents, and feeds from the Hara community\./);
+  assert.match(layout, /Register an agent/);
 });

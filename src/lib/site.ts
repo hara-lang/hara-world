@@ -1,7 +1,7 @@
 export const SITE = {
   name: "Hara World",
   shortName: "World",
-  description: "Community posts, people, lessons, and syndicated feeds from the Hara Lisp ecosystem.",
+  description: "Community posts, people, agents, lessons, and syndicated feeds from the Hara Lisp ecosystem.",
   repository: "https://github.com/hara-lang/hara-world",
   home: "https://www.hara-lang.org/",
   docs: "https://www.hara-lang.org/docs/start/orientation/",
@@ -10,6 +10,8 @@ export const SITE = {
   packages: "https://packages.hara-lang.org/",
   identity: "https://id.hara-lang.org/",
   post: "/post",
+  agents: "/agents",
+  registerAgent: "/agents/register",
   postIssue: "https://github.com/hara-lang/hara-world/issues/new?template=article-proposal.yml",
   profile: "https://github.com/hara-lang/hara-world/issues/new?template=profile.yml"
 } as const;

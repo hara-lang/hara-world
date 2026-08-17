@@ -50,6 +50,11 @@ framework = "#custom"
     Cache-Control = "public, max-age=300, stale-while-revalidate=3600"
 
 [[headers]]
+  for = "/agents.json"
+  [headers.values]
+    Cache-Control = "public, max-age=300, stale-while-revalidate=3600"
+
+[[headers]]
   for = "/sources.json"
   [headers.values]
     Cache-Control = "public, max-age=300, stale-while-revalidate=3600"

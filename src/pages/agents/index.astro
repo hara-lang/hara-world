@@ -1,0 +1,87 @@
+---
+import { getCollection } from "astro:content";
+import SiteLayout from "../../layouts/SiteLayout.astro";
+
+const agents = (await getCollection("agents", ({ data }) => data.published))
+  .sort((left, right) => left.data.name.localeCompare(right.data.name));
+
+const statusLabel = {
+  experimental: "Experimental",
+  active: "Active",
+  paused: "Paused",
+  retired: "Retired",
+};
+---
+<SiteLayout title="Agents" description="Public, human-owned agent registrations from the Hara community.">
+  <header class="page-hero agent-directory-hero">
+    <div class="shell">
+      <p class="eyebrow">Community / agents</p>
+      <h1>Agents built with Hara.</h1>
+      <p class="lede">A public directory of assistants, workflows, and autonomous systems registered by accountable people in the Hara community. Registration records what an agent is and who operates it; it does not grant the agent authority.</p>
+      <div class="hero-actions">
+        <a class="button button--primary" href="/agents/register">Register an agent</a>
+        <a class="button" href="/agents.json">Machine-readable registry</a>
+      </div>
+    </div>
+  </header>
+
+  <section class="section section--tight">
+    <div class="shell">
+      {agents.length > 0 ? (
+        <div class="agent-grid">
+          {agents.map((agent) => (
+            <a class="agent-card" href={`/agents/${agent.id}/`}>
+              <div class="agent-card__mark" aria-hidden="true">{agent.data.name.slice(0, 2).toUpperCase()}</div>
+              <div class="agent-card__heading">
+                <div>
+                  <p class="eyebrow">{statusLabel[agent.data.status]} / {agent.data.operationMode}</p>
+                  <h2>{agent.data.name}</h2>
+                </div>
+                <span class={`agent-card__status agent-card__status--${agent.data.status}`}>{agent.data.availability}</span>
+              </div>
+              <p>{agent.data.summary}</p>
+              <div class="agent-card__meta">
+                <span>by @{agent.data.operatorGithubLogin}</span>
+                <span>{agent.data.verification === "key-verified" ? "key verified" : "operator claimed"}</span>
+              </div>
+              <div class="agent-card__labels">
+                {agent.data.capabilities.slice(0, 4).map((capability) => <span>{capability}</span>)}
+              </div>
+            </a>
+          ))}
+        </div>
+      ) : (
+        <div class="empty-state">
+          <p class="eyebrow">Registry opening</p>
+          <h2>No public agents have been merged yet.</h2>
+          <p>The first agent will appear after its authenticated operator submits a Git-reviewed record and that proposal is merged.</p>
+          <a class="button button--primary" href="/agents/register">Register the first agent</a>
+        </div>
+      )}
+    </div>
+  </section>
+
+  <section class="section section--tight agent-trust">
+    <div class="shell policy-grid">
+      <article class="policy-card"><h3>Human-owned</h3><p>Every record carries the stable GitHub identity of the person who registered and operates the agent.</p></article>
+      <article class="policy-card"><h3>Git-reviewed</h3><p>Agent metadata is portable Markdown. A submitted form opens a draft pull request; merge is registration.</p></article>
+      <article class="policy-card"><h3>No implied authority</h3><p>Directory inclusion does not grant package access, posting rights, credentials, runtime access, or endorsement.</p></article>
+      <article class="policy-card"><h3>Keys come later</h3><p>An operator claim identifies responsibility. A separate reviewed key fingerprint may later verify the running agent itself.</p></article>
+    </div>
+  </section>
+
+  <style>
+    .agent-directory-hero{background:linear-gradient(145deg,color-mix(in srgb,var(--hara-signal) 8%,transparent),transparent 52%)}
+    .agent-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:1rem}
+    .agent-card{display:grid;gap:1rem;min-height:330px;padding:1.35rem;color:var(--hara-text);border:1px solid var(--hara-line);border-radius:var(--hara-radius-md);background:var(--hara-surface);text-decoration:none;transition:transform var(--hara-motion-fast),border-color var(--hara-motion-fast)}
+    .agent-card:hover{transform:translateY(-3px);border-color:var(--hara-line-strong)}
+    .agent-card__mark{display:grid;place-items:center;width:56px;height:56px;border:1px solid var(--hara-line-strong);border-radius:18px;background:color-mix(in srgb,var(--hara-signal) 14%,var(--hara-surface-solid));font:720 .82rem var(--hara-font-mono);letter-spacing:.08em}
+    .agent-card__heading{display:flex;align-items:flex-start;justify-content:space-between;gap:1rem}.agent-card__heading h2{margin:0;font-size:1.45rem}.agent-card__heading .eyebrow{margin-bottom:.45rem}.agent-card>p{margin:0;color:var(--hara-muted)}
+    .agent-card__status{padding:.3rem .55rem;border:1px solid var(--hara-line);border-radius:999px;color:var(--hara-muted);font:680 .62rem var(--hara-font-mono);text-transform:uppercase}.agent-card__status--active{color:var(--hara-signal)}
+    .agent-card__meta{display:flex;flex-wrap:wrap;justify-content:space-between;gap:.5rem;padding-top:1rem;border-top:1px solid var(--hara-line);color:var(--hara-faint);font:.65rem var(--hara-font-mono);text-transform:uppercase}
+    .agent-card__labels{display:flex;flex-wrap:wrap;gap:.4rem;margin-top:auto}.agent-card__labels span{padding:.28rem .5rem;border:1px solid var(--hara-line);border-radius:999px;color:var(--hara-muted);font-size:.68rem}
+    .agent-trust{border-top:1px solid var(--hara-line);background:var(--hara-bg-clean)}
+    @media(max-width:980px){.agent-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+    @media(max-width:620px){.agent-grid{grid-template-columns:1fr}.agent-card{min-height:0}}
+  </style>
+</SiteLayout>

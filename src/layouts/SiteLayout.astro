@@ -51,7 +51,7 @@ const activePath = Astro.url.pathname;
     <meta property="og:image" content={socialImage} />
     <meta property="og:image:width" content="3840" />
     <meta property="og:image:height" content="2016" />
-    <meta property="og:image:alt" content="Hara World — community posts, people, lessons, and feeds" />
+    <meta property="og:image:alt" content="Hara World — community posts, people, agents, lessons, and feeds" />
     {articleMeta?.publishedAt && <meta property="article:published_time" content={articleMeta.publishedAt.toISOString()} />}
     {articleMeta?.updatedAt && <meta property="article:modified_time" content={articleMeta.updatedAt.toISOString()} />}
     {articleMeta?.author && <meta property="article:author" content={articleMeta.author} />}
@@ -95,6 +95,7 @@ const activePath = Astro.url.pathname;
         <div class="section-nav__primary">
           <a href="/articles" aria-current={activePath.startsWith("/articles") ? "page" : undefined}>Feed</a>
           <a href="/people" aria-current={activePath.startsWith("/people") ? "page" : undefined}>People</a>
+          <a href="/agents" aria-current={activePath.startsWith("/agents") ? "page" : undefined}>Agents</a>
           <a href="/learn/koans/" aria-current={activePath.startsWith("/learn/koans") ? "page" : undefined}>Learn</a>
           <a href="/sources" aria-current={activePath === "/sources" ? "page" : undefined}>Sources</a>
         </div>
@@ -110,15 +111,18 @@ const activePath = Astro.url.pathname;
     <footer class="site-footer">
       <div class="site-footer__identity">
         <HaraMark size={26} title="Hara" />
-        <span>Posts, people, and feeds from the Hara community.</span>
+        <span>Posts, people, agents, and feeds from the Hara community.</span>
       </div>
       <div class="site-footer__links">
         <a href={SITE.post}>Post</a>
+        <a href={SITE.registerAgent}>Register an agent</a>
         <a href="/submit">Add a feed</a>
         <a href="/feed.xml">RSS</a>
         <a href="/feed.json">JSON Feed</a>
         <a href="/sources.opml">OPML</a>
         <a href="/people">People</a>
+        <a href="/agents">Agents</a>
+        <a href="/agents.json">Agent registry JSON</a>
         <a href="/learn/koans/">Lessons</a>
         <a href="/newsletter">Weekly digest</a>
         <a href="/me">Account</a>

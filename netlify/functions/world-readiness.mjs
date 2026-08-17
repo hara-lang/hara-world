@@ -14,7 +14,10 @@ function envValue(env, name, fallback = "") {
 }
 
 function permissionsReady(permissions = {}) {
-  return permissions.contents === "write" && permissions.pull_requests === "write";
+  const checksReadable = permissions.checks === "read" || permissions.checks === "write";
+  return permissions.contents === "write"
+    && permissions.pull_requests === "write"
+    && checksReadable;
 }
 
 function refPath(branch) {

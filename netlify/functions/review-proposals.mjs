@@ -1,6 +1,9 @@
 import { communityAccountStatus } from "./_shared/community-accounts.mjs";
 import { createGitHubAppClient } from "./_shared/github-app.mjs";
-import { reconcileProposals } from "./_shared/proposal-reconcile.mjs";
+import {
+  discoverManagedProposals,
+  reconcileProposals,
+} from "./_shared/proposal-reconcile.mjs";
 import { groupProposalCounts, listReviewProposals } from "./_shared/proposals.mjs";
 import { reviewAccess } from "./_shared/review-access.mjs";
 import {
@@ -76,6 +79,23 @@ export async function handle(request, options = {}) {
   }
 
   if (request.method === "POST") {
+    let discovered;
+    try {
+      discovered = await (options.discoverManagedProposalsImpl ?? discoverManagedProposals)(client, {
+        proposalStore: options.proposalLifecycleStore,
+        db: options.db,
+        now,
+      });
+    } catch (cause) {
+      discovered = [{
+        ok: false,
+        error: {
+          code: "PROPOSAL_DISCOVERY_FAILED",
+          message: cause?.message || "Managed pull requests could not be discovered.",
+        },
+      }];
+    }
+    try { proposals = await store.list({ db: options.db, limit: 300 }); } catch {}
     const open = proposals.filter((proposal) => !TERMINAL_STATES.has(proposal.state)).slice(0, 100);
     const reconciled = await (options.reconcileProposalsImpl ?? reconcileProposals)(open, client, {
       proposalStore: options.proposalLifecycleStore,
@@ -86,6 +106,7 @@ export async function handle(request, options = {}) {
     return json(200, {
       ok: true,
       reviewer: access,
+      discovered,
       reconciled,
       proposals,
       counts: groupProposalCounts(proposals),

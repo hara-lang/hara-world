@@ -38,3 +38,24 @@ test("World discovery advertises the first-party source proposal and probe endpo
   assert.match(discovery, /management: "git-pull-request"/);
   assert.match(discovery, /publicationBoundary: "merge"/);
 });
+
+test("authenticated source proposals have a read-only scope workflow and explicit code owners", async () => {
+  const [workflow, scope, owners] = await Promise.all([
+    read(".github/workflows/source-proposal.yml"),
+    read("scripts/validate-source-pr-scope.mjs"),
+    read(".github/CODEOWNERS"),
+  ]);
+  assert.match(workflow, /pull_request:/);
+  assert.doesNotMatch(workflow, /pull_request_target/);
+  assert.match(workflow, /permissions:\s*\n\s*contents: read/);
+  assert.match(workflow, /persist-credentials: false/);
+  assert.match(workflow, /source-registry\/github-/);
+  assert.match(scope, /may change only registry\/sources\.json/);
+  assert.match(scope, /cannot change reviewer-controlled activation status/);
+  assert.match(scope, /cannot change reviewer-controlled polling policy/);
+  assert.match(scope, /hara-world-source-proposal/);
+  assert.match(owners, /netlify\/functions\/source-proposal\.mjs/);
+  assert.match(owners, /netlify\/functions\/_shared\/feed-probe\.mjs/);
+  assert.match(owners, /registry\/sources\.json/);
+  assert.match(owners, /source-proposal\.yml/);
+});

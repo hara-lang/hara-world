@@ -98,7 +98,7 @@ export function normalizeProposalSubmission(input, { now = Date.now() } = {}) {
   };
 }
 
-function mapProposal(row = {}) {
+function mapProposal(row) {
   if (!row || typeof row !== "object") return null;
   return {
     proposalId: row.proposal_id,

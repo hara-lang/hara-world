@@ -8,9 +8,11 @@ const httpsUrl = z.string().url().refine((value) => {
   } catch {
     return false;
   }
-}, "Profile URLs must use HTTPS without embedded credentials.");
+}, "Community URLs must use HTTPS without embedded credentials.");
 
 const githubLogin = z.string().regex(/^[A-Za-z0-9](?:[A-Za-z0-9-]{0,37}[A-Za-z0-9])?$/);
+const agentLabel = z.string().min(1).max(60);
+const agentInterface = z.enum(["web", "chat", "cli", "repl", "api", "mcp", "email", "discord", "other"]);
 
 const articles = defineCollection({
   loader: glob({ pattern: "**/*.md", base: "./content/articles" }),
@@ -75,4 +77,42 @@ const profiles = defineCollection({
   })
 });
 
-export const collections = { articles, profiles };
+const agents = defineCollection({
+  loader: glob({ pattern: "**/*.md", base: "./content/agents" }),
+  schema: z.object({
+    agentId: z.string().regex(/^agent:github:\d+:[a-z0-9](?:[a-z0-9-]{0,62}[a-z0-9])?$/),
+    operatorGithubId: z.coerce.string().regex(/^\d+$/),
+    operatorGithubLogin: githubLogin,
+    operatorDisplayName: z.string().min(1).max(100),
+    name: z.string().min(1).max(100),
+    summary: z.string().min(1).max(320),
+    status: z.enum(["experimental", "active", "paused", "retired"]).default("experimental"),
+    availability: z.enum(["public", "request", "private", "local"]).default("private"),
+    operationMode: z.enum(["interactive", "supervised", "scheduled", "autonomous"]).default("supervised"),
+    capabilities: z.array(agentLabel).max(12).default([]),
+    interfaces: z.array(agentInterface).max(9).default([]),
+    haraPackages: z.array(z.string().min(1).max(120).regex(/^[A-Za-z0-9](?:[A-Za-z0-9._/-]{0,119})$/)).max(16).default([]),
+    runtime: z.string().min(1).max(160).optional(),
+    website: httpsUrl.optional(),
+    source: httpsUrl.optional(),
+    documentation: httpsUrl.optional(),
+    verification: z.enum(["operator-claimed", "key-verified"]).default("operator-claimed"),
+    keyFingerprint: z.string().min(8).max(240).optional(),
+    attestations: z.array(z.object({
+      label: z.string().min(1).max(80),
+      url: httpsUrl
+    })).max(24).default([]),
+    registeredAt: z.coerce.date(),
+    updatedAt: z.coerce.date(),
+    published: z.boolean().default(false)
+  }).superRefine((agent, context) => {
+    if (agent.verification === "key-verified" && !agent.keyFingerprint) {
+      context.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Key-verified agents must carry a reviewed public-key fingerprint.",
+      });
+    }
+  })
+});
+
+export const collections = { articles, profiles, agents };

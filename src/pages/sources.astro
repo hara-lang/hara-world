@@ -11,8 +11,8 @@ const proposed = sources.filter((source) => source.status === "proposed");
     <div class="shell">
       <p class="eyebrow">Registry / provenance</p>
       <h1>The publications behind the World Feed.</h1>
-      <p class="lede">Every automated source is registered with its feed, syndication mode, permission basis, and topic set. Active sources are fetched into reviewable article changes.</p>
-      <div class="hero-actions"><a class="button button--primary" href="/submit">Submit a source</a><a class="button" href="/sources.json">Registry JSON</a><a class="button" href="/sources.opml">Download OPML</a></div>
+      <p class="lede">Every automated source is registered with its feed, accountable registrant, syndication mode, permission basis, relevance, and topic set. Active sources are fetched into reviewable article changes.</p>
+      <div class="hero-actions"><a class="button button--primary" href="/submit">Add or update a feed</a><a class="button" href="/sources.json">Registry JSON</a><a class="button" href="/sources.opml">Download OPML</a></div>
     </div>
   </header>
   <section class="section section--tight">
@@ -22,7 +22,13 @@ const proposed = sources.filter((source) => source.status === "proposed");
           {active.map((source) => (
             <article class="source-card">
               <h2><a href={source.homepage}>{source.name}</a></h2>
-              <p>{source.topics.join(" · ")} · {source.syndication} syndication · {source.permission}</p>
+              <p>{source.relevance}</p>
+              <div class="source-meta">
+                <span>{source.topics.join(" · ")}</span>
+                <span>{source.syndication} syndication</span>
+                <span>{source.permission}</span>
+                {source.registrantGithubLogin && <span>registered by @{source.registrantGithubLogin}</span>}
+              </div>
               <span class="source-badge">active</span>
             </article>
           ))}
@@ -30,11 +36,11 @@ const proposed = sources.filter((source) => source.status === "proposed");
       ) : (
         <div class="empty-state">
           <h2>The registry is open.</h2>
-          <p>No external source has been activated yet. The first feed submission will establish the review path without filling the site with placeholder publishers.</p>
-          <a class="button button--primary" href="/submit">Submit the first source</a>
+          <p>No external source has been activated yet. The first authenticated feed proposal will establish the review path without filling the site with placeholder publishers.</p>
+          <a class="button button--primary" href="/submit">Add the first source</a>
         </div>
       )}
-      {proposed.length > 0 && <p class="source-meta" style="margin-top:1rem"><span>{proposed.length} proposed source{proposed.length === 1 ? "" : "s"} awaiting review.</span></p>}
+      {proposed.length > 0 && <p class="source-meta" style="margin-top:1rem"><span>{proposed.length} proposed source{proposed.length === 1 ? "" : "s"} awaiting permission review and activation.</span></p>}
     </div>
   </section>
 </SiteLayout>

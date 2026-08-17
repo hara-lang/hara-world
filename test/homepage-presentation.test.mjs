@@ -30,10 +30,11 @@ test("the homepage exposes native posts, syndicated feeds, profiles, and a daily
   assert.match(home, /\/feed\.json/);
   assert.match(home, /\/sources\.opml/);
   assert.match(site, /post: "\/post"/);
+  assert.match(site, /profile: "\/me"/);
+  assert.match(site, /sources: "\/submit"/);
   assert.match(site, /agents: "\/agents"/);
   assert.match(site, /registerAgent: "\/agents\/register"/);
-  assert.match(site, /postIssue: "https:\/\/github\.com\/hara-lang\/hara-world\/issues\/new\?template=article-proposal\.yml"/);
-  assert.match(site, /profile: "https:\/\/github\.com\/hara-lang\/hara-world\/issues\/new\?template=profile\.yml"/);
+  assert.doesNotMatch(site, /issues\/new\?template/);
 });
 
 test("the shared navigation uses community language", async () => {

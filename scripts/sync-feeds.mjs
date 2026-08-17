@@ -1,8 +1,7 @@
-import { lookup } from "node:dns/promises";
-import { isIP } from "node:net";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { XMLParser } from "fast-xml-parser";
+import { fetchPublicFeed } from "../netlify/functions/_shared/feed-probe.mjs";
 import { parseArgs } from "./lib/cli.mjs";
 import { contentHash, serialiseFrontmatter, slugify, stripHtml, truncate } from "./lib/article.mjs";
 
@@ -23,7 +22,10 @@ const parser = new XMLParser({
 const created = [];
 
 for (const source of registry.sources.filter((entry) => entry.status === "active")) {
-  const xml = await fetchFeed(source.feed);
+  const { xml } = await fetchPublicFeed(source.feed, {
+    timeoutMs: 20_000,
+    maximumBytes: 5 * 1024 * 1024,
+  });
   const parsed = parser.parse(xml);
   const items = normaliseFeed(parsed)
     .sort((left, right) => dateValue(right.publishedAt) - dateValue(left.publishedAt))
@@ -144,73 +146,6 @@ function normaliseArticleUrl(value, base) {
   } catch {
     return null;
   }
-}
-
-async function fetchFeed(initialUrl) {
-  let current = new URL(initialUrl);
-  for (let redirect = 0; redirect <= 5; redirect += 1) {
-    await assertPublicUrl(current);
-    const response = await fetch(current, {
-      redirect: "manual",
-      signal: AbortSignal.timeout(20_000),
-      headers: {
-        accept: "application/atom+xml, application/rss+xml, application/xml, text/xml;q=0.9, */*;q=0.1",
-        "user-agent": "HaraWorldFeedBot/0.1 (+https://world.hara-lang.org/about)"
-      }
-    });
-    if ([301, 302, 303, 307, 308].includes(response.status)) {
-      const location = response.headers.get("location");
-      if (!location) throw new Error(`Feed redirect from ${current} has no Location header.`);
-      current = new URL(location, current);
-      continue;
-    }
-    if (!response.ok) throw new Error(`Feed request failed for ${current} (${response.status}).`);
-    return readLimited(response, 5 * 1024 * 1024);
-  }
-  throw new Error(`Feed has too many redirects: ${initialUrl}`);
-}
-
-async function assertPublicUrl(url) {
-  if (url.protocol !== "https:") throw new Error(`Feed URL must use HTTPS: ${url}`);
-  if (url.username || url.password) throw new Error(`Feed URL must not contain credentials: ${url}`);
-  const hostname = url.hostname.toLowerCase();
-  if (hostname === "localhost" || hostname.endsWith(".localhost") || hostname.endsWith(".local")) {
-    throw new Error(`Feed host is not public: ${hostname}`);
-  }
-  const addresses = isIP(hostname) ? [{ address: hostname }] : await lookup(hostname, { all: true, verbatim: true });
-  if (addresses.length === 0 || addresses.some(({ address }) => isPrivateAddress(address))) {
-    throw new Error(`Feed host resolves to a private or reserved address: ${hostname}`);
-  }
-}
-
-function isPrivateAddress(address) {
-  if (address.includes(":")) {
-    const value = address.toLowerCase();
-    if (value.startsWith("::ffff:")) return isPrivateAddress(value.slice(7));
-    return value === "::1" || value === "::" || value.startsWith("fc") || value.startsWith("fd") || value.startsWith("fe8") || value.startsWith("fe9") || value.startsWith("fea") || value.startsWith("feb") || value.startsWith("ff") || value.startsWith("2001:db8");
-  }
-  const parts = address.split(".").map(Number);
-  if (parts.length !== 4 || parts.some((part) => !Number.isInteger(part))) return true;
-  const [a, b] = parts;
-  return a === 0 || a === 10 || a === 127 || (a === 169 && b === 254) || (a === 172 && b >= 16 && b <= 31) || (a === 192 && b === 168) || (a === 100 && b >= 64 && b <= 127) || a >= 224 || (a === 192 && b === 0) || (a === 198 && (b === 18 || b === 19 || b === 51)) || (a === 203 && b === 0);
-}
-
-async function readLimited(response, maximumBytes) {
-  const reader = response.body?.getReader();
-  if (!reader) return response.text();
-  const chunks = [];
-  let total = 0;
-  while (true) {
-    const { value, done } = await reader.read();
-    if (done) break;
-    total += value.byteLength;
-    if (total > maximumBytes) {
-      await reader.cancel();
-      throw new Error(`Feed response exceeded ${maximumBytes} bytes.`);
-    }
-    chunks.push(value);
-  }
-  return new TextDecoder().decode(Buffer.concat(chunks.map((chunk) => Buffer.from(chunk))));
 }
 
 function arrayify(value) { return value === undefined ? [] : Array.isArray(value) ? value : [value]; }

@@ -17,6 +17,7 @@ test("publishes fail-closed discovery and points operators to active readiness",
   assert.equal(missing.configured, false);
   assert.equal(missing.authentication.configured, false);
   assert.equal(missing.profiles.configured, false);
+  assert.equal(missing.sources.configured, false);
   assert.equal(missing.database.configured, false);
 
   const ready = discoveryPayload(request, CONFIGURED);
@@ -25,7 +26,13 @@ test("publishes fail-closed discovery and points operators to active readiness",
   assert.equal(ready.authentication.accountStatusEnforced, true);
   assert.equal(ready.authentication.frontChannelLogout, true);
   assert.equal(ready.profiles.index, "registry/profiles.json");
+  assert.equal(ready.profiles.editor, "https://world.hara-lang.org/me");
   assert.equal(ready.profiles.oneOpenProposalPerIdentity, true);
+  assert.equal(ready.sources.endpoint, "https://world.hara-lang.org/api/sources");
+  assert.equal(ready.sources.probeEndpoint, "https://world.hara-lang.org/api/sources/probe");
+  assert.equal(ready.sources.form, "https://world.hara-lang.org/submit");
+  assert.equal(ready.sources.activationBoundary, "reviewed-status-change");
+  assert.equal(ready.sources.networkPolicy, "public-https-only");
   assert.doesNotMatch(JSON.stringify(ready), /postgresql:\/\/|BEGIN PRIVATE KEY|hhhhhhhh|ssssssss/);
 });
 
@@ -34,4 +41,5 @@ test("keeps testing and production issuers isolated", () => {
   assert.equal(ready.issuer, "https://world.testing.hara-lang.org");
   assert.equal(ready.centralIssuer, "https://id.testing.hara-lang.org");
   assert.equal(ready.authentication.callbackEndpoint, "https://world.testing.hara-lang.org/api/auth/callback");
+  assert.equal(ready.sources.form, "https://world.testing.hara-lang.org/submit");
 });

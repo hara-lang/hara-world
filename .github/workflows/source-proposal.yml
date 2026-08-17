@@ -1,0 +1,30 @@
+name: Validate authenticated source proposal
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "registry/sources.json"
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    if: startsWith(github.head_ref, 'source-registry/github-')
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - run: npm install
+      - name: Restrict authenticated source proposal scope
+        run: node scripts/validate-source-pr-scope.mjs
+      - name: Validate source registry
+        run: npm run sources:check
+      - name: Run source proposal and network-boundary tests
+        run: node --test test/source-registry.test.mjs test/source-proposal.test.mjs test/source-probe.test.mjs test/first-party-submissions.test.mjs

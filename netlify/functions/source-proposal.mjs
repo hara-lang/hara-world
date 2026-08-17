@@ -2,6 +2,10 @@ import { createGitHubAppClient } from "./_shared/github-app.mjs";
 import { communityAccountStatus } from "./_shared/community-accounts.mjs";
 import { probeFeed } from "./_shared/feed-probe.mjs";
 import {
+  publicPathForProposal,
+  recordPublishedProposal,
+} from "./_shared/proposal-recording.mjs";
+import {
   assertSourceRegistry,
   normalizeSourceProposal,
   serialiseSourceRegistry,
@@ -185,6 +189,8 @@ async function createOrUpdateSourcePullRequest(client, { identity, proposal, pre
     branch,
     pullRequestUrl: pull?.html_url,
     number: pull?.number,
+    headSha: pull?.head?.sha ?? null,
+    submittedAt: pull?.created_at ?? new Date(now).toISOString(),
     reused: Boolean(existingPull),
   };
 }
@@ -262,7 +268,24 @@ export async function handle(request, options = {}) {
 
   try {
     const result = await createOrUpdateSourcePullRequest(client, { identity, proposal, preview, state, now });
-    return json(result.unchanged ? 200 : 201, { ok: true, preview, ...result });
+    const lifecycle = await recordPublishedProposal({
+      proposalType: "source",
+      identity,
+      resourceKey: proposal.id,
+      resourceTitle: proposal.name,
+      result,
+      client,
+      publicPath: publicPathForProposal("source"),
+      now,
+      db: options.db,
+      proposalStore: options.proposalLifecycleStore,
+    });
+    return json(result.unchanged ? 200 : 201, {
+      ok: true,
+      preview,
+      ...result,
+      lifecycleRecorded: lifecycle.recorded,
+    });
   } catch (error) {
     if (/another World account|already registered|source ID|legacy source/i.test(error?.message ?? "")) {
       return json(409, { error: { code: "SOURCE_CONFLICT", message: error.message } });

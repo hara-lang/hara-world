@@ -46,7 +46,7 @@ function fakeClient({ branchExists = false, existingPull = null, pathExists = fa
       if (path === "/repos/hara-lang/hara-world/git/ref/heads/main") return { object: { sha: "a".repeat(40) } };
       if (path.includes("/git/ref/heads/post/github-6685337/1111111111114111")) {
         if (!hasBranch) { const error = new Error("Not found"); error.status = 404; throw error; }
-        return { object: { sha: "c".repeat(40) };
+        return { object: { sha: "c".repeat(40) } };
       }
       if (path === "/repos/hara-lang/hara-world/git/refs" && options.method === "POST") {
         hasBranch = true;

@@ -52,6 +52,7 @@ function routeFor(pathname) {
   }
 }
 
+
 function resolvePostStore(options) {
   return options.postStore ?? {
     list: listPostDrafts,

@@ -1,43 +1,402 @@
 ---
 import SiteLayout from "../layouts/SiteLayout.astro";
-const submissionUrl = "https://github.com/hara-lang/hara-world/issues/new?template=source-submission.yml";
 ---
-<SiteLayout title="Submit a source" description="Register an RSS or Atom publication for inclusion in Hara World.">
-  <header class="page-hero">
+<SiteLayout title="Add a feed" description="Register an RSS or Atom publication through a reviewed Hara World proposal.">
+  <header class="page-hero source-submit-hero">
     <div class="shell">
       <p class="eyebrow">World Feed / source registry</p>
       <h1>Bring your own publication.</h1>
-      <p class="lede">Submit an RSS or Atom feed you own or are authorised to represent. Hara World will review provenance, relevance, and syndication permission before ingestion.</p>
-      <div class="hero-actions">
-        <a class="button button--primary" href={submissionUrl}>Open a source submission <span aria-hidden="true">↗</span></a>
-        <a class="button" href="https://github.com/hara-lang/hara-world/blob/main/EDITORIAL.md">Read the editorial policy</a>
-      </div>
+      <p class="lede">Connect an RSS or Atom feed you own or are authorised to represent. World inspects the feed safely, attaches your verified operator identity, and prepares the registry change for review without sending you to a GitHub issue form.</p>
     </div>
   </header>
 
-  <section class="section">
-    <div class="shell">
-      <div class="section-heading">
-        <div><p class="eyebrow">Submission contract</p><h2>Four things we need to know.</h2></div>
-        <p>These fields are kept in the source registry so that automation never has to guess whether it may republish someone’s work.</p>
-      </div>
-      <div class="release-flow">
-        <article><h3>Identity</h3><p>Publication name, homepage, feed URL, author or organisation, and a contact path.</p></article>
-        <article><h3>Relevance</h3><p>How the publication relates to Hara, Lisp, language tools, runtime systems, or programmable media.</p></article>
-        <article><h3>Permission</h3><p>Whether Hara World may link only, carry an excerpt, or republish full text under a stated licence.</p></article>
-        <article><h3>Topics</h3><p>A small stable set of tags used for feeds, digests, and future channel-specific lists.</p></article>
-        <article><h3>Revocation</h3><p>A person who can request pause, correction, or removal if the publication changes hands or policy.</p></article>
+  <section class="section section--tight">
+    <div class="shell source-submit-stack">
+      <article class="source-session-gate">
+        <div>
+          <p class="eyebrow">Accountable registrant</p>
+          <h2 data-session-title>Checking your World session…</h2>
+          <p data-session-copy>Hara World is checking for an audience-bound identity before accepting a source proposal.</p>
+        </div>
+        <a class="button button--primary" href="/api/auth/start?returnTo=/submit" data-authorize hidden>Enable feed registration</a>
+      </article>
+
+      <div class="source-workspace" data-workspace hidden>
+        <aside class="owned-source-panel">
+          <div class="source-panel-heading">
+            <div><p class="eyebrow">Merged records</p><h2>Your sources</h2></div>
+            <button class="button button--compact" type="button" data-new>New</button>
+          </div>
+          <div class="owned-source-list" data-sources></div>
+          <p class="source-empty" data-empty>No merged source records yet.</p>
+          <div class="source-panel-note">
+            <p>Submitted proposals remain in GitHub review until merged. A new source remains <code>proposed</code> until reviewers independently check permission and activate it.</p>
+          </div>
+        </aside>
+
+        <form class="source-form" data-form>
+          <div class="source-panel-heading source-form-heading">
+            <div><p class="eyebrow">Reviewed registry record</p><h2 data-form-title>New publication</h2></div>
+            <span class="source-status-chip" data-chip>not probed</span>
+          </div>
+
+          <div class="source-field-row">
+            <label>
+              <span>Publication name</span>
+              <input name="name" required maxlength="120" autocomplete="organization" placeholder="Example Lisp Journal" />
+            </label>
+            <label>
+              <span>Registry ID</span>
+              <input name="id" required maxlength="64" pattern="[a-z0-9]+(?:-[a-z0-9]+)*" autocomplete="off" placeholder="example-lisp-journal" />
+              <small>Lowercase kebab-case; fixed after the first merge.</small>
+            </label>
+          </div>
+
+          <div class="source-field-row">
+            <label>
+              <span>HTTPS homepage</span>
+              <input name="homepage" type="url" inputmode="url" required maxlength="2048" placeholder="https://example.com/" />
+            </label>
+            <label>
+              <span>Public contact URL</span>
+              <input name="contact" type="url" inputmode="url" required maxlength="2048" placeholder="https://example.com/contact" />
+              <small>This URL is stored in the reviewed repository for corrections and revocation.</small>
+            </label>
+          </div>
+
+          <section class="feed-probe-panel">
+            <label>
+              <span>HTTPS RSS or Atom feed</span>
+              <div class="feed-probe-control">
+                <input name="feed" type="url" inputmode="url" required maxlength="2048" placeholder="https://example.com/feed.xml" />
+                <button class="button" type="button" data-probe>Inspect feed</button>
+              </div>
+              <small>The server follows at most five public HTTPS redirects and limits DNS targets, duration, and response size.</small>
+            </label>
+            <div class="feed-preview" data-preview hidden aria-live="polite"></div>
+          </section>
+
+          <div class="source-field-row source-field-row--three">
+            <label>
+              <span>Your authority</span>
+              <select name="permission" required>
+                <option value="owner">I own the publication or feed</option>
+                <option value="authorised">I am authorised by its owner or author</option>
+                <option value="open-licence">The requested use is covered by an open licence</option>
+              </select>
+            </label>
+            <label>
+              <span>Syndication mode</span>
+              <select name="syndication" required>
+                <option value="excerpt">Excerpt, attribution, and canonical link</option>
+                <option value="link">Link only</option>
+                <option value="full">Full text with explicit permission or licence</option>
+              </select>
+            </label>
+            <label>
+              <span>Language</span>
+              <input name="language" maxlength="35" placeholder="en-AU" />
+            </label>
+          </div>
+
+          <div class="source-field-row">
+            <label>
+              <span>Licence or permission reference</span>
+              <input name="license" maxlength="500" placeholder="CC BY 4.0, or a public permission reference" />
+              <small>Required for open-licence and most full-text requests.</small>
+            </label>
+            <label>
+              <span>Default author</span>
+              <input name="defaultAuthor" maxlength="120" placeholder="Used only when an entry has no author metadata" />
+            </label>
+          </div>
+
+          <label>
+            <span>Topics</span>
+            <input name="topics" required maxlength="500" placeholder="hara, lisp, runtimes" />
+            <small>Comma-separated; converted to lowercase kebab-case; at most twelve.</small>
+          </label>
+
+          <label>
+            <span>Why this belongs in Hara World</span>
+            <textarea name="relevance" required maxlength="1200" rows="7" placeholder="Describe the publication's relationship to Hara, Lisp, language tools, runtimes, agents, or programmable media."></textarea>
+          </label>
+
+          <label class="source-consent">
+            <input name="consent" type="checkbox" required />
+            <span>I have the right to make this submission or have identified the applicable open licence. I understand that the proposal is public after submission, activation requires review, and the source may later be paused or removed.</span>
+          </label>
+
+          <div class="source-actions">
+            <button class="button button--primary" type="submit" data-submit>Submit source for review <span aria-hidden="true">↗</span></button>
+            <a class="text-link" href="/sources">View source registry</a>
+          </div>
+          <p class="source-form-status" data-status aria-live="polite"></p>
+          <p class="source-proposal" data-proposal hidden></p>
+        </form>
       </div>
     </div>
   </section>
 
-  <section class="section section--tight">
-    <div class="shell">
-      <div class="callout">
-        <p class="eyebrow">Default mode</p>
-        <h2>Excerpt, attribution, canonical link.</h2>
-        <p>Hara World does not scrape and re-host full articles merely because a feed exposes content. Full-text syndication is opt-in; excerpt syndication remains reversible and sends readers to the original publication.</p>
-      </div>
+  <section class="section section--tight source-contract">
+    <div class="shell policy-grid">
+      <article class="policy-card"><h3>Identity</h3><p>The server supplies the stable Hara World registrant identity. The form cannot impersonate another account.</p></article>
+      <article class="policy-card"><h3>Network safety</h3><p>Every probe and submission rechecks public HTTPS DNS targets, redirects, response size, timeout, and XML structure.</p></article>
+      <article class="policy-card"><h3>Permission</h3><p>Feed availability proves transport, not republication rights. Reviewers separately check the declared permission basis.</p></article>
+      <article class="policy-card"><h3>Publication</h3><p>The GitHub App writes one reusable proposal branch. Merge records the source; activation remains an explicit reviewed state.</p></article>
     </div>
   </section>
+
+  <script>
+    const $ = (selector) => document.querySelector(selector);
+    const form = $("[data-form]");
+    const workspace = $("[data-workspace]");
+    const sourcesNode = $("[data-sources]");
+    const empty = $("[data-empty]");
+    const statusNode = $("[data-status]");
+    const proposalNode = $("[data-proposal]");
+    const previewNode = $("[data-preview]");
+    const authorize = $("[data-authorize]");
+    const sessionTitle = $("[data-session-title]");
+    const sessionCopy = $("[data-session-copy]");
+    const chip = $("[data-chip]");
+    let sources = [];
+    let activeId = null;
+    let idTouched = false;
+
+    const field = (name) => form?.elements.namedItem(name);
+    const splitList = (value) => String(value || "").split(",").map((item) => item.trim()).filter(Boolean);
+    const slugify = (value) => String(value || "")
+      .normalize("NFKD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-+|-+$/g, "")
+      .slice(0, 64)
+      .replace(/-+$/g, "");
+
+    const sourcePayload = () => ({
+      id: field("id")?.value,
+      name: field("name")?.value,
+      homepage: field("homepage")?.value,
+      feed: field("feed")?.value,
+      contact: field("contact")?.value,
+      permission: field("permission")?.value,
+      syndication: field("syndication")?.value,
+      license: field("license")?.value,
+      defaultAuthor: field("defaultAuthor")?.value,
+      language: field("language")?.value,
+      topics: splitList(field("topics")?.value),
+      relevance: field("relevance")?.value,
+      consent: field("consent")?.checked === true,
+    });
+
+    const api = async (path, options = {}) => {
+      const response = await fetch(path, {
+        credentials: "include",
+        cache: "no-store",
+        ...options,
+        headers: {
+          Accept: "application/json",
+          ...(options.body ? { "Content-Type": "application/json" } : {}),
+          ...(options.headers || {}),
+        },
+      });
+      const body = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(body?.error?.message || `World returned HTTP ${response.status}.`);
+      return body;
+    };
+
+    const renderPreview = (preview) => {
+      previewNode.replaceChildren();
+      previewNode.hidden = false;
+      const heading = document.createElement("div");
+      heading.className = "feed-preview__heading";
+      const title = document.createElement("strong");
+      title.textContent = preview.title || "Untitled feed";
+      const format = document.createElement("span");
+      format.textContent = `${String(preview.format || "xml").toUpperCase()} · ${preview.entryCount ?? 0} entries`;
+      heading.append(title, format);
+      const address = document.createElement("code");
+      address.textContent = preview.finalUrl;
+      const list = document.createElement("ul");
+      (preview.entries || []).slice(0, 3).forEach((entry) => {
+        const item = document.createElement("li");
+        item.textContent = entry.title || entry.url || "Untitled entry";
+        list.append(item);
+      });
+      previewNode.append(heading, address);
+      if (list.childElementCount) previewNode.append(list);
+      chip.textContent = `${preview.format || "feed"} verified`;
+    };
+
+    const setSource = (source = null) => {
+      activeId = source?.id ?? null;
+      idTouched = Boolean(source);
+      field("name").value = source?.name ?? "";
+      field("id").value = source?.id ?? "";
+      field("id").readOnly = Boolean(source);
+      field("homepage").value = source?.homepage ?? "";
+      field("feed").value = source?.feed ?? "";
+      field("contact").value = source?.contact ?? "";
+      field("permission").value = source?.permission ?? "owner";
+      field("syndication").value = source?.syndication ?? "excerpt";
+      field("license").value = source?.license ?? "";
+      field("defaultAuthor").value = source?.defaultAuthor ?? "";
+      field("language").value = source?.language ?? "";
+      field("topics").value = Array.isArray(source?.topics) ? source.topics.join(", ") : "";
+      field("relevance").value = source?.relevance ?? "";
+      field("consent").checked = false;
+      $("[data-form-title]").textContent = source?.name ?? "New publication";
+      chip.textContent = source ? source.status : "not probed";
+      previewNode.hidden = true;
+      previewNode.replaceChildren();
+      proposalNode.hidden = true;
+      proposalNode.replaceChildren();
+      statusNode.textContent = source
+        ? `Editing the merged registry entry ${source.id}. Its ID and registrant cannot be changed through this form.`
+        : "A new submission becomes a public draft pull request. It remains proposed until reviewed and activated.";
+      renderSources();
+    };
+
+    const renderSources = () => {
+      sourcesNode.replaceChildren();
+      empty.hidden = sources.length > 0;
+      sources.forEach((source) => {
+        const button = document.createElement("button");
+        button.type = "button";
+        button.className = "owned-source-item";
+        button.setAttribute("aria-current", String(source.id === activeId));
+        const name = document.createElement("strong");
+        name.textContent = source.name;
+        const meta = document.createElement("small");
+        meta.textContent = `${source.status} · ${source.syndication}`;
+        button.append(name, meta);
+        button.addEventListener("click", () => setSource(source));
+        sourcesNode.append(button);
+      });
+    };
+
+    $("[data-new]")?.addEventListener("click", () => setSource(null));
+    field("id")?.addEventListener("input", () => { idTouched = true; });
+    field("name")?.addEventListener("input", () => {
+      if (!idTouched && !activeId) field("id").value = slugify(field("name").value);
+    });
+
+    $("[data-probe]")?.addEventListener("click", async () => {
+      const button = $("[data-probe]");
+      const feed = field("feed")?.value?.trim();
+      if (!feed) {
+        field("feed")?.focus();
+        statusNode.textContent = "Enter an HTTPS feed URL before inspecting it.";
+        return;
+      }
+      button.disabled = true;
+      chip.textContent = "probing";
+      statusNode.textContent = "Inspecting the feed from the public network boundary…";
+      try {
+        const body = await api("/api/sources/probe", {
+          method: "POST",
+          headers: { "X-Hara-Request": "source-probe" },
+          body: JSON.stringify({ feed }),
+        });
+        const preview = body.preview;
+        renderPreview(preview);
+        field("feed").value = preview.finalUrl;
+        if (!field("name").value && preview.title) field("name").value = preview.title;
+        if (!field("homepage").value && preview.homepage) field("homepage").value = preview.homepage;
+        if (!field("defaultAuthor").value && preview.author) field("defaultAuthor").value = preview.author;
+        if (!field("language").value && preview.language) field("language").value = preview.language;
+        if (!idTouched && !activeId && field("name").value) field("id").value = slugify(field("name").value);
+        statusNode.textContent = "Feed inspected successfully. Submission will probe it again before preparing the registry proposal.";
+      } catch (error) {
+        chip.textContent = "probe failed";
+        previewNode.hidden = true;
+        statusNode.textContent = error.message;
+      } finally {
+        button.disabled = false;
+      }
+    });
+
+    form?.addEventListener("submit", async (event) => {
+      event.preventDefault();
+      if (!form.reportValidity()) return;
+      const submit = $("[data-submit]");
+      submit.disabled = true;
+      statusNode.textContent = "Rechecking the feed and preparing the Git-reviewed source proposal…";
+      proposalNode.hidden = true;
+      try {
+        const result = await api("/api/sources", {
+          method: "POST",
+          headers: { "X-Hara-Request": "source-proposal" },
+          body: JSON.stringify(sourcePayload()),
+        });
+        renderPreview(result.preview);
+        if (result.unchanged) {
+          statusNode.textContent = "The reviewed registry already matches this source record; no pull request was needed.";
+        } else {
+          statusNode.textContent = result.reused
+            ? "The existing draft source proposal was updated."
+            : "Draft source proposal created. Merge records the source; activation remains a separate reviewed decision.";
+          proposalNode.hidden = false;
+          proposalNode.replaceChildren("Proposal prepared: ");
+          const link = document.createElement("a");
+          link.href = result.pullRequestUrl;
+          link.target = "_blank";
+          link.rel = "noopener noreferrer";
+          link.textContent = `GitHub PR #${result.number}`;
+          proposalNode.append(link);
+        }
+        field("consent").checked = false;
+      } catch (error) {
+        statusNode.textContent = error.message;
+      } finally {
+        submit.disabled = false;
+      }
+    });
+
+    const initialise = async () => {
+      try {
+        const response = await fetch("/api/auth/session", { credentials: "include", headers: { Accept: "application/json" }, cache: "no-store" });
+        const session = await response.json().catch(() => ({ authenticated: false }));
+        const signedIn = Boolean(session?.authenticated && session?.profile?.id);
+        authorize.hidden = signedIn || session?.configured === false;
+        workspace.hidden = !signedIn;
+        sessionTitle.textContent = signedIn
+          ? `Registering as @${session.profile.login}`
+          : session?.configured === false
+            ? "Feed registration is not configured"
+            : "Sign in to add a feed";
+        sessionCopy.textContent = signedIn
+          ? "Your stable registrant identity will be attached by the server to every proposed source record."
+          : "Use Hara Identity to establish a World session. The form then prepares the GitHub change through the server.";
+        if (signedIn) {
+          const body = await api("/api/sources");
+          sources = body.sources ?? [];
+          setSource(sources[0] ?? null);
+        }
+      } catch (error) {
+        sessionTitle.textContent = "Feed registration is unavailable";
+        sessionCopy.textContent = error.message;
+        workspace.hidden = true;
+        authorize.hidden = false;
+      }
+    };
+
+    document.addEventListener("astro:page-load", initialise);
+    if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", initialise, { once: true });
+    else initialise();
+  </script>
+
+  <style>
+    .source-submit-hero,.source-contract{border-bottom:1px solid var(--hara-line)}.source-submit-hero{background:linear-gradient(145deg,color-mix(in srgb,var(--hara-signal) 8%,transparent),transparent 55%)}
+    .source-submit-stack{display:grid;gap:1.25rem}.source-session-gate{display:flex;align-items:center;justify-content:space-between;gap:2rem;padding:clamp(1.2rem,3vw,2rem);border:1px solid var(--hara-line);background:color-mix(in srgb,var(--hara-surface) 86%,transparent)}.source-session-gate p:last-child{margin:0;color:var(--hara-muted)}
+    .source-workspace{display:grid;grid-template-columns:minmax(240px,.3fr) minmax(0,1fr);gap:1.25rem;align-items:start}.owned-source-panel,.source-form{border:1px solid var(--hara-line);background:color-mix(in srgb,var(--hara-surface) 86%,transparent)}.owned-source-panel{position:sticky;top:132px;overflow:hidden}.source-form{display:grid;gap:1.05rem;padding:clamp(1.1rem,3vw,2rem)}
+    .source-panel-heading{display:flex;align-items:center;justify-content:space-between;gap:1rem;padding:1rem;border-bottom:1px solid var(--hara-line)}.source-form-heading{margin:-1rem -1rem 0}.source-panel-heading h2{margin:0}.button--compact{min-height:34px;padding:.45rem .7rem}.owned-source-list{display:grid;max-height:52vh;overflow:auto}.owned-source-item{display:grid;gap:.3rem;padding:1rem;color:var(--hara-text);text-align:left;border:0;border-bottom:1px solid var(--hara-line);background:transparent;cursor:pointer}.owned-source-item:hover,.owned-source-item[aria-current="true"]{background:color-mix(in srgb,var(--hara-signal) 9%,transparent)}.owned-source-item small,.source-empty,.source-panel-note,.source-form-status,.source-proposal,.source-form small{color:var(--hara-muted);font-size:.78rem}.source-empty,.source-panel-note{padding:1rem}.source-panel-note{border-top:1px solid var(--hara-line)}.source-panel-note p{margin:0}
+    .source-field-row{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:1rem}.source-field-row--three{grid-template-columns:repeat(3,minmax(0,1fr))}.source-form label{display:grid;gap:.45rem;font-weight:650}.source-form input,.source-form textarea,.source-form select{width:100%;padding:.78rem;color:var(--hara-text);border:1px solid var(--hara-line);background:var(--hara-abyss);font:inherit}.source-form input[readonly]{color:var(--hara-muted);background:var(--hara-surface)}
+    .feed-probe-panel{display:grid;gap:.8rem;padding:1rem;border:1px solid var(--hara-line);background:color-mix(in srgb,var(--hara-signal) 5%,transparent)}.feed-probe-control{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:.65rem}.feed-preview{display:grid;gap:.65rem;padding:.9rem;border:1px solid var(--hara-line);background:var(--hara-surface-solid)}.feed-preview__heading{display:flex;align-items:center;justify-content:space-between;gap:1rem}.feed-preview__heading span{color:var(--hara-faint);font:650 .65rem var(--hara-font-mono);text-transform:uppercase}.feed-preview code{overflow-wrap:anywhere;color:var(--hara-muted);font-size:.7rem}.feed-preview ul{margin:0;padding-left:1.1rem;color:var(--hara-muted);font-size:.78rem}
+    .source-consent{grid-template-columns:auto 1fr!important;align-items:start;padding:1rem;border:1px solid var(--hara-line);background:color-mix(in srgb,var(--hara-signal) 6%,transparent)}.source-consent input{width:1rem;margin-top:.22rem}.source-actions{display:flex;align-items:center;flex-wrap:wrap;gap:1rem}.source-status-chip{padding:.35rem .55rem;border:1px solid var(--hara-line);border-radius:999px;color:var(--hara-muted);font:680 .62rem var(--hara-font-mono);text-transform:uppercase}.source-proposal a{color:var(--hara-signal)}.source-contract{background:var(--hara-bg-clean)}
+    @media(max-width:900px){.source-workspace{grid-template-columns:1fr}.owned-source-panel{position:static}.source-field-row--three{grid-template-columns:1fr 1fr}}
+    @media(max-width:620px){.source-session-gate{align-items:flex-start;flex-direction:column}.source-field-row,.source-field-row--three,.feed-probe-control{grid-template-columns:1fr}.source-actions{align-items:stretch;flex-direction:column}.source-actions .button,.feed-probe-control .button{width:100%}.feed-preview__heading{align-items:flex-start;flex-direction:column}}
+  </style>
 </SiteLayout>

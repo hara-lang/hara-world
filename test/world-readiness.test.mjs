@@ -18,7 +18,7 @@ function identityDiscovery(origin = "https://id.hara-lang.org", world = "https:/
   });
 }
 
-function githubClient(permissions = { contents: "write", pull_requests: "write" }) {
+function githubClient(permissions = { contents: "write", pull_requests: "write", checks: "read" }) {
   return {
     repository: "hara-lang/hara-world",
     baseBranch: "main",
@@ -76,7 +76,7 @@ test("fails closed for missing proposal migrations, webhook secret, or insuffici
       proposals: null,
       proposal_events: null,
     }] }; } },
-    githubClient: githubClient({ contents: "read", pull_requests: "write" }),
+    githubClient: githubClient({ contents: "write", pull_requests: "write" }),
   });
   assert.equal(result.ready, false);
   assert.equal(result.checks.find((item) => item.name === "database").code, "proposal-lifecycle-migration-missing");

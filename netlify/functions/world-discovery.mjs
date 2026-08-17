@@ -16,16 +16,16 @@ export function discoveryPayload(request, env = {}) {
   const issuer = worldOrigin(request.url);
   const centralIssuer = identityOriginForRequest(request.url, env);
   const authConfigured = isWorldAuthConfigured(env, request.url);
-  let profilePublisherConfigured = false;
+  let gitPublisherConfigured = false;
   try {
     readGitHubAppConfig(env);
-    profilePublisherConfigured = true;
+    gitPublisherConfigured = true;
   } catch {}
   const databaseConfigured = Boolean(envValue(env, "DATABASE_URL"));
   return {
     issuer,
     centralIssuer,
-    configured: authConfigured && profilePublisherConfigured && databaseConfigured,
+    configured: authConfigured && gitPublisherConfigured && databaseConfigured,
     readinessEndpoint: `${issuer}/.well-known/hara-world-readiness`,
     authentication: {
       configured: authConfigured,
@@ -38,12 +38,30 @@ export function discoveryPayload(request, env = {}) {
       frontChannelLogout: true,
     },
     profiles: {
-      configured: profilePublisherConfigured,
+      configured: gitPublisherConfigured,
       endpoint: `${issuer}/api/profile`,
       index: "registry/profiles.json",
       management: "git-pull-request",
       publicationBoundary: "merge",
       oneOpenProposalPerIdentity: true,
+    },
+    agents: {
+      configured: gitPublisherConfigured,
+      endpoint: `${issuer}/api/agents`,
+      directory: `${issuer}/agents`,
+      publicRegistry: `${issuer}/agents.json`,
+      index: "registry/agents.json",
+      management: "git-pull-request",
+      publicationBoundary: "merge",
+      ownership: "verified-human-operator",
+      machineAuthentication: "separate",
+    },
+    posts: {
+      configured: authConfigured && gitPublisherConfigured && databaseConfigured,
+      endpoint: `${issuer}/api/posts`,
+      composer: `${issuer}/post`,
+      draftAuthority: "neon-postgresql",
+      publicationAuthority: "git-merge",
     },
     database: {
       configured: databaseConfigured,

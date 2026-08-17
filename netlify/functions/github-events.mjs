@@ -125,6 +125,30 @@ async function processReview(eventName, delivery, payload, store, options) {
   return { ignored: false, accepted: result.accepted, proposal: result.proposal };
 }
 
+async function processReviewComment(eventName, delivery, payload, store, options) {
+  const pull = payload.pull_request;
+  const descriptor = proposalDescriptorFromPullRequest(pull);
+  if (!descriptor) return { ignored: true, reason: "unmanaged-pull-request" };
+  const proposal = await ensureProposal(store, descriptor, options);
+  const comment = payload.comment ?? {};
+  const result = await store.applyEvent({
+    proposalId: proposal.proposalId,
+    provider: "github",
+    deliveryKey: delivery,
+    eventType: `github.${eventName}`,
+    action: payload.action,
+    actorGithubUserId: comment.user?.id ?? payload.sender?.id,
+    actorLogin: comment.user?.login ?? payload.sender?.login,
+    payload: {
+      ...minimalPayload(eventName, payload, pull?.number),
+      commentId: comment.id ?? null,
+      path: comment.path ?? null,
+      line: comment.line ?? comment.original_line ?? null,
+    },
+  }, { db: options.db, now: options.now ?? Date.now() });
+  return { ignored: false, accepted: result.accepted, proposal: result.proposal };
+}
+
 async function processChecks(eventName, delivery, payload, store, options, repository) {
   const pullRequestNumber = pullRequestNumberFromCheckPayload(payload);
   if (!pullRequestNumber) return { ignored: true, reason: "check-without-pull-request" };
@@ -199,6 +223,8 @@ export async function handle(request, options = {}) {
       result = await processPullRequest(eventName, delivery, payload, store, options);
     } else if (eventName === "pull_request_review") {
       result = await processReview(eventName, delivery, payload, store, options);
+    } else if (eventName === "pull_request_review_comment") {
+      result = await processReviewComment(eventName, delivery, payload, store, options);
     } else if (eventName === "check_run" || eventName === "check_suite") {
       result = await processChecks(eventName, delivery, payload, store, options, repository);
     } else {

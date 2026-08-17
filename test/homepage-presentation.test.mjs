@@ -29,7 +29,8 @@ test("the homepage exposes native posts, syndicated feeds, profiles, and a daily
   assert.match(home, /\/feed\.xml/);
   assert.match(home, /\/feed\.json/);
   assert.match(home, /\/sources\.opml/);
-  assert.match(site, /post: "https:\/\/github\.com\/hara-lang\/hara-world\/issues\/new\?template=article-proposal\.yml"/);
+  assert.match(site, /post: "\/post"/);
+  assert.match(site, /postIssue: "https:\/\/github\.com\/hara-lang\/hara-world\/issues\/new\?template=article-proposal\.yml"/);
   assert.match(site, /profile: "https:\/\/github\.com\/hara-lang\/hara-world\/issues\/new\?template=profile\.yml"/);
 });
 

@@ -49,12 +49,16 @@ export async function checkWorldReadiness(request, options = {}) {
     const result = await db.query(
       `SELECT
          to_regclass('hara_world.community_accounts')::text AS accounts,
-         to_regclass('hara_world.community_identity_handoffs')::text AS handoffs`,
+         to_regclass('hara_world.community_identity_handoffs')::text AS handoffs,
+         to_regclass('hara_world.community_post_drafts')::text AS post_drafts,
+         to_regclass('hara_world.community_post_events')::text AS post_events`,
     );
     const row = result.rows[0] ?? {};
     const migrated = row.accounts === "hara_world.community_accounts"
-      && row.handoffs === "hara_world.community_identity_handoffs";
-    checks.push(check("database", migrated, migrated ? "ready" : "community-migration-missing"));
+      && row.handoffs === "hara_world.community_identity_handoffs"
+      && row.post_drafts === "hara_world.community_post_drafts"
+      && row.post_events === "hara_world.community_post_events";
+    checks.push(check("database", migrated, migrated ? "ready" : "community-post-migration-missing"));
   } catch {
     checks.push(check("database", false, "database-unreachable"));
   }
@@ -69,10 +73,10 @@ export async function checkWorldReadiness(request, options = {}) {
     const repository = await client.request(`/repos/${client.repository}`);
     const ref = await client.request(`/repos/${client.repository}/git/ref/heads/${refPath(client.baseBranch)}`);
     const repositoryOk = repository?.full_name === client.repository && typeof ref?.object?.sha === "string";
-    checks.push(check("github-profile-publisher", permissionOk && repositoryOk,
+    checks.push(check("github-community-publisher", permissionOk && repositoryOk,
       !permissionOk ? "github-permissions-insufficient" : repositoryOk ? "ready" : "github-repository-invalid"));
   } catch {
-    checks.push(check("github-profile-publisher", false, "github-app-unreachable"));
+    checks.push(check("github-community-publisher", false, "github-app-unreachable"));
   }
 
   const ready = Boolean(authConfig) && checks.every((item) => item.ready);

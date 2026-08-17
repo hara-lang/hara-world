@@ -10,6 +10,8 @@ const httpsUrl = z.string().url().refine((value) => {
   }
 }, "Profile URLs must use HTTPS without embedded credentials.");
 
+const githubLogin = z.string().regex(/^[A-Za-z0-9](?:[A-Za-z0-9-]{0,37}[A-Za-z0-9])?$/);
+
 const articles = defineCollection({
   loader: glob({ pattern: "**/*.md", base: "./content/articles" }),
   schema: z.object({
@@ -18,7 +20,10 @@ const articles = defineCollection({
     publishedAt: z.coerce.date(),
     updatedAt: z.coerce.date().optional(),
     author: z.string().min(1),
+    authorGithubId: z.coerce.string().regex(/^\d+$/).optional(),
+    authorGithubLogin: githubLogin.optional(),
     kind: z.enum(["dispatch", "syndicated", "release", "field-note"]).default("dispatch"),
+    postType: z.enum(["note", "question", "showcase", "release", "lesson"]).optional(),
     topics: z.array(z.string()).default([]),
     canonicalUrl: z.string().url().optional(),
     sourceId: z.string().optional(),
@@ -31,6 +36,21 @@ const articles = defineCollection({
     video: z.boolean().default(false),
     newsletter: z.boolean().default(true),
     social: z.boolean().default(true)
+  }).superRefine((article, context) => {
+    const hasId = Boolean(article.authorGithubId);
+    const hasLogin = Boolean(article.authorGithubLogin);
+    if (hasId !== hasLogin) {
+      context.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Native community posts must provide both authorGithubId and authorGithubLogin.",
+      });
+    }
+    if (article.postType && !hasId) {
+      context.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "A typed community post must carry its server-verified GitHub author identity.",
+      });
+    }
   })
 });
 
@@ -38,7 +58,7 @@ const profiles = defineCollection({
   loader: glob({ pattern: "**/*.md", base: "./content/profiles" }),
   schema: z.object({
     githubId: z.coerce.string().regex(/^\d+$/),
-    githubLogin: z.string().regex(/^[A-Za-z0-9](?:[A-Za-z0-9-]{0,37}[A-Za-z0-9])?$/),
+    githubLogin,
     displayName: z.string().min(1).max(100),
     summary: z.string().min(1).max(320),
     avatarUrl: httpsUrl.optional(),

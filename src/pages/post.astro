@@ -1,0 +1,209 @@
+---
+import SiteLayout from "../layouts/SiteLayout.astro";
+---
+<SiteLayout title="Post" description="Write a private Hara World draft and submit it as a Git-reviewed community post.">
+  <header class="page-hero post-hero">
+    <div class="shell">
+      <p class="eyebrow">Community posting / private draft</p>
+      <h1>Post to Hara World.</h1>
+      <p class="lede">Draft privately, then submit portable Markdown for community review. Nothing enters the public feed until its pull request is merged.</p>
+    </div>
+  </header>
+
+  <section class="section section--tight">
+    <div class="shell post-stack">
+      <article class="post-gate">
+        <div>
+          <p class="eyebrow">World session</p>
+          <h2 data-session-title>Checking your account…</h2>
+          <p data-session-copy>Hara World is checking for an audience-bound community session.</p>
+        </div>
+        <a class="button" href="/api/auth/start?returnTo=/post" data-authorize hidden>Enable community posting</a>
+      </article>
+
+      <div class="post-workspace" data-workspace hidden>
+        <aside class="draft-panel">
+          <div class="panel-heading">
+            <div><p class="eyebrow">Private drafts</p><h2>Your posts</h2></div>
+            <button class="button button--compact" type="button" data-new>New</button>
+          </div>
+          <div class="draft-list" data-drafts></div>
+          <p class="empty" data-empty>No private drafts yet.</p>
+        </aside>
+
+        <form class="composer" data-form>
+          <input type="hidden" name="id" />
+          <div class="panel-heading">
+            <div><p class="eyebrow">Composer</p><h2 data-form-title>New community post</h2></div>
+            <span class="status-chip" data-chip>unsaved</span>
+          </div>
+
+          <div class="field-row">
+            <label><span>Post type</span><select name="postType" required>
+              <option value="note">Working note</option><option value="question">Question</option>
+              <option value="showcase">Showcase</option><option value="release">Release</option>
+              <option value="lesson">Lesson</option>
+            </select></label>
+            <label><span>Slug</span><input name="slug" required maxlength="64" pattern="[a-z0-9](?:[a-z0-9-]{0,62}[a-z0-9])?" autocomplete="off" /></label>
+          </div>
+          <label><span>Title</span><input name="title" required maxlength="160" autocomplete="off" placeholder="What are you making or learning?" /></label>
+          <label><span>One-sentence description</span><textarea name="description" required maxlength="320" rows="3"></textarea></label>
+          <label><span>Topics</span><input name="topics" maxlength="400" placeholder="hara, agents, repl" /><small>Comma-separated; at most eight labels.</small></label>
+          <label><span>Markdown body</span><textarea class="body" name="body" required maxlength="50000" rows="22" placeholder="## The experiment\n\nWrite the useful part first…"></textarea><small>Code fences, tables, lists, blockquotes, and HTTPS links are supported. Raw HTML, executable links, embeds, and tracking images are not.</small></label>
+
+          <div class="actions">
+            <button class="button" type="button" data-save>Save private draft</button>
+            <button class="button button--primary" type="submit" data-submit>Submit for review <span aria-hidden="true">↗</span></button>
+            <button class="text-button" type="button" data-withdraw hidden>Withdraw proposal</button>
+            <button class="text-button danger" type="button" data-delete hidden>Delete draft</button>
+          </div>
+          <p class="form-status" data-status aria-live="polite"></p>
+          <p class="proposal" data-proposal hidden></p>
+        </form>
+      </div>
+    </div>
+  </section>
+
+  <section class="section section--tight post-contract">
+    <div class="shell policy-grid">
+      <article class="policy-card"><h3>Private until submitted</h3><p>Draft text lives in World’s private Neon store and is visible only to its authenticated owner.</p></article>
+      <article class="policy-card"><h3>Identity is server supplied</h3><p>The browser cannot choose the post’s stable GitHub subject or current login.</p></article>
+      <article class="policy-card"><h3>Review is public</h3><p>Submission creates or updates one draft GitHub pull request.</p></article>
+      <article class="policy-card"><h3>Merge publishes</h3><p>Only merged Markdown enters the site, RSS feed, and JSON Feed.</p></article>
+    </div>
+  </section>
+
+  <script>
+    const $ = (selector) => document.querySelector(selector);
+    const form = $("[data-form]");
+    const workspace = $("[data-workspace]");
+    const draftsNode = $("[data-drafts]");
+    const empty = $("[data-empty]");
+    const status = $("[data-status]");
+    const chip = $("[data-chip]");
+    const proposal = $("[data-proposal]");
+    const authorize = $("[data-authorize]");
+    const sessionTitle = $("[data-session-title]");
+    const sessionCopy = $("[data-session-copy]");
+    const withdraw = $("[data-withdraw]");
+    const remove = $("[data-delete]");
+    let drafts = [];
+    let activeId = null;
+    let slugTouched = false;
+
+    const field = (name) => form?.elements.namedItem(name);
+    const slugify = (value) => String(value || "").normalize("NFKD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 64).replace(/-+$/g, "");
+    const payload = () => ({ slug: field("slug")?.value, postType: field("postType")?.value, title: field("title")?.value, description: field("description")?.value, topics: String(field("topics")?.value || "").split(","), body: field("body")?.value });
+
+    const api = async (path, options = {}) => {
+      const response = await fetch(path, {
+        credentials: "include", cache: "no-store", ...options,
+        headers: { Accept: "application/json", ...(options.body ? { "Content-Type": "application/json" } : {}), ...(options.method && options.method !== "GET" ? { "X-Hara-Request": "community-post" } : {}), ...(options.headers || {}) },
+      });
+      const body = response.status === 204 ? {} : await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(body?.error?.message || `World returned HTTP ${response.status}.`);
+      return body;
+    };
+
+    const setDraft = (draft = null) => {
+      activeId = draft?.id ?? null;
+      slugTouched = Boolean(draft);
+      field("id").value = draft?.id ?? "";
+      field("slug").value = draft?.slug ?? "";
+      field("postType").value = draft?.postType ?? "note";
+      field("title").value = draft?.title ?? "";
+      field("description").value = draft?.description ?? "";
+      field("topics").value = Array.isArray(draft?.topics) ? draft.topics.join(", ") : "";
+      field("body").value = draft?.body ?? "";
+      $("[data-form-title]").textContent = draft?.title ?? "New community post";
+      chip.textContent = draft?.status ?? "unsaved";
+      withdraw.hidden = !draft || !["submitted", "changes-requested", "error"].includes(draft.status);
+      remove.hidden = !draft || draft.status !== "draft" || Boolean(draft.pullRequestNumber);
+      proposal.hidden = !draft?.pullRequestUrl;
+      proposal.replaceChildren();
+      if (draft?.pullRequestUrl) {
+        proposal.append("Proposal: ");
+        const link = document.createElement("a");
+        link.href = draft.pullRequestUrl; link.target = "_blank"; link.rel = "noopener noreferrer"; link.textContent = `GitHub PR #${draft.pullRequestNumber}`;
+        proposal.append(link);
+      }
+      status.textContent = draft ? `Revision ${draft.revision}. Last saved ${new Date(draft.updatedAt).toLocaleString()}.` : "Start a private draft. It is not visible in Git until you submit it.";
+      renderDrafts();
+    };
+
+    const renderDrafts = () => {
+      draftsNode.replaceChildren();
+      empty.hidden = drafts.length > 0;
+      drafts.forEach((draft) => {
+        const button = document.createElement("button");
+        button.type = "button"; button.className = "draft-item"; button.setAttribute("aria-current", String(draft.id === activeId));
+        const title = document.createElement("strong"); title.textContent = draft.title;
+        const meta = document.createElement("small"); meta.textContent = `${draft.postType} · ${draft.status}`;
+        button.append(title, meta); button.addEventListener("click", () => setDraft(draft)); draftsNode.append(button);
+      });
+    };
+
+    const save = async () => {
+      if (!form.reportValidity()) throw new Error("Complete the required fields before saving.");
+      status.textContent = activeId ? "Saving private draft…" : "Creating private draft…";
+      const body = activeId
+        ? await api(`/api/posts/${activeId}`, { method: "PATCH", body: JSON.stringify(payload()) })
+        : await api("/api/posts", { method: "POST", body: JSON.stringify(payload()) });
+      const draft = body.draft;
+      const index = drafts.findIndex((item) => item.id === draft.id);
+      if (index >= 0) drafts[index] = draft; else drafts.unshift(draft);
+      setDraft(draft);
+      status.textContent = "Private draft saved.";
+      return draft;
+    };
+
+    $("[data-save]")?.addEventListener("click", () => save().catch((error) => { status.textContent = error.message; }));
+    $("[data-new]")?.addEventListener("click", () => setDraft(null));
+    field("slug")?.addEventListener("input", () => { slugTouched = true; });
+    field("title")?.addEventListener("input", () => { if (!slugTouched) field("slug").value = slugify(field("title").value); });
+
+    form?.addEventListener("submit", async (event) => {
+      event.preventDefault();
+      try {
+        const draft = await save();
+        status.textContent = "Preparing the Git-reviewed proposal…";
+        const result = await api(`/api/posts/${draft.id}/submit`, { method: "POST" });
+        const next = result.draft?.pullRequestUrl ? result.draft : { ...draft, status: "submitted", pullRequestNumber: result.proposal.number, pullRequestUrl: result.proposal.pullRequestUrl };
+        const index = drafts.findIndex((item) => item.id === next.id); if (index >= 0) drafts[index] = next;
+        setDraft(next);
+        status.textContent = result.stateRecorded === false ? "The GitHub proposal exists, but private state recording failed; its link is authoritative." : result.proposal.reused ? "The existing draft PR was updated." : "Draft PR created. Merge remains the publication event.";
+      } catch (error) { status.textContent = error.message; }
+    });
+
+    withdraw?.addEventListener("click", async () => {
+      if (!activeId) return;
+      try { const body = await api(`/api/posts/${activeId}/withdraw`, { method: "POST" }); drafts[drafts.findIndex((item) => item.id === activeId)] = body.draft; setDraft(body.draft); status.textContent = "Proposal withdrawn."; }
+      catch (error) { status.textContent = error.message; }
+    });
+
+    remove?.addEventListener("click", async () => {
+      if (!activeId) return;
+      try { await api(`/api/posts/${activeId}`, { method: "DELETE" }); drafts = drafts.filter((draft) => draft.id !== activeId); setDraft(drafts[0] ?? null); status.textContent = "Private draft deleted."; }
+      catch (error) { status.textContent = error.message; }
+    });
+
+    const initialise = async () => {
+      try {
+        const response = await fetch("/api/auth/session", { credentials: "include", headers: { Accept: "application/json" }, cache: "no-store" });
+        const session = await response.json().catch(() => ({ authenticated: false }));
+        const signedIn = Boolean(session?.authenticated && session?.profile?.id);
+        authorize.hidden = signedIn || session?.configured === false;
+        workspace.hidden = !signedIn;
+        sessionTitle.textContent = signedIn ? `Posting as @${session.profile.login}` : session?.configured === false ? "Community posting is not configured" : "Sign in to create a private draft";
+        sessionCopy.textContent = signedIn ? "Your stable GitHub identity is supplied server-side. Draft contents remain private until submission." : "Use Hara Identity to establish a World session; your GitHub provider token is never sent here.";
+        if (signedIn) { const body = await api("/api/posts"); drafts = body.drafts ?? []; setDraft(drafts[0] ?? null); }
+      } catch (error) { sessionTitle.textContent = "Community posting is unavailable"; sessionCopy.textContent = error.message; workspace.hidden = true; authorize.hidden = false; }
+    };
+    document.addEventListener("astro:page-load", initialise);
+    if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", initialise, { once: true }); else initialise();
+  </script>
+
+  <style>
+    .post-hero,.post-contract{border-bottom:1px solid var(--hara-line)}.post-stack{display:grid;gap:1.25rem}.post-gate{display:flex;align-items:center;justify-content:space-between;gap:2rem;padding:clamp(1.2rem,3vw,2rem);border:1px solid var(--hara-line);background:color-mix(in srgb,var(--hara-surface) 86%,transparent)}.post-gate p:last-child{margin:0;color:var(--hara-text-muted)}.post-workspace{display:grid;grid-template-columns:minmax(240px,.32fr) minmax(0,1fr);gap:1.25rem;align-items:start}.draft-panel,.composer{border:1px solid var(--hara-line);background:color-mix(in srgb,var(--hara-surface) 86%,transparent)}.draft-panel{position:sticky;top:132px;overflow:hidden}.composer{display:grid;gap:1.05rem;padding:clamp(1.1rem,3vw,2rem)}.panel-heading{display:flex;align-items:center;justify-content:space-between;gap:1rem;padding:1rem;border-bottom:1px solid var(--hara-line)}.composer>.panel-heading{margin:-1rem -1rem 0}.panel-heading h2{margin:0}.button--compact{min-height:34px;padding:.45rem .7rem}.draft-list{display:grid;max-height:60vh;overflow:auto}.draft-item{display:grid;gap:.3rem;padding:1rem;color:var(--hara-text);text-align:left;border:0;border-bottom:1px solid var(--hara-line);background:transparent;cursor:pointer}.draft-item:hover,.draft-item[aria-current="true"]{background:color-mix(in srgb,var(--hara-signal) 9%,transparent)}.draft-item small,.empty,.form-status,.proposal,.composer small{color:var(--hara-text-muted);font-size:.78rem}.empty{padding:1rem}.field-row{display:grid;grid-template-columns:minmax(180px,.35fr) minmax(0,1fr);gap:1rem}.composer label{display:grid;gap:.45rem;font-weight:650}.composer input,.composer textarea,.composer select{width:100%;padding:.78rem;color:var(--hara-text);border:1px solid var(--hara-line);background:var(--hara-abyss);font:inherit}.body{min-height:420px;resize:vertical;font-family:var(--hara-font-mono);font-size:.84rem;line-height:1.65}.status-chip{padding:.35rem .55rem;border:1px solid var(--hara-line);border-radius:999px;font-family:var(--hara-font-mono);font-size:.62rem;text-transform:uppercase}.actions{display:flex;flex-wrap:wrap;gap:.75rem}.text-button{padding:.5rem;color:var(--hara-text-muted);border:0;background:transparent;font:inherit;font-weight:700;cursor:pointer}.danger{color:#b34b4b}@media(max-width:850px){.post-workspace{grid-template-columns:1fr}.draft-panel{position:static}}@media(max-width:640px){.post-gate,.panel-heading{align-items:flex-start;flex-direction:column}.field-row{grid-template-columns:1fr}.actions .button{width:100%}}
+  </style>
+</SiteLayout>

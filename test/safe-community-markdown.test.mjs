@@ -1,6 +1,9 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import safeCommunityMarkdown, { sanitizeCommunityMarkdownTree } from "../src/lib/safe-community-markdown.mjs";
+import safeCommunityMarkdown, {
+  isCommunityDocument,
+  sanitizeCommunityMarkdownTree,
+} from "../src/lib/safe-community-markdown.mjs";
 
 test("removes raw HTML, active content, images, and unsafe link schemes at render time", () => {
   const tree = { type: "root", children: [
@@ -33,12 +36,16 @@ test("allows relative and HTTPS links while marking external user content", () =
   assert.equal(tree.children[3].tagName, "span");
 });
 
-test("applies the renderer allowlist only to profile Markdown", () => {
-  const profileTree = { type: "root", children: [{ type: "raw", value: "<b>unsafe</b>" }] };
-  const articleTree = { type: "root", children: [{ type: "raw", value: "<b>article</b>" }] };
+test("applies the renderer allowlist to profiles and native community posts only", () => {
   const transform = safeCommunityMarkdown();
+  const profileTree = { type: "root", children: [{ type: "raw", value: "<b>unsafe</b>" }] };
+  const communityTree = { type: "root", children: [{ type: "raw", value: "<b>unsafe post</b>" }] };
+  const editorialTree = { type: "root", children: [{ type: "raw", value: "<b>editorial</b>" }] };
   transform(profileTree, { path: "/repo/content/profiles/chris.md" });
-  transform(articleTree, { path: "/repo/content/articles/post.md" });
+  transform(communityTree, { path: "/repo/content/articles/community/2026/08/6685337-note.md" });
+  transform(editorialTree, { path: "/repo/content/articles/2026-08-06-editorial.md" });
   assert.deepEqual(profileTree.children, []);
-  assert.equal(articleTree.children.length, 1);
+  assert.deepEqual(communityTree.children, []);
+  assert.equal(editorialTree.children.length, 1);
+  assert.equal(isCommunityDocument({ data: { astro: { frontmatter: { authorGithubId: "6685337", postType: "note" } } } }), true);
 });

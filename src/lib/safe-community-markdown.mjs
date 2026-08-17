@@ -4,10 +4,19 @@ const ALLOWED_TAGS = new Set([
   "td", "th", "thead", "tr", "ul",
 ]);
 
-function isProfileDocument(file) {
-  const paths = [file?.path, ...(Array.isArray(file?.history) ? file.history : [])].filter(Boolean).map(String);
+function documentPaths(file) {
+  return [file?.path, ...(Array.isArray(file?.history) ? file.history : [])]
+    .filter(Boolean)
+    .map(String);
+}
+
+export function isCommunityDocument(file) {
+  const paths = documentPaths(file);
   if (paths.some((value) => /(?:^|[\\/])content[\\/]profiles[\\/][^\\/]+\.md$/i.test(value))) return true;
-  return /^\d+$/.test(String(file?.data?.astro?.frontmatter?.githubId ?? ""));
+  if (paths.some((value) => /(?:^|[\\/])content[\\/]articles[\\/]community[\\/].+\.md$/i.test(value))) return true;
+  const frontmatter = file?.data?.astro?.frontmatter ?? {};
+  if (/^\d+$/.test(String(frontmatter.githubId ?? ""))) return true;
+  return /^\d+$/.test(String(frontmatter.authorGithubId ?? "")) && typeof frontmatter.postType === "string";
 }
 
 function plainText(node) {
@@ -100,6 +109,6 @@ export function sanitizeCommunityMarkdownTree(tree) {
 
 export default function safeCommunityMarkdown() {
   return (tree, file) => {
-    if (isProfileDocument(file)) sanitizeCommunityMarkdownTree(tree);
+    if (isCommunityDocument(file)) sanitizeCommunityMarkdownTree(tree);
   };
 }

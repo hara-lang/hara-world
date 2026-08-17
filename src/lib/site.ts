@@ -9,7 +9,8 @@ export const SITE = {
   specs: "https://specs.hara-lang.org/",
   packages: "https://packages.hara-lang.org/",
   identity: "https://id.hara-lang.org/",
-  post: "https://github.com/hara-lang/hara-world/issues/new?template=article-proposal.yml",
+  post: "/post",
+  postIssue: "https://github.com/hara-lang/hara-world/issues/new?template=article-proposal.yml",
   profile: "https://github.com/hara-lang/hara-world/issues/new?template=profile.yml"
 } as const;
 

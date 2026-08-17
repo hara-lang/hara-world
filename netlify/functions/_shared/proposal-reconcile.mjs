@@ -27,6 +27,15 @@ function reconciliationKey(proposal, pull, reviewState, checksState) {
   return `proposal:${parts.join(":")}`.slice(0, 240);
 }
 
+async function optionalGitHubRead(operation, fallback) {
+  try {
+    return await operation();
+  } catch (error) {
+    if ([403, 404].includes(error?.status)) return fallback;
+    throw error;
+  }
+}
+
 export async function reconcileProposal(proposal, client, {
   proposalStore,
   db,
@@ -46,9 +55,15 @@ export async function reconcileProposal(proposal, client, {
   }
 
   const [reviewsPayload, checksPayload] = await Promise.all([
-    client.request(`/repos/${client.repository}/pulls/${proposal.pullRequestNumber}/reviews?per_page=100`),
+    optionalGitHubRead(
+      () => client.request(`/repos/${client.repository}/pulls/${proposal.pullRequestNumber}/reviews?per_page=100`),
+      [],
+    ),
     pull.head?.sha
-      ? client.request(`/repos/${client.repository}/commits/${pull.head.sha}/check-runs?per_page=100`)
+      ? optionalGitHubRead(
+          () => client.request(`/repos/${client.repository}/commits/${pull.head.sha}/check-runs?per_page=100`),
+          { check_runs: [] },
+        )
       : Promise.resolve({ check_runs: [] }),
   ]);
   const reviewState = reviewStateFromReviews(reviewsPayload);

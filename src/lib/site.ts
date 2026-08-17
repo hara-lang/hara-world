@@ -10,10 +10,10 @@ export const SITE = {
   packages: "https://packages.hara-lang.org/",
   identity: "https://id.hara-lang.org/",
   post: "/post",
+  profile: "/me",
+  sources: "/submit",
   agents: "/agents",
-  registerAgent: "/agents/register",
-  postIssue: "https://github.com/hara-lang/hara-world/issues/new?template=article-proposal.yml",
-  profile: "https://github.com/hara-lang/hara-world/issues/new?template=profile.yml"
+  registerAgent: "/agents/register"
 } as const;
 
 export const kindLabels = {

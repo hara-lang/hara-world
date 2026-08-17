@@ -66,6 +66,12 @@ function minimalPayload(eventName, payload, pullRequestNumber) {
 
 async function ensureProposal(store, descriptor, options) {
   if (!descriptor) return null;
+  const current = await store.findByPullRequest(
+    descriptor.repository,
+    descriptor.pullRequestNumber,
+    { db: options.db },
+  );
+  if (current) return current;
   return store.recordSubmission(descriptor, {
     db: options.db,
     now: options.now ?? Date.now(),

@@ -9,6 +9,7 @@ const FAILURE_CONCLUSIONS = new Set([
   "timed_out",
 ]);
 const PASSING_CONCLUSIONS = new Set(["success", "neutral", "skipped"]);
+const POST_DRAFT_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
 function safeEqual(left, right) {
   const a = Buffer.from(String(left));
@@ -32,12 +33,23 @@ function titleWithoutPrefix(value) {
     .slice(0, 240) || "Untitled proposal";
 }
 
+function sameRepositoryPullRequest(pull) {
+  const base = String(pull?.base?.repo?.full_name ?? "");
+  const head = String(pull?.head?.repo?.full_name ?? "");
+  return Boolean(base && head && base === head);
+}
+
+function branchIs(actual, expected) {
+  return String(actual ?? "") === expected;
+}
+
 export function proposalDescriptorFromPullRequest(pullRequest) {
   const pull = pullRequest ?? {};
+  if (!sameRepositoryPullRequest(pull)) return null;
   const body = String(pull.body ?? "");
   const common = {
     resourceTitle: titleWithoutPrefix(pull.title),
-    repository: String(pull.base?.repo?.full_name ?? pull.head?.repo?.full_name ?? ""),
+    repository: String(pull.base?.repo?.full_name ?? ""),
     branch: String(pull.head?.ref ?? ""),
     baseBranch: String(pull.base?.ref ?? "main"),
     pullRequestNumber: Number(pull.number),
@@ -49,18 +61,22 @@ export function proposalDescriptorFromPullRequest(pullRequest) {
 
   const post = body.match(/<!--\s*hara-world-post:draft:([0-9a-f-]{36})\s*-->/i);
   const postAuthor = body.match(/<!--\s*hara-world-author:github:(\d+)\s*-->/i);
-  if (body.includes("<!-- hara-world-post-proposal -->") && post && postAuthor) {
+  if (body.includes("<!-- hara-world-post-proposal -->") && post && postAuthor && POST_DRAFT_PATTERN.test(post[1])) {
+    const draftId = post[1].toLowerCase();
+    const shortId = draftId.replace(/-/g, "").slice(0, 16);
+    if (!branchIs(common.branch, `post/github-${postAuthor[1]}/${shortId}`)) return null;
     return {
       ...common,
       proposalType: "post",
       ownerGithubUserId: postAuthor[1],
-      resourceKey: post[1].toLowerCase(),
+      resourceKey: draftId,
       publicPath: null,
     };
   }
 
   const profile = body.match(/<!--\s*hara-world-profile:github:(\d+)\s*-->/i);
   if (body.includes("<!-- hara-world-profile-proposal -->") && profile) {
+    if (!branchIs(common.branch, `profile/github-${profile[1]}`)) return null;
     return {
       ...common,
       proposalType: "profile",
@@ -72,22 +88,26 @@ export function proposalDescriptorFromPullRequest(pullRequest) {
 
   const agent = body.match(/<!--\s*hara-world-agent:(agent:github:(\d+):([a-z0-9](?:[a-z0-9-]{0,62}[a-z0-9])?))\s*-->/i);
   if (body.includes("<!-- hara-world-agent-proposal -->") && agent) {
+    const slug = agent[3].toLowerCase();
+    if (!branchIs(common.branch, `agent-registry/github-${agent[2]}/${slug}`)) return null;
     return {
       ...common,
       proposalType: "agent",
       ownerGithubUserId: agent[2],
       resourceKey: agent[1].toLowerCase(),
-      publicPath: `/agents/${agent[3].toLowerCase()}/`,
+      publicPath: `/agents/${slug}/`,
     };
   }
 
   const source = body.match(/<!--\s*hara-world-source:github:(\d+):([a-z0-9]+(?:-[a-z0-9]+)*)\s*-->/i);
   if (body.includes("<!-- hara-world-source-proposal -->") && source) {
+    const sourceId = source[2].toLowerCase();
+    if (!branchIs(common.branch, `source-registry/github-${source[1]}/${sourceId}`)) return null;
     return {
       ...common,
       proposalType: "source",
       ownerGithubUserId: source[1],
-      resourceKey: source[2].toLowerCase(),
+      resourceKey: sourceId,
       publicPath: "/sources",
     };
   }

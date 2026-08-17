@@ -1,6 +1,9 @@
 import { communityAccountStatus } from "./_shared/community-accounts.mjs";
 import { createGitHubAppClient } from "./_shared/github-app.mjs";
-import { reconcileProposals } from "./_shared/proposal-reconcile.mjs";
+import {
+  discoverManagedProposals,
+  reconcileProposals,
+} from "./_shared/proposal-reconcile.mjs";
 import {
   groupProposalCounts,
   listProposalsForOwner,
@@ -83,8 +86,28 @@ export async function handle(request, options = {}) {
   let client;
   try { client = await resolveClient(options, env, now); }
   catch { return error(503, "PROPOSAL_RECONCILER_UNAVAILABLE", "The GitHub proposal reconciler is not configured."); }
+
+  let discovered;
+  try {
+    discovered = await (options.discoverManagedProposalsImpl ?? discoverManagedProposals)(client, {
+      ownerGithubUserId: identity.id,
+      proposalStore: options.proposalLifecycleStore,
+      db: options.db,
+      now,
+    });
+  } catch (cause) {
+    discovered = [{
+      ok: false,
+      error: {
+        code: "PROPOSAL_DISCOVERY_FAILED",
+        message: cause?.message || "Managed pull requests could not be discovered.",
+      },
+    }];
+  }
+
+  try { proposals = await store.listForOwner(identity.id, { db: options.db, limit: 200 }); } catch {}
   const open = proposals.filter((proposal) => !TERMINAL_STATES.has(proposal.state)).slice(0, 50);
-  const results = await (options.reconcileProposalsImpl ?? reconcileProposals)(open, client, {
+  const reconciled = await (options.reconcileProposalsImpl ?? reconcileProposals)(open, client, {
     proposalStore: options.proposalLifecycleStore,
     db: options.db,
     now,
@@ -93,7 +116,8 @@ export async function handle(request, options = {}) {
   try { refreshed = await store.listForOwner(identity.id, { db: options.db, limit: 200 }); } catch {}
   return json(200, {
     ok: true,
-    reconciled: results,
+    discovered,
+    reconciled,
     proposals: refreshed,
     counts: groupProposalCounts(refreshed),
   });

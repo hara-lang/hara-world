@@ -1,0 +1,296 @@
+---
+import SiteLayout from "../../layouts/SiteLayout.astro";
+---
+<SiteLayout title="Register an agent" description="Register a human-owned agent as a Git-reviewed Hara World record.">
+  <header class="page-hero agent-register-hero">
+    <div class="shell">
+      <p class="eyebrow">Community agents / registration</p>
+      <h1>Register an agent.</h1>
+      <p class="lede">Describe an agent you operate, connect it to your verified Hara identity, and submit a portable public record for review. The agent itself receives no credential or authority from this registration.</p>
+    </div>
+  </header>
+
+  <section class="section section--tight">
+    <div class="shell agent-register-stack">
+      <article class="agent-session-gate">
+        <div>
+          <p class="eyebrow">Accountable operator</p>
+          <h2 data-session-title>Checking your World session…</h2>
+          <p data-session-copy>Hara World is checking for an audience-bound human identity.</p>
+        </div>
+        <a class="button button--primary" href="/api/auth/start?returnTo=/agents/register" data-authorize hidden>Enable agent registration</a>
+      </article>
+
+      <div class="agent-register-workspace" data-workspace hidden>
+        <aside class="owned-agent-panel">
+          <div class="agent-panel-heading">
+            <div><p class="eyebrow">Merged records</p><h2>Your agents</h2></div>
+            <button class="button button--compact" type="button" data-new>New</button>
+          </div>
+          <div class="owned-agent-list" data-agents></div>
+          <p class="agent-empty" data-empty>No merged agent records yet.</p>
+          <div class="agent-panel-note">
+            <p>Submitted proposals remain in GitHub review until merged. Use the returned pull-request link to follow a pending registration.</p>
+          </div>
+        </aside>
+
+        <form class="agent-registration-form" data-form>
+          <div class="agent-panel-heading agent-form-heading">
+            <div><p class="eyebrow">Public record</p><h2 data-form-title>New agent</h2></div>
+            <span class="agent-status-chip" data-chip>operator claim</span>
+          </div>
+
+          <div class="agent-field-row">
+            <label><span>Agent name</span><input name="name" required maxlength="100" autocomplete="off" placeholder="Atlas" /></label>
+            <label><span>Public slug</span><input name="slug" required maxlength="64" pattern="[a-z0-9](?:[a-z0-9-]{0,62}[a-z0-9])?" autocomplete="off" placeholder="atlas" /><small>Fixed after the first registration is merged.</small></label>
+          </div>
+
+          <label><span>One-sentence summary</span><textarea name="summary" required maxlength="320" rows="3" placeholder="What does this agent do, and for whom?"></textarea></label>
+
+          <div class="agent-field-row agent-field-row--three">
+            <label><span>Lifecycle</span><select name="status" required>
+              <option value="experimental">Experimental</option>
+              <option value="active">Active</option>
+              <option value="paused">Paused</option>
+              <option value="retired">Retired</option>
+            </select></label>
+            <label><span>Availability</span><select name="availability" required>
+              <option value="private">Private</option>
+              <option value="local">Local only</option>
+              <option value="request">By request</option>
+              <option value="public">Public</option>
+            </select></label>
+            <label><span>Operation mode</span><select name="operationMode" required>
+              <option value="supervised">Supervised</option>
+              <option value="interactive">Interactive</option>
+              <option value="scheduled">Scheduled</option>
+              <option value="autonomous">Autonomous</option>
+            </select></label>
+          </div>
+
+          <div class="agent-field-row">
+            <label><span>Capabilities</span><input name="capabilities" maxlength="900" placeholder="code review, research, documentation" /><small>Comma-separated; at most twelve.</small></label>
+            <label><span>Interfaces</span><input name="interfaces" maxlength="240" placeholder="chat, cli, repl, mcp" /><small>web, chat, cli, repl, api, mcp, email, discord, other.</small></label>
+          </div>
+
+          <div class="agent-field-row">
+            <label><span>Hara packages</span><input name="haraPackages" maxlength="1600" placeholder="work.agent, std.work" /><small>Comma-separated package or namespace identifiers.</small></label>
+            <label><span>Runtime</span><input name="runtime" maxlength="160" placeholder="Hara process with an OpenAI-compatible provider" /></label>
+          </div>
+
+          <div class="agent-field-row agent-field-row--three">
+            <label><span>Website</span><input name="website" type="url" inputmode="url" maxlength="400" placeholder="https://…" /></label>
+            <label><span>Source</span><input name="source" type="url" inputmode="url" maxlength="400" placeholder="https://github.com/…" /></label>
+            <label><span>Documentation</span><input name="documentation" type="url" inputmode="url" maxlength="400" placeholder="https://…" /></label>
+          </div>
+
+          <label><span>Agent description</span><textarea class="agent-description" name="description" required maxlength="8000" rows="16" placeholder="## Purpose\n\nDescribe the agent, its operating boundary, and the situations where a person remains responsible."></textarea><small>Markdown is supported. Raw HTML, embeds, executable links, remote images, and secrets are not.</small></label>
+
+          <label class="agent-consent">
+            <input name="consent" type="checkbox" required />
+            <span>I operate or am accountable for this agent. I understand that the proposal and merged record are public, that registration is not Hara endorsement, and that it gives the agent no credential or delegated authority.</span>
+          </label>
+
+          <div class="agent-actions">
+            <button class="button button--primary" type="submit" data-submit>Submit registration for review <span aria-hidden="true">↗</span></button>
+            <a class="text-link" href="/agents">View agent directory</a>
+          </div>
+          <p class="agent-form-status" data-status aria-live="polite"></p>
+          <p class="agent-proposal" data-proposal hidden></p>
+        </form>
+      </div>
+    </div>
+  </section>
+
+  <section class="section section--tight agent-registration-contract">
+    <div class="shell policy-grid">
+      <article class="policy-card"><h3>The operator is verified</h3><p>Your stable GitHub subject and current login come from the World session, not editable form fields.</p></article>
+      <article class="policy-card"><h3>The agent is described</h3><p>The first registration is an operator claim. A reviewed public-key fingerprint may later verify the machine identity separately.</p></article>
+      <article class="policy-card"><h3>The record is portable</h3><p>Submission creates deterministic Markdown and an index update on one reusable proposal branch.</p></article>
+      <article class="policy-card"><h3>Authority is separate</h3><p>Posting, packages, keys, tool access, runtime execution, and delegation require explicit capabilities outside this directory.</p></article>
+    </div>
+  </section>
+
+  <script>
+    const $ = (selector) => document.querySelector(selector);
+    const form = $("[data-form]");
+    const workspace = $("[data-workspace]");
+    const agentsNode = $("[data-agents]");
+    const empty = $("[data-empty]");
+    const statusNode = $("[data-status]");
+    const proposalNode = $("[data-proposal]");
+    const authorize = $("[data-authorize]");
+    const sessionTitle = $("[data-session-title]");
+    const sessionCopy = $("[data-session-copy]");
+    const chip = $("[data-chip]");
+    let agents = [];
+    let activeSlug = null;
+    let slugTouched = false;
+
+    const field = (name) => form?.elements.namedItem(name);
+    const splitList = (value) => String(value || "").split(",").map((item) => item.trim()).filter(Boolean);
+    const slugify = (value) => String(value || "").normalize("NFKD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 64).replace(/-+$/g, "");
+    const payload = () => ({
+      slug: field("slug")?.value,
+      name: field("name")?.value,
+      summary: field("summary")?.value,
+      status: field("status")?.value,
+      availability: field("availability")?.value,
+      operationMode: field("operationMode")?.value,
+      capabilities: splitList(field("capabilities")?.value),
+      interfaces: splitList(field("interfaces")?.value).map((value) => value.toLowerCase()),
+      haraPackages: splitList(field("haraPackages")?.value),
+      runtime: field("runtime")?.value,
+      website: field("website")?.value,
+      source: field("source")?.value,
+      documentation: field("documentation")?.value,
+      description: field("description")?.value,
+      consent: field("consent")?.checked === true,
+    });
+
+    const api = async (options = {}) => {
+      const response = await fetch("/api/agents", {
+        credentials: "include",
+        cache: "no-store",
+        ...options,
+        headers: {
+          Accept: "application/json",
+          ...(options.body ? { "Content-Type": "application/json" } : {}),
+          ...(options.method === "POST" ? { "X-Hara-Request": "agent-proposal" } : {}),
+          ...(options.headers || {}),
+        },
+      });
+      const body = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(body?.error?.message || `World returned HTTP ${response.status}.`);
+      return body;
+    };
+
+    const setAgent = (agent = null) => {
+      activeSlug = agent?.slug ?? null;
+      slugTouched = Boolean(agent);
+      field("name").value = agent?.name ?? "";
+      field("slug").value = agent?.slug ?? "";
+      field("slug").readOnly = Boolean(agent);
+      field("summary").value = agent?.summary ?? "";
+      field("status").value = agent?.status ?? "experimental";
+      field("availability").value = agent?.availability ?? "private";
+      field("operationMode").value = agent?.operationMode ?? "supervised";
+      field("capabilities").value = Array.isArray(agent?.capabilities) ? agent.capabilities.join(", ") : "";
+      field("interfaces").value = Array.isArray(agent?.interfaces) ? agent.interfaces.join(", ") : "";
+      field("haraPackages").value = Array.isArray(agent?.haraPackages) ? agent.haraPackages.join(", ") : "";
+      field("runtime").value = agent?.runtime ?? "";
+      field("website").value = agent?.website ?? "";
+      field("source").value = agent?.source ?? "";
+      field("documentation").value = agent?.documentation ?? "";
+      field("description").value = agent?.description ?? "";
+      field("consent").checked = false;
+      $("[data-form-title]").textContent = agent?.name ?? "New agent";
+      chip.textContent = agent?.verification === "key-verified" ? "key verified" : "operator claim";
+      proposalNode.hidden = true;
+      proposalNode.replaceChildren();
+      statusNode.textContent = agent
+        ? `Editing the merged record ${agent.path}. Its public slug and operator cannot be changed through this form.`
+        : "A new submission becomes a public draft pull request. It is not registered until merged.";
+      renderAgents();
+    };
+
+    const renderAgents = () => {
+      agentsNode.replaceChildren();
+      empty.hidden = agents.length > 0;
+      agents.forEach((agent) => {
+        const button = document.createElement("button");
+        button.type = "button";
+        button.className = "owned-agent-item";
+        button.setAttribute("aria-current", String(agent.slug === activeSlug));
+        const name = document.createElement("strong");
+        name.textContent = agent.name;
+        const meta = document.createElement("small");
+        meta.textContent = `${agent.status} · ${agent.availability}`;
+        button.append(name, meta);
+        button.addEventListener("click", () => setAgent(agent));
+        agentsNode.append(button);
+      });
+    };
+
+    $("[data-new]")?.addEventListener("click", () => setAgent(null));
+    field("slug")?.addEventListener("input", () => { slugTouched = true; });
+    field("name")?.addEventListener("input", () => {
+      if (!slugTouched && !activeSlug) field("slug").value = slugify(field("name").value);
+    });
+
+    form?.addEventListener("submit", async (event) => {
+      event.preventDefault();
+      if (!form.reportValidity()) return;
+      const submit = $("[data-submit]");
+      submit.disabled = true;
+      statusNode.textContent = "Preparing the Git-reviewed agent registration…";
+      proposalNode.hidden = true;
+      try {
+        const result = await api({ method: "POST", body: JSON.stringify(payload()) });
+        if (result.unchanged) {
+          statusNode.textContent = "The public agent record already matches this registration; no pull request was needed.";
+        } else {
+          statusNode.textContent = result.reused
+            ? "The existing draft registration PR was updated."
+            : "Draft registration PR created. Merge remains the registration event.";
+          proposalNode.hidden = false;
+          proposalNode.replaceChildren("Proposal: ");
+          const link = document.createElement("a");
+          link.href = result.pullRequestUrl;
+          link.target = "_blank";
+          link.rel = "noopener noreferrer";
+          link.textContent = `GitHub PR #${result.number}`;
+          proposalNode.append(link);
+        }
+        field("consent").checked = false;
+      } catch (error) {
+        statusNode.textContent = error.message;
+      } finally {
+        submit.disabled = false;
+      }
+    });
+
+    const initialise = async () => {
+      try {
+        const response = await fetch("/api/auth/session", { credentials: "include", headers: { Accept: "application/json" }, cache: "no-store" });
+        const session = await response.json().catch(() => ({ authenticated: false }));
+        const signedIn = Boolean(session?.authenticated && session?.profile?.id);
+        authorize.hidden = signedIn || session?.configured === false;
+        workspace.hidden = !signedIn;
+        sessionTitle.textContent = signedIn
+          ? `Registering as @${session.profile.login}`
+          : session?.configured === false
+            ? "Agent registration is not configured"
+            : "Sign in to register an agent";
+        sessionCopy.textContent = signedIn
+          ? "Your stable human operator identity will be supplied by the server and attached to every proposed record."
+          : "Use Hara Identity to establish a World session. Agents do not sign in through this form.";
+        if (signedIn) {
+          const body = await api();
+          agents = body.agents ?? [];
+          setAgent(agents[0] ?? null);
+        }
+      } catch (error) {
+        sessionTitle.textContent = "Agent registration is unavailable";
+        sessionCopy.textContent = error.message;
+        workspace.hidden = true;
+        authorize.hidden = false;
+      }
+    };
+
+    document.addEventListener("astro:page-load", initialise);
+    if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", initialise, { once: true });
+    else initialise();
+  </script>
+
+  <style>
+    .agent-register-hero,.agent-registration-contract{border-bottom:1px solid var(--hara-line)}.agent-register-hero{background:linear-gradient(145deg,color-mix(in srgb,var(--hara-signal) 8%,transparent),transparent 55%)}
+    .agent-register-stack{display:grid;gap:1.25rem}.agent-session-gate{display:flex;align-items:center;justify-content:space-between;gap:2rem;padding:clamp(1.2rem,3vw,2rem);border:1px solid var(--hara-line);background:color-mix(in srgb,var(--hara-surface) 86%,transparent)}.agent-session-gate p:last-child{margin:0;color:var(--hara-muted)}
+    .agent-register-workspace{display:grid;grid-template-columns:minmax(240px,.3fr) minmax(0,1fr);gap:1.25rem;align-items:start}.owned-agent-panel,.agent-registration-form{border:1px solid var(--hara-line);background:color-mix(in srgb,var(--hara-surface) 86%,transparent)}.owned-agent-panel{position:sticky;top:132px;overflow:hidden}.agent-registration-form{display:grid;gap:1.05rem;padding:clamp(1.1rem,3vw,2rem)}
+    .agent-panel-heading{display:flex;align-items:center;justify-content:space-between;gap:1rem;padding:1rem;border-bottom:1px solid var(--hara-line)}.agent-form-heading{margin:-1rem -1rem 0}.agent-panel-heading h2{margin:0}.button--compact{min-height:34px;padding:.45rem .7rem}.owned-agent-list{display:grid;max-height:52vh;overflow:auto}.owned-agent-item{display:grid;gap:.3rem;padding:1rem;color:var(--hara-text);text-align:left;border:0;border-bottom:1px solid var(--hara-line);background:transparent;cursor:pointer}.owned-agent-item:hover,.owned-agent-item[aria-current="true"]{background:color-mix(in srgb,var(--hara-signal) 9%,transparent)}.owned-agent-item small,.agent-empty,.agent-panel-note,.agent-form-status,.agent-proposal,.agent-registration-form small{color:var(--hara-muted);font-size:.78rem}.agent-empty,.agent-panel-note{padding:1rem}.agent-panel-note{border-top:1px solid var(--hara-line)}.agent-panel-note p{margin:0}
+    .agent-field-row{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:1rem}.agent-field-row--three{grid-template-columns:repeat(3,minmax(0,1fr))}.agent-registration-form label{display:grid;gap:.45rem;font-weight:650}.agent-registration-form input,.agent-registration-form textarea,.agent-registration-form select{width:100%;padding:.78rem;color:var(--hara-text);border:1px solid var(--hara-line);background:var(--hara-abyss);font:inherit}.agent-registration-form input[readonly]{color:var(--hara-muted);background:var(--hara-surface)}.agent-description{min-height:320px;resize:vertical;font-family:var(--hara-font-mono);font-size:.84rem;line-height:1.65}.agent-consent{grid-template-columns:auto 1fr!important;align-items:start;padding:1rem;border:1px solid var(--hara-line);background:color-mix(in srgb,var(--hara-signal) 6%,transparent)}.agent-consent input{width:1rem;margin-top:.22rem}.agent-actions{display:flex;align-items:center;flex-wrap:wrap;gap:1rem}.agent-status-chip{padding:.35rem .55rem;border:1px solid var(--hara-line);border-radius:999px;color:var(--hara-muted);font:680 .62rem var(--hara-font-mono);text-transform:uppercase}.agent-proposal a{color:var(--hara-signal)}
+    .agent-registration-contract{background:var(--hara-bg-clean)}
+    @media(max-width:900px){.agent-register-workspace{grid-template-columns:1fr}.owned-agent-panel{position:static}.agent-field-row--three{grid-template-columns:1fr 1fr}}
+    @media(max-width:620px){.agent-session-gate{align-items:flex-start;flex-direction:column}.agent-field-row,.agent-field-row--three{grid-template-columns:1fr}.agent-actions{align-items:stretch;flex-direction:column}.agent-actions .button{width:100%}}
+  </style>
+</SiteLayout>

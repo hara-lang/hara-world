@@ -38,8 +38,15 @@ grep -q '/api/auth/session' "$work/world-session-sync.js"
 grep -q '/api/auth/logout' "$work/world-session-sync.js"
 
 fetch_until "${world_origin}/me" "$work/me.html"
-grep -q 'Your Hara World account' "$work/me.html"
-grep -q 'Open draft profile PR' "$work/me.html"
+grep -q '>My World\.<' "$work/me.html"
+grep -q 'Your proposal activity' "$work/me.html"
+grep -q 'Submit profile for review' "$work/me.html"
+grep -q '/api/proposals/reconcile' "$work/me.html"
+fetch_until "${world_origin}/review" "$work/review.html"
+grep -q '>Review the World\.<' "$work/review.html"
+grep -q 'Changes or failing checks' "$work/review.html"
+grep -q '/api/review/proposals' "$work/review.html"
+
 fetch_until "${world_origin}/feed.xml" "$work/feed.xml"
 grep -Eq '<rss|<feed' "$work/feed.xml"
 fetch_until "${world_origin}/feed.json" "$work/feed.json"
@@ -66,6 +73,15 @@ jq -e --arg issuer "$world_origin" --arg central "$identity_origin" '
   and .authentication.frontChannelLogout == true
   and .profiles.index == "registry/profiles.json"
   and .profiles.oneOpenProposalPerIdentity == true
+  and .proposals.dashboard == ($issuer + "/me")
+  and .proposals.endpoint == ($issuer + "/api/proposals")
+  and .proposals.reconcileEndpoint == ($issuer + "/api/proposals/reconcile")
+  and .proposals.reviewQueue == ($issuer + "/review")
+  and .proposals.reviewEndpoint == ($issuer + "/api/review/proposals")
+  and .proposals.webhookEndpoint == ($issuer + "/api/github/events")
+  and .proposals.deliveryDeduplication == true
+  and .proposals.reconciliationFallback == true
+  and .proposals.publicationBoundary == "merge"
 ' "$work/world.json" >/dev/null
 
 if [[ "$REQUIRE_WORLD_AUTH_CONFIGURED" == "true" || "$REQUIRE_PROFILE_PUBLISHER_CONFIGURED" == "true" ]]; then
@@ -73,6 +89,8 @@ if [[ "$REQUIRE_WORLD_AUTH_CONFIGURED" == "true" || "$REQUIRE_PROFILE_PUBLISHER_
   jq -e --arg issuer "$world_origin" --arg central "$identity_origin" '
     .ready == true and .issuer == $issuer and .centralIssuer == $central
     and ([.checks[] | select(.ready != true)] | length) == 0
+    and any(.checks[]; .name == "github-proposal-webhook" and .ready == true)
+    and any(.checks[]; .name == "database" and .ready == true)
   ' "$work/readiness.json" >/dev/null
 fi
 
@@ -96,6 +114,18 @@ status="$(curl --silent --show-error --max-time 20 --output "$work/profile.json"
 [[ "$status" == "401" ]]
 jq -e '.error.code == "WORLD_SESSION_REQUIRED"' "$work/profile.json" >/dev/null
 
+status="$(curl --silent --show-error --max-time 20 --output "$work/proposals.json" --write-out '%{http_code}' "${world_origin}/api/proposals")"
+[[ "$status" == "401" ]]
+jq -e '.error.code == "WORLD_SESSION_REQUIRED"' "$work/proposals.json" >/dev/null
+
+status="$(curl --silent --show-error --max-time 20 --output "$work/review.json" --write-out '%{http_code}' "${world_origin}/api/review/proposals")"
+[[ "$status" == "401" ]]
+jq -e '.error.code == "WORLD_SESSION_REQUIRED"' "$work/review.json" >/dev/null
+
+status="$(curl --silent --show-error --max-time 20 --output "$work/webhook.json" --write-out '%{http_code}' "${world_origin}/api/github/events")"
+[[ "$status" == "405" ]]
+jq -e '.error.code == "METHOD_NOT_ALLOWED"' "$work/webhook.json" >/dev/null
+
 # Netlify preserves source query parameters on same-origin HTTP redirects. World therefore clears its cookie in an HTML bridge whose validated return link is exact and whose script uses that link directly.
 logout_return="${world_origin}/me"
 world_logout="${world_origin}/api/auth/logout?source=hara-identity&returnTo=$(jq -rn --arg value "$logout_return" '$value|@uri')"
@@ -109,4 +139,4 @@ if grep -Eq 'source=hara-identity|returnTo=' "$work/world-logout.html"; then
   exit 1
 fi
 
-echo "Verified Hara World at ${world_origin} with active readiness, account enforcement, and exact front-channel logout."
+echo "Verified Hara World at ${world_origin} with proposal lifecycle readiness, account enforcement, and exact front-channel logout."

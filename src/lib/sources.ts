@@ -14,6 +14,11 @@ export type SourceRegistryEntry = {
   topics: string[];
   language?: string;
   maxItemsPerRun?: number;
+  relevance: string;
+  registrantGithubId?: string;
+  registrantGithubLogin?: string;
+  registeredAt?: string;
+  updatedAt?: string;
 };
 
 export const sourceRegistry = registry as {

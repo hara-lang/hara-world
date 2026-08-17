@@ -23,6 +23,10 @@ jobs:
       - run: npm install
       - name: Validate deployment scripts
         run: bash -n .github/scripts/*.sh
-      - run: npm run sources:check
+      - name: Validate reviewed registries
+        run: |
+          npm run sources:check
+          npm run profiles:check
+          npm run agents:check
       - run: npm test
       - run: npm run build

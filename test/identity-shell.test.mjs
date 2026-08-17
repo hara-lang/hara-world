@@ -31,7 +31,7 @@ test("My World uses the trusted local session for profile and lifecycle proposal
   assert.match(accountPage, /\/api\/auth\/start\?returnTo=\/me/);
   assert.match(accountPage, /fetch\("\/api\/auth\/session"/);
   assert.match(accountPage, /api\("\/api\/profile"/);
-  assert.match(accountPage, /api\("\/api\/proposals"/);
+  assert.match(accountPage, /"\/api\/proposals\/reconcile"\s*:\s*"\/api\/proposals"/);
   assert.match(accountPage, /Submit profile for review/);
   assert.match(accountPage, /stored in Git history/);
   assert.match(accountPage, /X-Hara-Request": "profile-proposal"/);

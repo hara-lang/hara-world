@@ -4,7 +4,10 @@ import {
   pullRequestLifecycle,
   reviewStateFromReviews,
 } from "./github-proposals.mjs";
-import { applyProposalLifecycleEvent } from "./proposals.mjs";
+import {
+  applyProposalLifecycleEvent,
+  recordProposalSubmission,
+} from "./proposals.mjs";
 
 function stateFromPullAndReview(pullLifecycle, reviewState) {
   if (["merged", "closed"].includes(pullLifecycle.state)) return pullLifecycle.state;
@@ -34,6 +37,50 @@ async function optionalGitHubRead(operation, fallback) {
     if ([403, 404].includes(error?.status)) return fallback;
     throw error;
   }
+}
+
+export async function discoverManagedProposals(client, {
+  ownerGithubUserId,
+  proposalStore,
+  db,
+  now = Date.now(),
+  maximum = 100,
+} = {}) {
+  if (!client?.repository || typeof client.request !== "function") {
+    throw new TypeError("A GitHub App client is required for proposal discovery.");
+  }
+  const owner = ownerGithubUserId === undefined || ownerGithubUserId === null
+    ? null
+    : String(ownerGithubUserId);
+  if (owner !== null && !/^\d+$/.test(owner)) throw new TypeError("Proposal discovery owner must be a numeric GitHub ID.");
+  const limit = Math.max(1, Math.min(100, Number(maximum) || 100));
+  const pulls = await client.request(`/repos/${client.repository}/pulls?state=all&sort=updated&direction=desc&per_page=${limit}`);
+  const record = proposalStore?.recordSubmission ?? recordProposalSubmission;
+  const discovered = [];
+
+  for (const pull of Array.isArray(pulls) ? pulls : []) {
+    const descriptor = proposalDescriptorFromPullRequest(pull);
+    if (!descriptor || (owner !== null && descriptor.ownerGithubUserId !== owner)) continue;
+    try {
+      const proposal = await record(descriptor, {
+        db,
+        now,
+        recordEvent: false,
+        resetState: false,
+      });
+      discovered.push({ ok: true, proposal });
+    } catch (error) {
+      discovered.push({
+        ok: false,
+        descriptor,
+        error: {
+          code: "PROPOSAL_DISCOVERY_FAILED",
+          message: error?.message || "The managed pull request could not be recorded.",
+        },
+      });
+    }
+  }
+  return discovered;
 }
 
 export async function reconcileProposal(proposal, client, {

@@ -6,7 +6,9 @@ export const SITE = {
   home: "https://www.hara-lang.org/",
   docs: "https://www.hara-lang.org/docs/start/orientation/",
   playground: "https://playground.hara-lang.org/",
-  specs: "https://specs.hara-lang.org/"
+  specs: "https://specs.hara-lang.org/",
+  packages: "https://packages.hara-lang.org/",
+  identity: "https://id.hara-lang.org/"
 } as const;
 
 export const kindLabels = {

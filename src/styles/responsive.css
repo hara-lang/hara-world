@@ -1,5 +1,5 @@
 @media (max-width: 960px) {
-  .site-header {
+  .site-header__inner {
     grid-template-columns: 1fr auto;
   }
 
@@ -7,16 +7,26 @@
     display: none;
   }
 
-  .hero-console {
-    grid-template-columns: repeat(2, 1fr);
+  .section-nav__inner {
+    justify-content: flex-start;
+    padding-inline: var(--hara-space-page);
   }
 
-  .hero-console article:nth-child(2) {
-    border-right: 0;
+  .world-hero {
+    min-height: auto;
   }
 
-  .hero-console article:nth-child(-n + 2) {
-    border-bottom: 1px solid var(--hara-line);
+  .world-hero__inner {
+    grid-template-columns: 1fr;
+    gap: 3.5rem;
+  }
+
+  .world-hero__copy {
+    max-width: 760px;
+  }
+
+  .world-feature {
+    min-height: 0;
   }
 
   .section-heading {
@@ -59,18 +69,29 @@
     background: var(--hara-bg);
   }
 
-  .site-header {
+  .site-header__inner {
+    width: calc(100% - 32px);
     min-height: 60px;
+  }
+
+  .brand {
+    gap: .4rem;
+  }
+
+  .brand__name,
+  .brand__section,
+  .brand__divider {
+    font-size: .86rem;
+  }
+
+  .section-nav__inner {
+    width: max-content;
     padding-inline: 16px;
   }
 
-  .brand span {
-    font-size: .88rem;
-  }
-
-  .section-nav > div {
-    justify-content: flex-start;
-    padding-inline: 20px;
+  .section-nav__primary,
+  .section-nav__secondary {
+    gap: 1rem;
   }
 
   .shell {
@@ -81,27 +102,42 @@
     font-size: clamp(2.75rem, 17vw, 5rem);
   }
 
-  .world-hero {
-    min-height: auto;
-  }
-
   .world-hero__inner {
-    padding-block: 80px 54px;
+    gap: 2.8rem;
+    padding-block: 66px 54px;
   }
 
-  .hero-console {
-    grid-template-columns: 1fr;
-    margin-top: 56px;
+  .world-hero h1 {
+    font-size: clamp(3.15rem, 15vw, 5.3rem);
   }
 
-  .hero-console article {
-    min-height: 124px;
-    border-right: 0;
-    border-bottom: 1px solid var(--hara-line);
+  .world-hero__note {
+    max-width: 30ch;
+    line-height: 1.7;
   }
 
-  .hero-console article:last-child {
-    border-bottom: 0;
+  .world-feature__visual {
+    min-height: 170px;
+  }
+
+  .world-feature__mark svg {
+    width: 150px;
+    height: 150px;
+  }
+
+  .world-feature__body {
+    padding: 1.35rem;
+  }
+
+  .world-feature h2 {
+    font-size: clamp(2rem, 11vw, 2.8rem);
+  }
+
+  .world-feature__rail,
+  .world-feature__footer {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: .35rem;
   }
 
   .channel-grid,
@@ -174,4 +210,3 @@
     animation-iteration-count: 1 !important;
   }
 }
-

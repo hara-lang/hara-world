@@ -1,9 +1,10 @@
 ---
-import Backdrop from "@hara-lang/visual-language/astro/Backdrop.astro";
+import HaraMark from "@hara-lang/visual-language/astro/HaraMark.astro";
 import ArticleCard from "../components/ArticleCard.astro";
 import ChannelCard from "../components/ChannelCard.astro";
 import SiteLayout from "../layouts/SiteLayout.astro";
 import { getArticles, articlePath } from "../lib/articles";
+import { formatDate, kindLabels } from "../lib/site";
 
 const articles = await getArticles();
 const featured = articles.find((article) => article.data.featured) ?? articles[0];
@@ -11,38 +12,41 @@ const latest = articles.slice(0, 6);
 ---
 <SiteLayout>
   <section class="world-hero">
-    <Backdrop effect="kernel" intensity="quiet" />
     <div class="shell world-hero__inner">
-      <p class="eyebrow">Hara World / open transmission</p>
-      <h1>The programmable world, <span>in Lisp.</span></h1>
-      <p class="lede">Essays, field reports, working demonstrations, releases, and independent writing from people building with Hara.</p>
-      <div class="hero-actions">
-        {featured && <a class="button button--primary" href={articlePath(featured)}>Read the first dispatch <span aria-hidden="true">↗</span></a>}
-        <a class="button" href="/submit">Submit your publication</a>
-        <a class="button" href="/feed.xml">Follow by RSS</a>
+      <div class="world-hero__copy">
+        <p class="eyebrow">Hara World / independent publication</p>
+        <h1>Notes from a programmable world.</h1>
+        <p class="lede">Essays, field reports, working demonstrations, and releases from people building with Hara Lisp.</p>
+        <div class="hero-actions">
+          {featured && <a class="button button--primary" href={articlePath(featured)}>Read the latest dispatch <span aria-hidden="true">↗</span></a>}
+          <a class="world-hero__text-link" href="/articles">Browse all dispatches <span aria-hidden="true">→</span></a>
+        </div>
+        <p class="world-hero__note">Independent voices · working examples · an open archive</p>
       </div>
-      <div class="hero-console" aria-label="Hara World distribution status">
-        <article>
-          <span class="metric-label"><span class="status-dot"></span>Canonical</span>
-          <strong>Web + RSS</strong>
-          <p>Every release starts as an attributed, addressable article.</p>
+
+      {featured && (
+        <article class="world-feature">
+          <div class="world-feature__rail">
+            <span>Latest / {kindLabels[featured.data.kind]}</span>
+            <time datetime={featured.data.publishedAt.toISOString()}>{formatDate(featured.data.publishedAt)}</time>
+          </div>
+          <div class="world-feature__visual" aria-hidden="true">
+            <span class="world-feature__index">WORLD—001</span>
+            <div class="world-feature__mark">
+              <HaraMark size={190} title="" />
+            </div>
+            <span class="world-feature__axis">HARA / COMMUNITY / PUBLICATION</span>
+          </div>
+          <div class="world-feature__body">
+            <h2><a href={articlePath(featured)}>{featured.data.title}</a></h2>
+            <p>{featured.data.description}</p>
+          </div>
+          <div class="world-feature__footer">
+            <span>{featured.data.author}</span>
+            <a href={articlePath(featured)} aria-label={`Read ${featured.data.title}`}>Read dispatch <span aria-hidden="true">↗</span></a>
+          </div>
         </article>
-        <article>
-          <span class="metric-label"><span class="status-dot"></span>Mail</span>
-          <strong>Hara World Dispatch</strong>
-          <p>Weekly editorial digest with an explicit release-notice option.</p>
-        </article>
-        <article>
-          <span class="metric-label"><span class="status-dot"></span>Motion</span>
-          <strong>Hara in 90 seconds</strong>
-          <p>Templated shorts, captions, narration scripts, and private review uploads.</p>
-        </article>
-        <article>
-          <span class="metric-label"><span class="status-dot"></span>Outbox</span>
-          <strong>Social projections</strong>
-          <p>Platform-specific drafts generated from one approved release object.</p>
-        </article>
-      </div>
+      )}
     </div>
   </section>
 

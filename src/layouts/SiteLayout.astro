@@ -40,7 +40,8 @@ const activePath = Astro.url.pathname;
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width" />
     <meta name="description" content={description} />
-    <meta name="theme-color" content="#080a0d" />
+    <meta name="theme-color" content="#f7f5ef" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#08120d" media="(prefers-color-scheme: dark)" />
     <meta name="generator" content={Astro.generator} />
     <meta property="og:type" content={isArticle ? "article" : "website"} />
     <meta property="og:site_name" content={SITE.name} />
@@ -69,33 +70,38 @@ const activePath = Astro.url.pathname;
   <body>
     <a class="skip-link" href="#content">Skip to content</a>
     <header class="site-header">
-      <a class="brand" href="/" aria-label="Hara World home">
-        <HaraMark size={30} title="Hara" />
-        <span><strong>Hara</strong> World</span>
-      </a>
-      <nav class="ecosystem-nav" aria-label="Hara ecosystem navigation">
-        <a href="/" aria-current={activePath === "/" ? "page" : undefined}>World</a>
-        <a href={SITE.docs}>Docs</a>
-        <a href={SITE.playground}>Playground</a>
-        <a href={SITE.specs}>Specs</a>
-      </nav>
-      <div class="header-actions">
-        <div data-hara-identity></div>
-        <a class="icon-action" href={SITE.repository} aria-label="Hara World source on GitHub" title="Source on GitHub">
-          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2a10 10 0 0 0-3.16 19.49c.5.09.68-.22.68-.48v-1.88c-2.78.6-3.37-1.18-3.37-1.18-.45-1.16-1.11-1.47-1.11-1.47-.91-.62.07-.61.07-.61 1 .07 1.53 1.03 1.53 1.03.9 1.53 2.35 1.09 2.92.83.09-.65.35-1.09.64-1.34-2.22-.25-4.56-1.11-4.56-4.94 0-1.09.39-1.98 1.03-2.68-.1-.25-.45-1.27.1-2.64 0 0 .84-.27 2.75 1.02A9.56 9.56 0 0 1 12 6.82a9.5 9.5 0 0 1 2.5.34c1.91-1.3 2.75-1.02 2.75-1.02.55 1.37.2 2.39.1 2.64.64.7 1.03 1.59 1.03 2.68 0 3.84-2.34 4.68-4.57 4.93.36.31.68.92.68 1.86v2.76c0 .27.18.58.69.48A10 10 0 0 0 12 2Z"></path></svg>
+      <div class="site-header__inner">
+        <a class="brand" href="/" aria-label="Hara World home">
+          <HaraMark size={28} title="Hara" />
+          <span class="brand__name">Hara</span>
+          <span class="brand__divider" aria-hidden="true">/</span>
+          <span class="brand__section">World</span>
         </a>
-        <ThemeToggle label="Change colour theme" />
+        <nav class="ecosystem-nav" aria-label="Hara ecosystem navigation">
+          <a href={SITE.home}>Home</a>
+          <a href="/" aria-current="page">World</a>
+          <a href={SITE.specs}>Specs</a>
+          <a href={SITE.packages}>Packages</a>
+          <a href={SITE.identity}>Identity</a>
+        </nav>
+        <div class="header-actions">
+          <div data-hara-identity></div>
+          <ThemeToggle label="Change colour theme" />
+        </div>
       </div>
     </header>
     <nav class="section-nav" aria-label="Hara World navigation">
-      <div>
-        <a href="/articles" aria-current={activePath.startsWith("/articles") ? "page" : undefined}>Dispatches</a>
-        <a href="/people" aria-current={activePath.startsWith("/people") ? "page" : undefined}>People</a>
-        <a href="/learn/koans/" aria-current={activePath.startsWith("/learn/koans") ? "page" : undefined}>Koans</a>
-        <a href="/sources" aria-current={activePath === "/sources" ? "page" : undefined}>Sources</a>
-        <a href="/submit" aria-current={activePath === "/submit" ? "page" : undefined}>Submit</a>
-        <a href="/about" aria-current={activePath === "/about" ? "page" : undefined}>About</a>
-        <a href="/newsletter" aria-current={activePath === "/newsletter" ? "page" : undefined}>Newsletter</a>
+      <div class="section-nav__inner">
+        <div class="section-nav__primary">
+          <a href="/articles" aria-current={activePath.startsWith("/articles") ? "page" : undefined}>Dispatches</a>
+          <a href="/people" aria-current={activePath.startsWith("/people") ? "page" : undefined}>People</a>
+          <a href="/learn/koans/" aria-current={activePath.startsWith("/learn/koans") ? "page" : undefined}>Koans</a>
+          <a href="/sources" aria-current={activePath === "/sources" ? "page" : undefined}>Sources</a>
+        </div>
+        <div class="section-nav__secondary">
+          <a href="/newsletter" aria-current={activePath === "/newsletter" ? "page" : undefined}>Newsletter</a>
+          <a class="section-nav__submit" href="/submit" aria-current={activePath === "/submit" ? "page" : undefined}>Submit <span aria-hidden="true">↗</span></a>
+        </div>
       </div>
     </nav>
     <main id="content">
@@ -113,6 +119,7 @@ const activePath = Astro.url.pathname;
         <a href="/submit">Submit a source</a>
         <a href="/people">People</a>
         <a href="/me">Account</a>
+        <a href="/about">About</a>
         <a href="/privacy">Privacy</a>
         <a href="https://opensource.greenways.ai/open-source/">A Greenways Open Source Project</a>
         <a href="https://github.com/hara-lang/hara-world/blob/main/LICENSE">MIT License</a>

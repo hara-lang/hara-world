@@ -9,7 +9,8 @@
   "scripts": {
     "predev": "npm run assets:build",
     "dev": "astro dev",
-    "prebuild": "npm run assets:build",
+    "brand:check": "node --test test/brand-contract.test.mjs",
+    "prebuild": "npm run assets:build && npm run brand:check",
     "build": "astro build",
     "preview": "astro preview",
     "check": "npm run sources:check && npm run profiles:check && npm run agents:check && npm test && npm run build",
@@ -23,7 +24,7 @@
     "discord:sync": "node scripts/sync-discord-pins.mjs",
     "database:migrate": "node scripts/database/migrate.mjs",
     "newsletter:export": "node scripts/newsletter/export.mjs",
-    "release:build": "node scripts/build-release.mjs",
+    "release:build": "npm run brand:check && node scripts/build-release.mjs",
     "video:render": "node scripts/render-short.mjs",
     "publish:buttondown": "node scripts/publish/buttondown.mjs",
     "publish:bluesky": "node scripts/publish/bluesky.mjs",

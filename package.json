@@ -37,7 +37,7 @@
     "@astrojs/rss": "^4.0.12",
     "@hara-lang/visual-language": "github:hara-lang/visual-language#a902c76a73da88ab4bcb199318e8365c48324f71",
     "astro": "^5.16.0",
-    "fast-xml-parser": "^5.2.5",
+    "fast-xml-parser": "^5.11.0",
     "sharp": "^0.34.3",
     "@astrojs/sitemap": "^3.4.2"
   }

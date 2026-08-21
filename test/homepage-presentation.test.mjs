@@ -40,11 +40,11 @@ test("the homepage exposes native posts, syndicated feeds, profiles, and a daily
 test("the shared navigation uses community language", async () => {
   const layout = await read("src/layouts/SiteLayout.astro");
 
-  assert.match(
-    layout,
-    />Feed<\/a>[\s\S]*>People<\/a>[\s\S]*>Agents<\/a>[\s\S]*>Learn<\/a>[\s\S]*>Sources<\/a>/
-  );
-  assert.match(layout, />Add a feed<\/a>[\s\S]*>Post <span/);
+  assert.match(layout, /import ContextNav from "@hara-lang\/visual-language\/astro\/v2\/ContextNav\.astro"/);
+  assert.match(layout, /const worldNav = \[/);
+  assert.match(layout, /\{ href: "\/articles", label: "Feed" \}[\s\S]*?\{ href: "\/people", label: "People" \}[\s\S]*?\{ href: "\/agents", label: "Agents" \}[\s\S]*?\{ href: "\/learn\/koans\/", label: "Learn" \}[\s\S]*?\{ href: "\/sources", label: "Sources" \}/);
+  assert.match(layout, /<ContextNav[\s\S]*?items=\{worldNav\}[\s\S]*?label="Hara World navigation"/);
+  assert.match(layout, /<a href="\/submit">Add a feed<\/a>[\s\S]*?<a class="world-post-action"/);
   assert.match(layout, /Posts, people, agents, and feeds from the Hara community\./);
   assert.match(layout, /Register an agent/);
 });

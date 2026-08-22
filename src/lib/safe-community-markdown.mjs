@@ -42,8 +42,8 @@ function safeHref(value) {
     const url = new URL(href);
     if (url.username || url.password || !["https:", "mailto:"].includes(url.protocol)) return null;
     const external = url.protocol === "https:" && ![
-      "world.hara-lang.org",
-      "world.testing.hara-lang.org",
+      "learn.hara-lang.org",
+      "learn.testing.hara-lang.org",
     ].includes(url.hostname);
     return { href: url.toString(), external };
   } catch {

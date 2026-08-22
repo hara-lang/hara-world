@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://world.hara-lang.org/sitemap-index.xml
+Sitemap: https://learn.hara-lang.org/sitemap-index.xml

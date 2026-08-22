@@ -5,7 +5,7 @@ import { SITE } from "../lib/site";
 
 export const GET: APIRoute = async (context) => {
   const articles = await getArticles();
-  const site = context.site ?? new URL("https://world.hara-lang.org");
+  const site = context.site ?? new URL("https://learn.hara-lang.org");
 
   return rss({
     title: SITE.name,

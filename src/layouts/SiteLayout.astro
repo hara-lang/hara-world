@@ -51,7 +51,7 @@ const activePath = Astro.url.pathname;
     <meta property="og:image" content={socialImage} />
     <meta property="og:image:width" content="3840" />
     <meta property="og:image:height" content="2016" />
-    <meta property="og:image:alt" content="Hara World — community posts, people, agents, lessons, and feeds" />
+    <meta property="og:image:alt" content="Hara Learn — tutorials, koans, people, projects, and community writing" />
     {articleMeta?.publishedAt && <meta property="article:published_time" content={articleMeta.publishedAt.toISOString()} />}
     {articleMeta?.updatedAt && <meta property="article:modified_time" content={articleMeta.updatedAt.toISOString()} />}
     {articleMeta?.author && <meta property="article:author" content={articleMeta.author} />}
@@ -61,8 +61,8 @@ const activePath = Astro.url.pathname;
     <meta name="twitter:description" content={description} />
     <meta name="twitter:image" content={socialImage} />
     <link rel="canonical" href={canonical} />
-    <link rel="alternate" type="application/rss+xml" title="Hara World RSS" href="/feed.xml" />
-    <link rel="alternate" type="application/feed+json" title="Hara World JSON Feed" href="/feed.json" />
+    <link rel="alternate" type="application/rss+xml" title="Hara Learn RSS" href="/feed.xml" />
+    <link rel="alternate" type="application/feed+json" title="Hara Learn JSON Feed" href="/feed.json" />
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
     <title>{pageTitle}</title>
     <script is:inline src="/identity-loader.js" defer></script>
@@ -71,18 +71,16 @@ const activePath = Astro.url.pathname;
     <a class="skip-link" href="#content">Skip to content</a>
     <header class="site-header">
       <div class="site-header__inner">
-        <a class="brand" href="/" aria-label="Hara World home">
+        <a class="brand" href={SITE.home} aria-label="Hara home">
           <HaraMark size={28} title="Hara" />
           <span class="brand__name">Hara</span>
           <span class="brand__divider" aria-hidden="true">/</span>
-          <span class="brand__section">World</span>
+          <span class="brand__section">Learn</span>
         </a>
         <nav class="ecosystem-nav" aria-label="Hara ecosystem navigation">
-          <a href={SITE.home}>Home</a>
-          <a href="/" aria-current="page">World</a>
-          <a href={SITE.specs}>Specs</a>
-          <a href={SITE.packages}>Packages</a>
-          <a href={SITE.identity}>Identity</a>
+          <a href={SITE.playground}>Play</a>
+          <a href="/" aria-current="page">Learn</a>
+          <a href={SITE.specs}>Build</a>
         </nav>
         <div class="header-actions">
           <div data-hara-identity></div>
@@ -90,7 +88,7 @@ const activePath = Astro.url.pathname;
         </div>
       </div>
     </header>
-    <nav class="section-nav" aria-label="Hara World navigation">
+    <nav class="section-nav" aria-label="Hara Learn navigation">
       <div class="section-nav__inner">
         <div class="section-nav__primary">
           <a href="/articles" aria-current={activePath.startsWith("/articles") ? "page" : undefined}>Feed</a>
@@ -129,7 +127,7 @@ const activePath = Astro.url.pathname;
         <a href="/about">About</a>
         <a href="/privacy">Privacy</a>
         <a href="https://opensource.greenways.ai/open-source/">A Greenways Open Source Project</a>
-        <a href="https://github.com/hara-lang/hara-world/blob/main/LICENSE">MIT License</a>
+        <a href="https://github.com/hara-lang/hara-learn/blob/main/LICENSE">MIT License</a>
         <a href={SITE.repository}>Source</a>
       </div>
     </footer>

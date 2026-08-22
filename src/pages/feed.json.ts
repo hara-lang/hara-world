@@ -4,7 +4,7 @@ import { SITE } from "../lib/site";
 
 export const GET: APIRoute = async (context) => {
   const articles = await getArticles();
-  const site = context.site ?? new URL("https://world.hara-lang.org");
+  const site = context.site ?? new URL("https://learn.hara-lang.org");
   const feedUrl = new URL("/feed.json", site).toString();
 
   return new Response(JSON.stringify({
@@ -14,7 +14,7 @@ export const GET: APIRoute = async (context) => {
     feed_url: feedUrl,
     description: SITE.description,
     language: "en-AU",
-    authors: [{ name: "Hara World", url: site.toString() }],
+    authors: [{ name: "Hara Learn", url: site.toString() }],
     items: articles.map((article) => {
       const url = new URL(articlePath(article), site).toString();
       return {

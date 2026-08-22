@@ -1,0 +1,105 @@
+---
+import HaraGlyph from "@hara-lang/visual-language/astro/HaraGlyph.astro";
+
+interface Lesson {
+  id: string;
+  slug: string;
+  title: string;
+  topic: string;
+  difficulty: number;
+}
+
+interface Entrance {
+  number: string;
+  label: string;
+  title: string;
+  summary: string;
+  outcome: string;
+  lesson: Lesson;
+  href: string;
+}
+
+interface Props {
+  dailyLesson: Lesson;
+  entrances: Entrance[];
+  koanCount: number;
+  articleCount: number;
+  profileCount: number;
+}
+
+const { dailyLesson, entrances, koanCount, articleCount, profileCount } = Astro.props as Props;
+---
+<section class="learn-home-arrival" aria-labelledby="learn-home-title">
+  <div class="learn-home-arrival__copy">
+    <p class="hara-v2-kicker">Hara Learn</p>
+    <h1 id="learn-home-title">Learn Hara by reading and changing small programs.</h1>
+    <p class="learn-home-arrival__definition">
+      Hara is a Lisp: programs use a small set of readable forms, and those forms remain ordinary data. Learn begins with one value, then connects functions, persistent collections, runtime sessions, and complete programs without hiding the host boundary.
+    </p>
+    <div class="learn-home-actions">
+      <a class="hara-v2-button" data-variant="primary" href={`/learn/koans/${dailyLesson.slug}/`}>
+        Open today’s koan <span aria-hidden="true">→</span>
+      </a>
+      <a class="hara-v2-button" href="#choose-path">Choose a starting path</a>
+      <a class="hara-v2-button" data-variant="ghost" href="https://play.hara-lang.org/">Open Hara Play</a>
+    </div>
+    <div class="learn-home-contract" aria-label="Hara Learn access contract">
+      <span>Anonymous first lesson</span>
+      <span>Static source before execution</span>
+      <span>Browser kernel only in exercises</span>
+    </div>
+  </div>
+
+  <aside class="learn-home-arrival__field" aria-label="Hara Learn application field">
+    <div class="learn-home-arrival__glyph">
+      <HaraGlyph name="product-learn" size={180} label="Hara Learn" strokeWidth={1.35} />
+    </div>
+    <div class="learn-home-field-record" data-record="forms">
+      <span>01</span><strong>forms</strong><small>read code as data</small>
+    </div>
+    <div class="learn-home-field-record" data-record="values">
+      <span>02</span><strong>values</strong><small>inspect expected results</small>
+    </div>
+    <div class="learn-home-field-record" data-record="runtime">
+      <span>03</span><strong>runtime</strong><small>attach a named host</small>
+    </div>
+    <div class="learn-home-field-record" data-record="community">
+      <span>04</span><strong>community</strong><small>follow real work</small>
+    </div>
+  </aside>
+</section>
+
+<section class="learn-home-ledger" aria-label="Current Hara Learn records">
+  <article><span>Koans</span><strong>{koanCount}</strong><p>Canonical browser exercises, ordered from values to a complete sequence pipeline.</p></article>
+  <article><span>Community records</span><strong>{articleCount}</strong><p>Native and syndicated posts from the current article collection.</p></article>
+  <article><span>Published profiles</span><strong>{profileCount}</strong><p>People who have chosen to make their Hara work visible.</p></article>
+  <article><span>Open feed formats</span><strong>3</strong><p>RSS, JSON Feed, and OPML remain public without an account.</p></article>
+</section>
+
+<section class="learn-home-section learn-home-entrances" id="choose-path">
+  <header class="learn-home-section-head">
+    <div>
+      <p class="hara-v2-kicker">Choose an entrance</p>
+      <h2>Start from what you already know.</h2>
+    </div>
+    <p>Each entrance opens a real exercise from the same canonical koan sequence. The route changes; the language, tests, and browser runtime contract do not.</p>
+  </header>
+
+  <div class="learn-home-entrance-grid">
+    {entrances.map((entrance) => (
+      <article>
+        <header><span>{entrance.number}</span><p class="hara-v2-kicker">{entrance.label}</p></header>
+        <h3>{entrance.title}</h3>
+        <p>{entrance.summary}</p>
+        <dl>
+          <dt>First outcome</dt>
+          <dd>{entrance.outcome}</dd>
+        </dl>
+        <footer>
+          <span>Koan {entrance.lesson.id} · {entrance.lesson.topic}</span>
+          <a href={entrance.href}>Open {entrance.lesson.title} <span aria-hidden="true">→</span></a>
+        </footer>
+      </article>
+    ))}
+  </div>
+</section>

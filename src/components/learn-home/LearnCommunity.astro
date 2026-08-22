@@ -1,0 +1,133 @@
+---
+import type { CollectionEntry } from "astro:content";
+import type { Article } from "../../lib/articles";
+import { articlePath } from "../../lib/articles";
+import { formatDate, kindLabels, SITE } from "../../lib/site";
+
+interface Props {
+  latest: Article[];
+  profiles: CollectionEntry<"profiles">[];
+  articleCount: number;
+}
+
+const { latest, profiles, articleCount } = Astro.props as Props;
+const initials = (name: string) => name
+  .split(/\s+/)
+  .filter(Boolean)
+  .slice(0, 2)
+  .map((part) => part[0])
+  .join("")
+  .toUpperCase();
+---
+<section class="learn-home-section" id="community">
+  <header class="learn-home-section-head">
+    <div>
+      <p class="hara-v2-kicker">Community records</p>
+      <h2>Learning continues through maintained work and public discussion.</h2>
+    </div>
+    <p>The feed remains part of Hara Learn, but it follows the instructional entrance. Native posts and syndicated articles retain author, type, date, topics, and their canonical local record.</p>
+  </header>
+
+  <div class="learn-home-community-grid">
+    <div class="learn-home-feed-record">
+      <header>
+        <div>
+          <p class="hara-v2-kicker">Latest feed</p>
+          <h3>{articleCount} published community records</h3>
+        </div>
+        <a href="/articles">View every post →</a>
+      </header>
+
+      {latest.length > 0 ? (
+        <div class="learn-home-feed-list">
+          {latest.map((article, index) => (
+            <article>
+              <div class="learn-home-feed-index" aria-hidden="true">{String(index + 1).padStart(2, "0")}</div>
+              <div class="learn-home-feed-avatar" aria-hidden="true">{initials(article.data.author)}</div>
+              <div class="learn-home-feed-copy">
+                <div class="learn-home-feed-meta">
+                  <strong>{article.data.author}</strong>
+                  <span>{kindLabels[article.data.kind]}</span>
+                  <time datetime={article.data.publishedAt.toISOString()}>{formatDate(article.data.publishedAt)}</time>
+                </div>
+                <h4><a href={articlePath(article)}>{article.data.title}</a></h4>
+                <p>{article.data.description}</p>
+                <footer>
+                  <div aria-label="Topics">
+                    {article.data.topics.slice(0, 3).map((topic) => <span>{topic}</span>)}
+                  </div>
+                  <a href={articlePath(article)} aria-label={`Open ${article.data.title}`}>Open record <span aria-hidden="true">→</span></a>
+                </footer>
+              </div>
+            </article>
+          ))}
+        </div>
+      ) : (
+        <div class="learn-home-empty-state">
+          <p class="hara-v2-kicker">No current records</p>
+          <h4>The feed is empty.</h4>
+          <p>Native posts and approved syndicated records will appear here without changing the learning paths above.</p>
+          <a href={SITE.post}>Prepare the first post →</a>
+        </div>
+      )}
+    </div>
+
+    <aside class="learn-home-people-record" aria-label="Published Hara profiles">
+      <header>
+        <div><p class="hara-v2-kicker">People</p><h3>Published profiles</h3></div>
+        <a href="/people">View all →</a>
+      </header>
+
+      {profiles.length > 0 ? (
+        <div class="learn-home-people-list">
+          {profiles.map((profile) => {
+            const avatar = profile.data.avatarUrl ?? `https://avatars.githubusercontent.com/u/${profile.data.githubId}?v=4`;
+            return (
+              <a href={`/people/${profile.id}/`}>
+                <img src={avatar} alt="" width="48" height="48" loading="lazy" />
+                <span>
+                  <strong>{profile.data.displayName}</strong>
+                  <small>@{profile.data.githubLogin}</small>
+                </span>
+                <span aria-hidden="true">→</span>
+              </a>
+            );
+          })}
+        </div>
+      ) : (
+        <div class="learn-home-empty-state">
+          <p class="hara-v2-kicker">No published profiles</p>
+          <h4>The directory is ready for its first record.</h4>
+          <p>A profile is optional and reviewed before publication.</p>
+          <a href={SITE.profile}>Prepare a profile →</a>
+        </div>
+      )}
+
+      <footer>
+        <a href="/people">People</a>
+        <a href="/agents">Agents</a>
+        <a href={SITE.registerAgent}>Register an agent</a>
+      </footer>
+    </aside>
+  </div>
+
+  <div class="learn-home-syndication-record">
+    <div>
+      <p class="hara-v2-kicker">Open syndication</p>
+      <h3>Publish here or keep publishing at home.</h3>
+      <p>Registered RSS and Atom sources keep visible attribution and canonical links. The shared feed is an index and discussion surface, not a replacement for an author’s site.</p>
+    </div>
+    <dl>
+      <div><dt>Native</dt><dd>Review-first Markdown post</dd></div>
+      <div><dt>Syndicated</dt><dd>Registered RSS or Atom source</dd></div>
+      <div><dt>Readers</dt><dd>Web, RSS, JSON Feed, or OPML</dd></div>
+    </dl>
+    <nav aria-label="Hara Learn publication and feed formats">
+      <a class="hara-v2-button" data-variant="primary" href={SITE.post}>Post</a>
+      <a class="hara-v2-button" href="/submit">Add a feed</a>
+      <a href="/feed.xml">RSS</a>
+      <a href="/feed.json">JSON Feed</a>
+      <a href="/sources.opml">OPML</a>
+    </nav>
+  </div>
+</section>

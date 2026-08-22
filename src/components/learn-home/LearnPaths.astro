@@ -1,0 +1,61 @@
+---
+interface Lesson {
+  id: string;
+  slug: string;
+  title: string;
+  topic: string;
+}
+
+interface PathRecord {
+  number: string;
+  title: string;
+  topics: string[];
+  summary: string;
+  outcome: string;
+  lessonCount: number;
+  firstLesson: Lesson;
+  href: string;
+}
+
+const { paths } = Astro.props as { paths: PathRecord[] };
+---
+<section class="learn-home-section" id="curriculum">
+  <header class="learn-home-section-head">
+    <div>
+      <p class="hara-v2-kicker">Learning paths</p>
+      <h2>Progress is organised by outcomes, not product features.</h2>
+    </div>
+    <p>The current curriculum is the canonical koan catalogue. These records group its real topics without inventing unavailable courses, completion percentages, or certification states.</p>
+  </header>
+
+  <div class="learn-home-path-grid">
+    {paths.map((path) => (
+      <article>
+        <header>
+          <span>{path.number}</span>
+          <strong>{path.lessonCount} exercises</strong>
+        </header>
+        <p class="hara-v2-kicker">{path.topics.join(" · ")}</p>
+        <h3>{path.title}</h3>
+        <p>{path.summary}</p>
+        <dl>
+          <dt>Outcome</dt>
+          <dd>{path.outcome}</dd>
+        </dl>
+        <footer>
+          <span>Begin with koan {path.firstLesson.id}</span>
+          <a href={path.href}>{path.firstLesson.title} <span aria-hidden="true">→</span></a>
+        </footer>
+      </article>
+    ))}
+  </div>
+
+  <aside class="learn-home-progress-state">
+    <div>
+      <p class="hara-v2-kicker">Progress state</p>
+      <strong>Local and explicit.</strong>
+    </div>
+    <p>The public homepage does not imply saved progress. The koan workspace reports test state; account-backed history should appear only when that service is present and the reader chooses it.</p>
+    <a href="/learn/koans/">Open the complete koan sequence →</a>
+  </aside>
+</section>

@@ -1,0 +1,78 @@
+---
+import { SITE } from "../../lib/site";
+
+interface Lesson {
+  id: string;
+  slug: string;
+  title: string;
+}
+
+const { dailyLesson } = Astro.props as { dailyLesson: Lesson };
+---
+<section class="learn-home-section" id="start">
+  <header class="learn-home-section-head">
+    <div>
+      <p class="hara-v2-kicker">Start or continue</p>
+      <h2>Choose the next concrete record.</h2>
+    </div>
+    <p>Reading and the first exercise remain public. Identity becomes relevant only for optional profile, publication, agent, or future saved-history boundaries.</p>
+  </header>
+
+  <div class="learn-home-start-grid">
+    <article>
+      <header><span>01</span><p class="hara-v2-kicker">Today</p></header>
+      <h3>{dailyLesson.title}</h3>
+      <p>Open the current canonical koan with its starter expression and checks.</p>
+      <code>/learn/koans/{dailyLesson.slug}/</code>
+      <a href={`/learn/koans/${dailyLesson.slug}/`}>Open koan {dailyLesson.id} →</a>
+    </article>
+    <article>
+      <header><span>02</span><p class="hara-v2-kicker">Curriculum</p></header>
+      <h3>Browse every koan</h3>
+      <p>Inspect the complete ordered sequence, topic, level, and exercise route.</p>
+      <code>/learn/koans/</code>
+      <a href="/learn/koans/">Open the sequence →</a>
+    </article>
+    <article>
+      <header><span>03</span><p class="hara-v2-kicker">Explore</p></header>
+      <h3>Open Hara Play</h3>
+      <p>Move from a bounded exercise to an open browser programming surface.</p>
+      <code>play.hara-lang.org</code>
+      <a href={SITE.playground}>Open Hara Play →</a>
+    </article>
+    <article>
+      <header><span>04</span><p class="hara-v2-kicker">Community</p></header>
+      <h3>Read current work</h3>
+      <p>Continue through articles, people, agents, releases, and syndicated notes.</p>
+      <code>/articles</code>
+      <a href="/articles">Open the feed →</a>
+    </article>
+  </div>
+
+  <div class="learn-home-state-grid" aria-label="Hara Learn access and degraded states">
+    <article data-tone="success">
+      <header><i aria-hidden="true"></i><div><p class="hara-v2-kicker">Anonymous reader</p><h3>Learning begins without an account.</h3></div></header>
+      <p>The proposition, path selection, starter source, checks, koan list, articles, profiles, and open feeds remain public.</p>
+    </article>
+    <article data-tone="notice">
+      <header><i aria-hidden="true"></i><div><p class="hara-v2-kicker">No JavaScript</p><h3>The homepage remains a complete reading surface.</h3></div></header>
+      <p>Only an exercise’s Run action needs the browser kernel. This page does not hide its first lesson, paths, or community records behind client code.</p>
+    </article>
+    <article data-tone="warning">
+      <header><i aria-hidden="true"></i><div><p class="hara-v2-kicker">Runtime unavailable</p><h3>Source and checks remain visible.</h3></div></header>
+      <p>The exercise workspace reports its own connection state. Hara Learn does not present a guessed result or silent success when execution is unavailable.</p>
+    </article>
+  </div>
+</section>
+
+<section class="learn-home-closing" aria-labelledby="learn-home-closing-title">
+  <div>
+    <p class="hara-v2-kicker">Hara Learn Dispatch</p>
+    <h2 id="learn-home-closing-title">One lesson, current community records, and a precise view of what changed.</h2>
+    <p>The weekly digest is optional. The same public records remain available through the site and open feeds.</p>
+  </div>
+  <div>
+    <a class="hara-v2-button" data-variant="primary" href="/newsletter#join">Join the weekly digest</a>
+    <a class="hara-v2-button" href="/feed.xml">Use RSS instead</a>
+  </div>
+</section>

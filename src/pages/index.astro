@@ -1,234 +1,111 @@
 ---
 import { getCollection } from "astro:content";
 import SiteLayout from "../layouts/SiteLayout.astro";
-import { getArticles, articlePath } from "../lib/articles";
+import LearnArrival from "../components/learn-home/LearnArrival.astro";
+import LearnFirstLesson from "../components/learn-home/LearnFirstLesson.astro";
+import LearnPaths from "../components/learn-home/LearnPaths.astro";
+import LearnCommunity from "../components/learn-home/LearnCommunity.astro";
+import LearnStart from "../components/learn-home/LearnStart.astro";
+import { getArticles } from "../lib/articles";
 import { KOANS } from "../lib/koans.mjs";
-import { formatDate, kindLabels, SITE } from "../lib/site";
+import "@hara-lang/visual-language/v2-icons.css";
+import "../styles/learn-home-v2.css";
 
 const articles = await getArticles();
-const latest = articles.slice(0, 8);
-const profiles = (await getCollection("profiles", ({ data }) => data.published))
-  .sort((left, right) => right.data.joinedAt.getTime() - left.data.joinedAt.getTime())
-  .slice(0, 3);
+const latest = articles.slice(0, 6);
+const publishedProfiles = (await getCollection("profiles", ({ data }) => data.published))
+  .sort((left, right) => right.data.joinedAt.getTime() - left.data.joinedAt.getTime());
+const profiles = publishedProfiles.slice(0, 4);
+
 const buildDay = Math.floor(Date.now() / 86_400_000);
 const dailyLesson = KOANS[buildDay % KOANS.length];
-const lessonPayload = JSON.stringify(KOANS.map(({ id, slug, title, topic, difficulty, prompt, starter }) => ({
-  id,
-  slug,
-  title,
-  topic,
-  difficulty,
-  prompt,
-  starter
-})));
-const initials = (name: string) => name
-  .split(/\s+/)
-  .filter(Boolean)
-  .slice(0, 2)
-  .map((part) => part[0])
-  .join("")
-  .toUpperCase();
+const lessonBySlug = (slug: string) => KOANS.find((lesson) => lesson.slug === slug) ?? KOANS[0];
+const lessonHref = (lesson: { slug: string }) => `/learn/koans/${lesson.slug}/`;
+
+const entrances = [
+  {
+    number: "01",
+    label: "New to programming",
+    title: "Begin with a value.",
+    summary: "Learn how values, names, collections, functions, and decisions fit together without assuming another language first.",
+    outcome: "Read one expression and make its first test pass.",
+    lesson: lessonBySlug("first-value")
+  },
+  {
+    number: "02",
+    label: "Programmed before",
+    title: "Translate familiar ideas into Hara forms.",
+    summary: "Start with functions and immutable data, then continue into sequences, maps, recursion, and explicit state.",
+    outcome: "Write and test a small function in the browser workspace.",
+    lesson: lessonBySlug("double-it")
+  },
+  {
+    number: "03",
+    label: "Familiar with Lisp",
+    title: "Inspect Hara’s runtime and host boundaries.",
+    summary: "Use familiar forms as the starting point, then examine threading, sessions, browser execution, and the surrounding ecosystem.",
+    outcome: "Move from readable data to a named runtime deliberately.",
+    lesson: lessonBySlug("threaded-data")
+  }
+].map((entrance) => ({ ...entrance, href: lessonHref(entrance.lesson) }));
+
+const pathDefinitions = [
+  {
+    number: "01",
+    title: "Values and collections",
+    topics: ["values", "collections"],
+    summary: "Read literals, keywords, vectors, maps, counts, positions, and collection joins.",
+    outcome: "Represent and inspect ordinary program data."
+  },
+  {
+    number: "02",
+    title: "Functions and decisions",
+    topics: ["functions", "decisions"],
+    summary: "Define callable values, bind arguments, choose branches, and compose behaviour.",
+    outcome: "Express reusable transformations and control flow."
+  },
+  {
+    number: "03",
+    title: "Sequences and maps",
+    topics: ["sequences", "maps"],
+    summary: "Transform collections, preserve order, aggregate values, and build indexed results.",
+    outcome: "Work with persistent data as a pipeline."
+  },
+  {
+    number: "04",
+    title: "Recursion, forms, and state",
+    topics: ["recursion", "forms", "state"],
+    summary: "Use recursive definitions, threading forms, and a small explicit mutable boundary.",
+    outcome: "Connect language structure to a running program."
+  }
+];
+
+const paths = pathDefinitions.map((definition) => {
+  const lessons = KOANS.filter((lesson) => definition.topics.includes(lesson.topic));
+  const firstLesson = lessons[0] ?? KOANS[0];
+  return {
+    ...definition,
+    lessonCount: lessons.length,
+    firstLesson,
+    href: lessonHref(firstLesson)
+  };
+});
 ---
-<SiteLayout description="Community posts, people, lessons, and syndicated feeds from the Hara Lisp ecosystem.">
-  <section class="community-intro">
-    <div class="shell community-intro__inner">
-      <div class="community-intro__copy">
-        <p class="eyebrow">Hara Learn / community</p>
-        <h1>See what people are making with Hara.</h1>
-        <p class="lede">Project notes, questions, releases, experiments, and lessons from the Hara community. Post here—or keep publishing on your own site and bring it into the shared feed with RSS or Atom.</p>
-        <div class="hero-actions">
-          <a class="button button--primary" href={SITE.post}>Post something <span aria-hidden="true">↗</span></a>
-          <a class="button" href="/submit">Add your feed</a>
-          <a class="community-intro__feed-link" href="/feed.xml">Follow the feed <span aria-hidden="true">→</span></a>
-        </div>
-      </div>
-
-      <dl class="community-summary" aria-label="How Hara Learn works">
-        <div data-index="01">
-          <dt>Post here</dt>
-          <dd>Write a community post without starting a separate site.</dd>
-        </div>
-        <div data-index="02">
-          <dt>Publish at home</dt>
-          <dd>Register an existing RSS or Atom feed and keep your canonical URL.</dd>
-        </div>
-        <div data-index="03">
-          <dt>Read together</dt>
-          <dd>Follow one community feed through the web, RSS, JSON Feed, or OPML.</dd>
-        </div>
-      </dl>
-    </div>
-  </section>
-
-  <section class="section community-section">
-    <div class="shell community-board">
-      <div class="community-feed">
-        <header class="community-panel-heading">
-          <div>
-            <p class="eyebrow">Community feed</p>
-            <h2>Latest from the Hara community.</h2>
-          </div>
-          <a class="text-link" href="/articles">View every post <span aria-hidden="true">→</span></a>
-        </header>
-
-        <div class="feed-list">
-          {latest.map((article) => (
-            <article class="feed-entry">
-              <div class="feed-entry__avatar" aria-hidden="true">{initials(article.data.author)}</div>
-              <div class="feed-entry__content">
-                <div class="feed-entry__meta">
-                  <strong>{article.data.author}</strong>
-                  <span>{kindLabels[article.data.kind]}</span>
-                  <time datetime={article.data.publishedAt.toISOString()}>{formatDate(article.data.publishedAt)}</time>
-                </div>
-                <h3><a href={articlePath(article)}>{article.data.title}</a></h3>
-                <p>{article.data.description}</p>
-                <footer class="feed-entry__footer">
-                  <div class="feed-entry__topics" aria-label="Topics">
-                    {article.data.topics.slice(0, 3).map((topic) => <span>{topic}</span>)}
-                  </div>
-                  <a href={articlePath(article)} aria-label={`Read ${article.data.title}`}>Open post <span aria-hidden="true">↗</span></a>
-                </footer>
-              </div>
-            </article>
-          ))}
-
-          <article class="feed-entry feed-entry--invitation">
-            <div class="feed-entry__avatar" aria-hidden="true">+</div>
-            <div class="feed-entry__content">
-              <div class="feed-entry__meta"><strong>Community prompt</strong><span>Open invitation</span></div>
-              <h3>What are you building?</h3>
-              <p>Share a working note, a question, a package, a strange experiment, or a lesson learned. Small posts are welcome.</p>
-              <footer class="feed-entry__footer">
-                <span class="feed-entry__aside">Markdown reviewed through GitHub</span>
-                <a href={SITE.post}>Start a post <span aria-hidden="true">↗</span></a>
-              </footer>
-            </div>
-          </article>
-        </div>
-      </div>
-
-      <aside class="community-sidebar" aria-label="Community highlights">
-        <section class="community-widget people-widget">
-          <header class="widget-heading">
-            <p class="eyebrow">Community</p>
-            <a href="/people">View all</a>
-          </header>
-          <h2>Who’s using Hara?</h2>
-          {profiles.length > 0 ? (
-            <div class="people-widget__list">
-              {profiles.map((profile) => {
-                const avatar = profile.data.avatarUrl ?? `https://avatars.githubusercontent.com/u/${profile.data.githubId}?v=4`;
-                return (
-                  <a class="person-row" href={`/people/${profile.id}/`}>
-                    <img src={avatar} alt="" width="44" height="44" loading="lazy" />
-                    <span>
-                      <strong>{profile.data.displayName}</strong>
-                      <small>@{profile.data.githubLogin}</small>
-                    </span>
-                    <span aria-hidden="true">→</span>
-                  </a>
-                );
-              })}
-            </div>
-          ) : (
-            <div class="people-widget__empty">
-              <div class="people-widget__avatars" aria-hidden="true"><span>H</span><span>+</span></div>
-              <h3>Put your work on the map.</h3>
-              <p>Create a compact public profile and show the community what you use Hara for.</p>
-              <a class="text-link" href={SITE.profile}>Add your profile <span aria-hidden="true">↗</span></a>
-            </div>
-          )}
-        </section>
-
-        <section class="community-widget lesson-widget" data-lesson-widget data-lessons={lessonPayload}>
-          <header class="widget-heading">
-            <p class="eyebrow">Lesson of the day</p>
-            <span data-lesson-number>Koan {dailyLesson.id}</span>
-          </header>
-          <p class="lesson-widget__topic" data-lesson-topic>{dailyLesson.topic} / level {dailyLesson.difficulty}</p>
-          <h2 data-lesson-title>{dailyLesson.title}</h2>
-          <p data-lesson-prompt>{dailyLesson.prompt}</p>
-          <pre><code data-lesson-starter>{dailyLesson.starter}</code></pre>
-          <a class="button lesson-widget__action" data-lesson-link href={`/learn/koans/${dailyLesson.slug}/`}>Try this lesson <span aria-hidden="true">→</span></a>
-        </section>
-
-        <section class="community-widget syndication-widget">
-          <p class="eyebrow">Open syndication</p>
-          <h2>One feed, many homes.</h2>
-          <p>Publish on your own domain. Hara Learn keeps the attribution and canonical link, then adds the post to the community stream.</p>
-          <a class="button" href="/submit">Register an RSS or Atom feed</a>
-          <nav aria-label="Hara Learn feed formats">
-            <a href="/feed.xml">RSS</a>
-            <a href="/feed.json">JSON</a>
-            <a href="/sources.opml">OPML</a>
-          </nav>
-        </section>
-      </aside>
-    </div>
-  </section>
-
-  <section class="section section--tight syndication-section">
-    <div class="shell">
-      <div class="section-heading">
-        <div>
-          <p class="eyebrow">How the shared feed works</p>
-          <h2>Publish at home. Appear here.</h2>
-        </div>
-        <p>Hara Learn is an index and community layer, not a reason to abandon your own site. Syndicated posts retain visible provenance and point readers back to the canonical source.</p>
-      </div>
-      <div class="syndication-path">
-        <article><span>01</span><h3>Write</h3><p>Publish directly to Learn or post on a site you control.</p></article>
-        <article><span>02</span><h3>Connect</h3><p>Register the site’s RSS or Atom feed with permission and provenance.</p></article>
-        <article><span>03</span><h3>Review</h3><p>Learn checks attribution, canonical URLs, relevance, and syndication mode.</p></article>
-        <article><span>04</span><h3>Join the feed</h3><p>New posts appear alongside native community writing in open feed formats.</p></article>
-      </div>
-    </div>
-  </section>
-
-  <section class="section">
-    <div class="shell">
-      <div class="callout">
-        <p class="eyebrow">Hara Learn Dispatch</p>
-        <h2>The community, once a week.</h2>
-        <p>One working example, notable posts from around the community, a small lesson, and a clear view of what changed in Hara.</p>
-        <div class="hero-actions">
-          <a class="button button--primary" href="/newsletter#join">Join the weekly digest</a>
-          <a class="button" href="/feed.xml">Use RSS instead</a>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <script>
-    const setDailyLesson = () => {
-      document.querySelectorAll("[data-lesson-widget]").forEach((widget) => {
-        const raw = widget.getAttribute("data-lessons");
-        if (!raw) return;
-
-        const lessons = JSON.parse(raw);
-        if (!Array.isArray(lessons) || lessons.length === 0) return;
-
-        const today = new Date();
-        const localDay = Math.floor(Date.UTC(today.getFullYear(), today.getMonth(), today.getDate()) / 86_400_000);
-        const lesson = lessons[localDay % lessons.length];
-        const setText = (selector, value) => {
-          const node = widget.querySelector(selector);
-          if (node) node.textContent = String(value);
-        };
-
-        setText("[data-lesson-number]", `Koan ${lesson.id}`);
-        setText("[data-lesson-topic]", `${lesson.topic} / level ${lesson.difficulty}`);
-        setText("[data-lesson-title]", lesson.title);
-        setText("[data-lesson-prompt]", lesson.prompt);
-        setText("[data-lesson-starter]", lesson.starter);
-
-        const link = widget.querySelector("[data-lesson-link]");
-        if (link instanceof HTMLAnchorElement) link.href = `/learn/koans/${lesson.slug}/`;
-      });
-    };
-
-    setDailyLesson();
-    document.addEventListener("astro:page-load", setDailyLesson);
-  </script>
+<SiteLayout
+  title="Learn Hara"
+  description="Learn the Hara programming language through small readable programs, browser koans, explicit runtime boundaries, and community records."
+>
+  <div class="learn-home">
+    <LearnArrival
+      dailyLesson={dailyLesson}
+      entrances={entrances}
+      koanCount={KOANS.length}
+      articleCount={articles.length}
+      profileCount={publishedProfiles.length}
+    />
+    <LearnFirstLesson lesson={dailyLesson} koanCount={KOANS.length} />
+    <LearnPaths paths={paths} />
+    <LearnCommunity latest={latest} profiles={profiles} articleCount={articles.length} />
+    <LearnStart dailyLesson={dailyLesson} />
+  </div>
 </SiteLayout>

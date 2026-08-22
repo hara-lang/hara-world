@@ -35,7 +35,7 @@
   },
   "dependencies": {
     "@astrojs/rss": "^4.0.12",
-    "@hara-lang/visual-language": "github:hara-lang/visual-language#a2ab66d0fde79edb1cee46b79528098b3fda68cf",
+    "@hara-lang/visual-language": "github:hara-lang/visual-language#b512a12e8d7191c9092d195ca0ddc894b0ba54d2",
     "astro": "^5.16.0",
     "fast-xml-parser": "^5.11.0",
     "sharp": "^0.34.3",

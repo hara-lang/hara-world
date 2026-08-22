@@ -41,10 +41,10 @@ test("the shared navigation uses community language", async () => {
   const layout = await read("src/layouts/SiteLayout.astro");
 
   assert.match(layout, /import ContextNav from "@hara-lang\/visual-language\/astro\/v2\/ContextNav\.astro"/);
-  assert.match(layout, /const worldNav = \[/);
+  assert.match(layout, /const learnNav = \[/);
   assert.match(layout, /\{ href: "\/articles", label: "Feed" \}[\s\S]*?\{ href: "\/people", label: "People" \}[\s\S]*?\{ href: "\/agents", label: "Agents" \}[\s\S]*?\{ href: "\/learn\/koans\/", label: "Learn" \}[\s\S]*?\{ href: "\/sources", label: "Sources" \}/);
-  assert.match(layout, /<ContextNav[\s\S]*?items=\{worldNav\}[\s\S]*?label="Hara World navigation"/);
-  assert.match(layout, /<a href="\/submit">Add a feed<\/a>[\s\S]*?<a class="world-post-action"/);
+  assert.match(layout, /<ContextNav[\s\S]*?items=\{learnNav\}[\s\S]*?label="Hara Learn navigation"/);
+  assert.match(layout, /<a href="\/submit">Add a feed<\/a>[\s\S]*?<a class="learn-post-action"/);
   assert.match(layout, /Posts, people, agents, and feeds from the Hara community\./);
   assert.match(layout, /Register an agent/);
 });

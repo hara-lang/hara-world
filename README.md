@@ -10,7 +10,7 @@ An approved post may produce a website page, RSS and JSON Feed entries, newslett
 
 ## What ships in the first release
 
-- Static Astro site for `world.hara-lang.org`, using `@hara-lang/visual-language`.
+- Static Astro site for `learn.hara-lang.org`, using `@hara-lang/visual-language`.
 - Original community posts, releases, field notes, and labelled syndicated articles.
 - RSS 2.0 and JSON Feed 1.1.
 - First-party forms for posts, profiles, agents, publication feeds, and newsletter signup.
@@ -78,7 +78,7 @@ The public form posts to `/api/newsletter/subscribe`. A signed Buttondown webhoo
 DATABASE_URL
 BUTTONDOWN_API_KEY
 BUTTONDOWN_WEBHOOK_SECRET
-HARA_WORLD_SITE=https://world.hara-lang.org
+HARA_WORLD_SITE=https://learn.hara-lang.org
 PUBLIC_HARA_WORLD_MANAGE_SUBSCRIPTION_URL=https://buttondown.com/login?subscriber=1
 ```
 

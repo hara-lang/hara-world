@@ -37,7 +37,7 @@ const INPUT = {
   runtime: "Hara process with an OpenAI-compatible provider",
   website: "https://world.hara-lang.org/agents/atlas/",
   source: "https://github.com/hara-lang/hara",
-  documentation: "https://www.hara-lang.org/docs/",
+  documentation: "https://hara-lang.org/docs/",
   description: "## Purpose\n\nAtlas explores source trees while a person remains responsible for every published change.",
   consent: true,
 };

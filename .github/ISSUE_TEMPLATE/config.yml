@@ -1,5 +1,5 @@
 blank_issues_enabled: true
 contact_links:
   - name: Hara documentation
-    url: https://www.hara-lang.org/docs/start/orientation/
+    url: https://hara-lang.org/docs/start/orientation/
     about: Check the language documentation before filing a general Hara support request here.

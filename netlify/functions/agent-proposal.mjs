@@ -19,15 +19,15 @@ import {
   recordPublishedProposal,
 } from "./_shared/proposal-recording.mjs";
 import {
-  clearWorldSessionCookie,
+  clearLearnSessionCookie,
   json,
-  readWorldSession,
+  readLearnSession,
   sameOrigin,
-} from "./_shared/world-auth.mjs";
+} from "./_shared/learn-auth.mjs";
 
 const AGENT_PATH = "/api/agents";
 const AGENT_INDEX_PATH = "registry/agents.json";
-const PR_MARKER = "<!-- hara-world-agent-proposal -->";
+const PR_MARKER = "<!-- hara-learn-agent-proposal -->";
 
 function decodeContent(payload) {
   if (typeof payload?.content !== "string" || payload.encoding !== "base64") return "";
@@ -102,10 +102,10 @@ function refPath(branch) {
 function pullRequestBody(identity, proposal) {
   return [
     PR_MARKER,
-    `<!-- hara-world-agent:agent:github:${identity.id}:${proposal.slug} -->`,
-    "## Hara World agent registration",
+    `<!-- hara-learn-agent:agent:github:${identity.id}:${proposal.slug} -->`,
+    "## Hara Learn agent registration",
     "",
-    `Prepared from the authenticated World session for operator \`github:${identity.id}\` (\`@${identity.login}\`).`,
+    `Prepared from the authenticated Learn session for operator \`github:${identity.id}\` (\`@${identity.login}\`).`,
     "",
     `Agent: **${proposal.name}** (\`${proposal.slug}\`)`,
     "",
@@ -144,7 +144,7 @@ async function prepareProposalBranch(client, branch, baseSha) {
 
 async function putFile(client, path, source, branch, sha) {
   const body = {
-    message: `Propose World agent record ${path}`,
+    message: `Propose Learn agent record ${path}`,
     content: Buffer.from(source).toString("base64"),
     branch,
   };
@@ -216,11 +216,11 @@ async function createOrUpdateAgentPullRequest(client, { identity, proposal, stat
 function inactiveResponse(request, status) {
   return json(403, {
     error: {
-      code: "WORLD_ACCOUNT_INACTIVE",
-      message: "This Hara World account is not active.",
+      code: "LEARN_ACCOUNT_INACTIVE",
+      message: "This Hara Learn account is not active.",
       status,
     },
-  }, { "Set-Cookie": clearWorldSessionCookie(request.url) });
+  }, { "Set-Cookie": clearLearnSessionCookie(request.url) });
 }
 
 export async function handle(request, options = {}) {
@@ -233,15 +233,15 @@ export async function handle(request, options = {}) {
     return json(405, { error: { code: "METHOD_NOT_ALLOWED", message: "Only GET and POST are supported." } }, { Allow: "GET, POST" });
   }
 
-  const identity = readWorldSession(request, env, now);
-  if (!identity) return json(401, { error: { code: "WORLD_SESSION_REQUIRED", message: "Establish a Hara World session before registering an agent." } });
+  const identity = readLearnSession(request, env, now);
+  if (!identity) return json(401, { error: { code: "LEARN_SESSION_REQUIRED", message: "Establish a Hara Learn session before registering an agent." } });
   if (request.method === "POST" && (!sameOrigin(request, env) || request.headers.get("x-hara-request") !== "agent-proposal")) {
-    return json(403, { error: { code: "AGENT_REQUEST_REJECTED", message: "The agent registration must come from Hara World." } });
+    return json(403, { error: { code: "AGENT_REQUEST_REJECTED", message: "The agent registration must come from Hara Learn." } });
   }
 
   let status;
   try { status = await (options.communityAccountStatusImpl ?? communityAccountStatus)(identity.id); }
-  catch { return json(503, { error: { code: "WORLD_ACCOUNT_CHECK_FAILED", message: "World could not verify the community account." } }); }
+  catch { return json(503, { error: { code: "LEARN_ACCOUNT_CHECK_FAILED", message: "Learn could not verify the community account." } }); }
   if (status !== "active") return inactiveResponse(request, status);
 
   let client;
@@ -251,7 +251,7 @@ export async function handle(request, options = {}) {
   let state;
   try { state = await loadAgentIndex(client); }
   catch (error) {
-    console.error("World agent index lookup failed", { status: error?.status, name: error?.name });
+    console.error("Learn agent index lookup failed", { status: error?.status, name: error?.name });
     return json(502, { error: { code: "AGENT_REGISTRY_UNAVAILABLE", message: "The agent registry could not be read from GitHub." } });
   }
 
@@ -260,7 +260,7 @@ export async function handle(request, options = {}) {
       const records = await Promise.all(agentsForOperator(state.index, identity.id).map((indexed) => readAgentRecord(client, indexed)));
       return json(200, { ok: true, agents: records.map(publicAgent) });
     } catch (error) {
-      console.error("World agent records could not be loaded", { status: error?.status, name: error?.name });
+      console.error("Learn agent records could not be loaded", { status: error?.status, name: error?.name });
       return json(502, { error: { code: "AGENT_RECORDS_UNAVAILABLE", message: "The registered agent records could not be loaded." } });
     }
   }
@@ -286,7 +286,7 @@ export async function handle(request, options = {}) {
     return json(result.unchanged ? 200 : 201, { ok: true, ...result, lifecycleRecorded: lifecycle.recorded });
   } catch (error) {
     if (/slug|at most/.test(error?.message ?? "")) return json(409, { error: { code: "AGENT_CONFLICT", message: error.message } });
-    console.error("World agent proposal failed", { status: error?.status, name: error?.name });
+    console.error("Learn agent proposal failed", { status: error?.status, name: error?.name });
     return json(502, { error: { code: "AGENT_PROPOSAL_FAILED", message: "The agent pull request could not be created." } });
   }
 }

@@ -1,4 +1,4 @@
-# Contributing to Hara World
+# Contributing to Hara Learn
 
 ## Articles
 

@@ -9,7 +9,7 @@ import { fileURLToPath } from "node:url";
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 
 test("builds a review-first release bundle from an article", async () => {
-  const output = await mkdtemp(path.join(tmpdir(), "hara-world-release-"));
+  const output = await mkdtemp(path.join(tmpdir(), "hara-learn-release-"));
   try {
     await run(process.execPath, [
       "scripts/build-release.mjs",

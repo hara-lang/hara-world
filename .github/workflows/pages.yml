@@ -1,4 +1,4 @@
-name: Deploy world.hara-lang.org
+name: Deploy learn.hara-lang.org
 
 on:
   push:
@@ -24,7 +24,7 @@ permissions:
   contents: read
 
 concurrency:
-  group: netlify-world-${{ github.ref_name }}
+  group: netlify-learn-${{ github.ref_name }}
   cancel-in-progress: false
 
 jobs:
@@ -40,52 +40,54 @@ jobs:
       - name: Validate publication and functions
         run: npm run check
 
-      - name: Deploy testing to world.testing.hara-lang.org
+      - name: Deploy testing to learn.testing.hara-lang.org
         if: github.ref_name == 'testing'
         run: npx --yes netlify-cli deploy --build --prod --message "testing ${GITHUB_SHA}"
         env:
           NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
           NETLIFY_SITE_ID: ${{ secrets.NETLIFY_TESTING_SITE_ID }}
 
-      - name: Deploy main to world.hara-lang.org
+      - name: Deploy main to learn.hara-lang.org
         if: github.ref_name == 'main'
         run: npx --yes netlify-cli deploy --build --prod --message "main ${GITHUB_SHA}"
         env:
           NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
           NETLIFY_SITE_ID: ${{ secrets.NETLIFY_PRODUCTION_SITE_ID }}
 
-      - name: Reconcile world.testing.hara-lang.org
+      - name: Reconcile learn.testing.hara-lang.org
         if: github.ref_name == 'testing'
         run: bash .github/scripts/reconcile-netlify-domain.sh
         env:
           NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
           NETLIFY_SITE_ID: ${{ secrets.NETLIFY_TESTING_SITE_ID }}
-          NETLIFY_CUSTOM_DOMAIN: world.testing.hara-lang.org
+          NETLIFY_CUSTOM_DOMAIN: learn.testing.hara-lang.org
+          NETLIFY_LEGACY_DOMAIN: world.testing.hara-lang.org
 
-      - name: Reconcile world.hara-lang.org
+      - name: Reconcile learn.hara-lang.org
         if: github.ref_name == 'main'
         run: bash .github/scripts/reconcile-netlify-domain.sh
         env:
           NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
           NETLIFY_SITE_ID: ${{ secrets.NETLIFY_PRODUCTION_SITE_ID }}
-          NETLIFY_CUSTOM_DOMAIN: world.hara-lang.org
+          NETLIFY_CUSTOM_DOMAIN: learn.hara-lang.org
+          NETLIFY_LEGACY_DOMAIN: world.hara-lang.org
 
-      - name: Verify testing World, session handoff, and profile publisher
+      - name: Verify testing Learn, session handoff, and profile publisher
         if: github.ref_name == 'testing'
-        run: bash .github/scripts/verify-world-site.sh
+        run: bash .github/scripts/verify-learn-site.sh
         env:
-          WORLD_ORIGIN: https://world.testing.hara-lang.org
+          LEARN_ORIGIN: https://learn.testing.hara-lang.org
           IDENTITY_ORIGIN: https://id.testing.hara-lang.org
           REQUIRE_IDENTITY_CONFIGURED: "true"
-          REQUIRE_WORLD_AUTH_CONFIGURED: "true"
+          REQUIRE_LEARN_AUTH_CONFIGURED: "true"
           REQUIRE_PROFILE_PUBLISHER_CONFIGURED: "true"
 
-      - name: Verify production World, session handoff, and profile publisher
+      - name: Verify production Learn, session handoff, and profile publisher
         if: github.ref_name == 'main'
-        run: bash .github/scripts/verify-world-site.sh
+        run: bash .github/scripts/verify-learn-site.sh
         env:
-          WORLD_ORIGIN: https://world.hara-lang.org
+          LEARN_ORIGIN: https://learn.hara-lang.org
           IDENTITY_ORIGIN: https://id.hara-lang.org
           REQUIRE_IDENTITY_CONFIGURED: "true"
-          REQUIRE_WORLD_AUTH_CONFIGURED: "true"
+          REQUIRE_LEARN_AUTH_CONFIGURED: "true"
           REQUIRE_PROFILE_PUBLISHER_CONFIGURED: "true"

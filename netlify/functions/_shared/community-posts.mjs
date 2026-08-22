@@ -67,7 +67,7 @@ export async function listPostDrafts(githubUserId, { db = getDatabase(), limit =
   const safeLimit = Math.max(1, Math.min(100, Number(limit) || 50));
   const result = await db.query(
     `SELECT ${DRAFT_COLUMNS}
-       FROM hara_world.community_post_drafts
+       FROM hara_learn.community_post_drafts
       WHERE github_user_id = $1::bigint
       ORDER BY updated_at DESC, id DESC
       LIMIT $2::integer`,
@@ -81,7 +81,7 @@ export async function getPostDraft(githubUserId, draftId, { db = getDatabase() }
   const id = assertDraftId(draftId);
   const result = await db.query(
     `SELECT ${DRAFT_COLUMNS}
-       FROM hara_world.community_post_drafts
+       FROM hara_learn.community_post_drafts
       WHERE id = $1::uuid AND github_user_id = $2::bigint`,
     [id, identity.id],
   );
@@ -101,7 +101,7 @@ export async function createPostDraft(identity, input, {
   const payload = JSON.stringify({ contentSha256: fingerprint, postType: draft.postType });
   const result = await db.query(
     `WITH inserted AS (
-       INSERT INTO hara_world.community_post_drafts (
+       INSERT INTO hara_learn.community_post_drafts (
          id, github_user_id, slug, post_type, title, description, body, topics,
          status, content_sha256, created_at, updated_at
        ) VALUES (
@@ -110,7 +110,7 @@ export async function createPostDraft(identity, input, {
        )
        RETURNING ${DRAFT_COLUMNS}
      ), recorded AS (
-       INSERT INTO hara_world.community_post_events (
+       INSERT INTO hara_learn.community_post_events (
          draft_id, event_type, actor_github_user_id, payload, created_at
        )
        SELECT id, 'draft.created', github_user_id, $11::jsonb, $10::timestamptz
@@ -158,7 +158,7 @@ export async function updatePostDraft(identity, draftId, input, {
   });
   const result = await db.query(
     `WITH updated AS (
-       UPDATE hara_world.community_post_drafts
+       UPDATE hara_learn.community_post_drafts
           SET slug = $3,
               post_type = $4,
               title = $5,
@@ -172,7 +172,7 @@ export async function updatePostDraft(identity, draftId, input, {
         WHERE id = $1::uuid AND github_user_id = $2::bigint
         RETURNING ${DRAFT_COLUMNS}
      ), recorded AS (
-       INSERT INTO hara_world.community_post_events (
+       INSERT INTO hara_learn.community_post_events (
          draft_id, event_type, actor_github_user_id, payload, created_at
        )
        SELECT id, 'draft.updated', github_user_id, $11::jsonb, $10::timestamptz
@@ -200,7 +200,7 @@ export async function deletePostDraft(identity, draftId, { db = getDatabase() } 
   const author = assertPostIdentity(identity);
   const id = assertDraftId(draftId);
   const result = await db.query(
-    `DELETE FROM hara_world.community_post_drafts
+    `DELETE FROM hara_learn.community_post_drafts
       WHERE id = $1::uuid
         AND github_user_id = $2::bigint
         AND status = 'draft'
@@ -229,7 +229,7 @@ export async function markPostSubmitted(identity, draftId, proposal, {
   });
   const result = await db.query(
     `WITH updated AS (
-       UPDATE hara_world.community_post_drafts
+       UPDATE hara_learn.community_post_drafts
           SET status = 'submitted',
               proposal_content_sha256 = $3,
               proposal_branch = $4,
@@ -244,7 +244,7 @@ export async function markPostSubmitted(identity, draftId, proposal, {
         WHERE id = $1::uuid AND github_user_id = $2::bigint
         RETURNING ${DRAFT_COLUMNS}
      ), recorded AS (
-       INSERT INTO hara_world.community_post_events (
+       INSERT INTO hara_learn.community_post_events (
          draft_id, event_type, actor_github_user_id, payload, created_at
        )
        SELECT id, $10, github_user_id, $11::jsonb, $9::timestamptz
@@ -278,12 +278,12 @@ export async function markPostProposalError(identity, draftId, message, {
   const payload = JSON.stringify({ message: String(message ?? "Proposal publication failed.").slice(0, 500) });
   const result = await db.query(
     `WITH updated AS (
-       UPDATE hara_world.community_post_drafts
+       UPDATE hara_learn.community_post_drafts
           SET status = 'error', revision = revision + 1, updated_at = $3::timestamptz
         WHERE id = $1::uuid AND github_user_id = $2::bigint
         RETURNING ${DRAFT_COLUMNS}
      ), recorded AS (
-       INSERT INTO hara_world.community_post_events (
+       INSERT INTO hara_learn.community_post_events (
          draft_id, event_type, actor_github_user_id, payload, created_at
        )
        SELECT id, 'proposal.error', github_user_id, $4::jsonb, $3::timestamptz
@@ -304,7 +304,7 @@ export async function markPostWithdrawn(identity, draftId, {
   const timestamp = new Date(now).toISOString();
   const result = await db.query(
     `WITH updated AS (
-       UPDATE hara_world.community_post_drafts
+       UPDATE hara_learn.community_post_drafts
           SET status = 'withdrawn',
               withdrawn_at = $3::timestamptz,
               revision = revision + 1,
@@ -314,7 +314,7 @@ export async function markPostWithdrawn(identity, draftId, {
           AND status IN ('draft', 'submitted', 'changes-requested', 'error')
         RETURNING ${DRAFT_COLUMNS}
      ), recorded AS (
-       INSERT INTO hara_world.community_post_events (
+       INSERT INTO hara_learn.community_post_events (
          draft_id, event_type, actor_github_user_id, payload, created_at
        )
        SELECT id, 'proposal.withdrawn', github_user_id, '{}'::jsonb, $3::timestamptz

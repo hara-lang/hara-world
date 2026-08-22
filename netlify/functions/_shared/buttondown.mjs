@@ -68,21 +68,21 @@ export async function createButtondownSubscriber({
     email_address: email,
     referrer_url: sourceUrl,
     metadata: {
-      hara_world_request_id: requestId,
-      hara_world_interests: interests,
-      hara_world_consent_version: consentTextVersion
+      hara_learn_request_id: requestId,
+      hara_learn_interests: interests,
+      hara_learn_consent_version: consentTextVersion
     }
   };
   if (envFlag("BUTTONDOWN_FORWARD_IP", true) && ipAddress) payload.ip_address = ipAddress;
   if (envFlag("BUTTONDOWN_USE_TAGS", false)) {
-    payload.tags = ["hara-world", ...interests.map((interest) => `hara-world:${interest}`)];
+    payload.tags = ["hara-learn", ...interests.map((interest) => `hara-learn:${interest}`)];
   }
 
   try {
     return await buttondownRequest("/subscribers", {
       method: "POST",
       body: payload,
-      idempotencyKey: `hara-world-${requestId}`,
+      idempotencyKey: `hara-learn-${requestId}`,
       collisionBehavior: "add",
       fetchImpl
     });
@@ -97,5 +97,5 @@ export function getButtondownSubscriber(idOrEmail, { fetchImpl } = {}) {
 }
 
 export function getButtondownPortalUrl() {
-  return getEnv("PUBLIC_HARA_WORLD_MANAGE_SUBSCRIPTION_URL", "https://buttondown.com/login?subscriber=1");
+  return getEnv("PUBLIC_HARA_LEARN_MANAGE_SUBSCRIPTION_URL", "https://buttondown.com/login?subscriber=1");
 }

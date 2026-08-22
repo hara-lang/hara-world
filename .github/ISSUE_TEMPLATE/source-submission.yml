@@ -1,5 +1,5 @@
 name: Submit a publication feed
-description: Register an RSS or Atom publication for review by Hara World.
+description: Register an RSS or Atom publication for review by Hara Learn.
 title: "Source: "
 body:
   - type: markdown
@@ -63,7 +63,7 @@ body:
   - type: textarea
     id: relevance
     attributes:
-      label: Relevance to Hara World
+      label: Relevance to Hara Learn
       description: Explain the publication's relationship to Hara, Lisp, language tools, runtimes, or programmable media.
     validations:
       required: true

@@ -4,7 +4,7 @@ import test from "node:test";
 
 const read = (path) => readFile(new URL(`../${path}`, import.meta.url), "utf8");
 
-test("source submission is an on-site authenticated form backed by the World API", async () => {
+test("source submission is an on-site authenticated form backed by the Learn API", async () => {
   const page = await read("src/pages/submit.astro");
   assert.match(page, /<form class="source-form"/);
   assert.match(page, /\/api\/sources\/probe/);
@@ -15,7 +15,7 @@ test("source submission is an on-site authenticated form backed by the World API
   assert.doesNotMatch(page, /issues\/new\?template|Open a source submission/);
 });
 
-test("profile calls-to-action stay on Hara World and use the existing profile API form", async () => {
+test("profile calls-to-action stay on Hara Learn and use the existing profile API form", async () => {
   const [people, site, me, home] = await Promise.all([
     read("src/pages/people/index.astro"),
     read("src/lib/site.ts"),
@@ -31,8 +31,8 @@ test("profile calls-to-action stay on Hara World and use the existing profile AP
   assert.match(home, /href=\{SITE\.profile\}/);
 });
 
-test("World discovery advertises the first-party source proposal and probe endpoints", async () => {
-  const discovery = await read("netlify/functions/world-discovery.mjs");
+test("Learn discovery advertises the first-party source proposal and probe endpoints", async () => {
+  const discovery = await read("netlify/functions/learn-discovery.mjs");
   assert.match(discovery, /sources: \{/);
   assert.match(discovery, /endpoint: `\$\{issuer\}\/api\/sources`/);
   assert.match(discovery, /probeEndpoint: `\$\{issuer\}\/api\/sources\/probe`/);
@@ -54,7 +54,7 @@ test("authenticated source proposals have a read-only scope workflow and explici
   assert.match(scope, /may change only registry\/sources\.json/);
   assert.match(scope, /cannot change reviewer-controlled activation status/);
   assert.match(scope, /cannot change reviewer-controlled polling policy/);
-  assert.match(scope, /hara-world-source-proposal/);
+  assert.match(scope, /hara-learn-source-proposal/);
   assert.match(owners, /netlify\/functions\/source-proposal\.mjs/);
   assert.match(owners, /netlify\/functions\/_shared\/feed-probe\.mjs/);
   assert.match(owners, /registry\/sources\.json/);

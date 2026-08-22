@@ -2,9 +2,9 @@ import { getEnv } from "./_shared/env.mjs";
 import { readGitHubAppConfig } from "./_shared/github-app.mjs";
 import {
   identityOriginForRequest,
-  isWorldAuthConfigured,
-  worldOrigin,
-} from "./_shared/world-auth.mjs";
+  isLearnAuthConfigured,
+  learnOrigin,
+} from "./_shared/learn-auth.mjs";
 
 function envValue(env, name, fallback = "") {
   const injected = env?.[name];
@@ -13,22 +13,22 @@ function envValue(env, name, fallback = "") {
 }
 
 export function discoveryPayload(request, env = {}) {
-  const issuer = worldOrigin(request.url);
+  const issuer = learnOrigin(request.url);
   const centralIssuer = identityOriginForRequest(request.url, env);
-  const authConfigured = isWorldAuthConfigured(env, request.url);
+  const authConfigured = isLearnAuthConfigured(env, request.url);
   let gitPublisherConfigured = false;
   try {
     readGitHubAppConfig(env);
     gitPublisherConfigured = true;
   } catch {}
   const databaseConfigured = Boolean(envValue(env, "DATABASE_URL"));
-  const webhookConfigured = envValue(env, "HARA_WORLD_GITHUB_WEBHOOK_SECRET").length >= 32;
+  const webhookConfigured = envValue(env, "HARA_LEARN_GITHUB_WEBHOOK_SECRET").length >= 32;
   const lifecycleConfigured = authConfigured && gitPublisherConfigured && databaseConfigured && webhookConfigured;
   return {
     issuer,
     centralIssuer,
     configured: lifecycleConfigured,
-    readinessEndpoint: `${issuer}/.well-known/hara-world-readiness`,
+    readinessEndpoint: `${issuer}/.well-known/hara-learn-readiness`,
     authentication: {
       configured: authConfigured,
       startEndpoint: `${issuer}/api/auth/start`,
@@ -102,7 +102,7 @@ export function discoveryPayload(request, env = {}) {
   };
 }
 
-export default async function worldDiscovery(request) {
+export default async function learnDiscovery(request) {
   if (request.method !== "GET" && request.method !== "HEAD") {
     return new Response(`${JSON.stringify({ error: { code: "METHOD_NOT_ALLOWED", message: "Only GET and HEAD are supported." } })}\n`, {
       status: 405,
@@ -126,4 +126,4 @@ export default async function worldDiscovery(request) {
   });
 }
 
-export const config = { path: "/.well-known/hara-world" };
+export const config = { path: "/.well-known/hara-learn" };

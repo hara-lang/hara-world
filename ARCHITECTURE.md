@@ -1,12 +1,12 @@
-# Hara World architecture
+# Hara Learn architecture
 
 ## Product boundary
 
-Hara World is the community and syndication layer for the Hara ecosystem.
+Hara Learn is the community and syndication layer for the Hara ecosystem.
 
 People may publish native community posts, maintain reviewed public profiles, work through shared lessons, or connect an RSS/Atom publication they already control. The public homepage is a chronological community stream that mixes those native and syndicated posts with clear provenance.
 
-Hara World is not a closed social network and does not require writers to surrender their own sites. Canonical ownership stays with the author: a native World post has a portable Markdown record, while a syndicated post points back to its canonical URL. Review protects attribution, relevance, permissions, and the shared feed; it is not meant to turn the community into a single editorial voice.
+Hara Learn is not a closed social network and does not require writers to surrender their own sites. Canonical ownership stays with the author: a native Learn post has a portable Markdown record, while a syndicated post points back to its canonical URL. Review protects attribution, relevance, permissions, and the shared feed; it is not meant to turn the community into a single editorial voice.
 
 ```text
 people ──────────────► private drafts ─► native post PRs ─┐
@@ -26,7 +26,7 @@ The community stream, people directory, and learning surfaces are the product ce
 
 ## Public and private planes
 
-Hara World deliberately separates mutable workflow state from the public community record.
+Hara Learn deliberately separates mutable workflow state from the public community record.
 
 ### Private transactional plane
 
@@ -59,7 +59,7 @@ Astro content collections render native and syndicated posts, public profiles, a
 
 Native posts and profiles are portable Git-reviewed records. Syndicated entries preserve their source identity and canonical URL. The homepage presents all approved posts through one chronological community feed.
 
-Native typed posts carry a stable numeric GitHub author ID and the current reviewed GitHub login. Those fields come from Hara Identity through a World-local session, not from editable browser fields.
+Native typed posts carry a stable numeric GitHub author ID and the current reviewed GitHub login. Those fields come from Hara Identity through a Learn-local session, not from editable browser fields.
 
 ### 2. Intake
 
@@ -68,7 +68,7 @@ Native typed posts carry a stable numeric GitHub author ID and the current revie
 The `/post` composer writes private drafts to Neon. Submitting a draft:
 
 - validates and normalises its post type, title, description, topics, slug, and Markdown;
-- derives author identity from the verified World session;
+- derives author identity from the verified Learn session;
 - creates deterministic Markdown under `content/articles/community/`;
 - resets or creates one stable per-draft proposal branch;
 - opens or updates one draft pull request through the narrowly scoped GitHub App;
@@ -150,7 +150,7 @@ This first version favours typography, diagrams, code, and product captures over
 
 - **Merge is approval.** Draft saving, form submission, feed polling, and PR creation are not publication.
 - **Private state is not the public source.** Neon drafts and proposal rows cannot appear in the community feed until reviewed Markdown is merged.
-- **Identity is server supplied.** Stable GitHub subjects come from Hara Identity and a World-local session, never editable post fields.
+- **Identity is server supplied.** Stable GitHub subjects come from Hara Identity and a Learn-local session, never editable post fields.
 - **Canonical ownership is visible.** Native posts retain their reviewed author identity; syndicated posts retain attribution and point back to the author’s site.
 - **Proposal branches are reusable.** Resubmission updates one draft PR instead of creating review spam.
 - **Git wins after submission.** If GitHub accepts a proposal but Neon state recording fails, the GitHub URL remains authoritative.

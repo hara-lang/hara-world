@@ -17,7 +17,7 @@ export function normalizeCompletion(body) {
 export async function completedKoans(githubUserId, { db = getDatabase() } = {}) {
   const result = await db.query(
     `SELECT koan_id, koan_version, completed_at, updated_at
-       FROM hara_world.koan_completions
+       FROM hara_learn.koan_completions
       WHERE github_user_id = $1::bigint
       ORDER BY koan_id`, [String(githubUserId)]);
   return result.rows;
@@ -25,7 +25,7 @@ export async function completedKoans(githubUserId, { db = getDatabase() } = {}) 
 
 export async function saveCompletion(githubUserId, completion, { db = getDatabase() } = {}) {
   const result = await db.query(
-    `INSERT INTO hara_world.koan_completions
+    `INSERT INTO hara_learn.koan_completions
        (github_user_id, koan_id, koan_version, solution_source, source_sha256, completed_at, updated_at)
      VALUES ($1::bigint, $2, $3, $4, $5, now(), now())
      ON CONFLICT (github_user_id, koan_id, koan_version) DO UPDATE SET
@@ -42,12 +42,12 @@ export async function peerSolutions(githubUserId, koan, { db = getDatabase() } =
     `SELECT c.github_user_id::text AS github_user_id,
             a.github_login, a.display_name, a.avatar_url,
             c.solution_source, c.completed_at, c.updated_at
-       FROM hara_world.koan_completions c
-       JOIN hara_world.community_accounts a USING (github_user_id)
+       FROM hara_learn.koan_completions c
+       JOIN hara_learn.community_accounts a USING (github_user_id)
       WHERE c.koan_id = $2 AND c.koan_version = $3
         AND a.status = 'active'
         AND EXISTS (
-          SELECT 1 FROM hara_world.koan_completions viewer
+          SELECT 1 FROM hara_learn.koan_completions viewer
            WHERE viewer.github_user_id = $1::bigint
              AND viewer.koan_id = $2 AND viewer.koan_version = $3)
       ORDER BY c.completed_at, c.github_user_id

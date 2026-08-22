@@ -52,7 +52,7 @@ test("extracts and minimizes Buttondown subscriber events", () => {
         email_address: "Reader@Example.com",
         type: "regular",
         ip_address: "203.0.113.4",
-        metadata: { hara_world_interests: ["dispatch"] }
+        metadata: { hara_learn_interests: ["dispatch"] }
       }
     }
   });

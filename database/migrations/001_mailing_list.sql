@@ -1,8 +1,8 @@
-CREATE SCHEMA IF NOT EXISTS hara_world;
+CREATE SCHEMA IF NOT EXISTS hara_learn;
 
 -- statement-breakpoint
 
-CREATE TABLE IF NOT EXISTS hara_world.mailing_list_subscribers (
+CREATE TABLE IF NOT EXISTS hara_learn.mailing_list_subscribers (
   id bigint GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
   email text NOT NULL CHECK (char_length(email) BETWEEN 3 AND 254),
   email_normalized text GENERATED ALWAYS AS (lower(btrim(email))) STORED,
@@ -34,17 +34,17 @@ CREATE TABLE IF NOT EXISTS hara_world.mailing_list_subscribers (
 -- statement-breakpoint
 
 CREATE UNIQUE INDEX IF NOT EXISTS mailing_list_subscribers_provider_id_key
-  ON hara_world.mailing_list_subscribers (provider, provider_subscriber_id)
+  ON hara_learn.mailing_list_subscribers (provider, provider_subscriber_id)
   WHERE provider_subscriber_id IS NOT NULL;
 
 -- statement-breakpoint
 
 CREATE INDEX IF NOT EXISTS mailing_list_subscribers_status_idx
-  ON hara_world.mailing_list_subscribers (status, updated_at DESC);
+  ON hara_learn.mailing_list_subscribers (status, updated_at DESC);
 
 -- statement-breakpoint
 
-CREATE TABLE IF NOT EXISTS hara_world.mailing_list_provider_events (
+CREATE TABLE IF NOT EXISTS hara_learn.mailing_list_provider_events (
   provider text NOT NULL,
   event_key text NOT NULL,
   event_type text NOT NULL,
@@ -60,7 +60,7 @@ CREATE TABLE IF NOT EXISTS hara_world.mailing_list_provider_events (
 
 -- statement-breakpoint
 
-CREATE OR REPLACE VIEW hara_world.mailing_list_active AS
+CREATE OR REPLACE VIEW hara_learn.mailing_list_active AS
 SELECT
   id,
   email,
@@ -70,15 +70,15 @@ SELECT
   provider_subscriber_id,
   created_at,
   updated_at
-FROM hara_world.mailing_list_subscribers
+FROM hara_learn.mailing_list_subscribers
 WHERE status = 'active' AND deleted_at IS NULL;
 
 -- statement-breakpoint
 
-COMMENT ON TABLE hara_world.mailing_list_subscribers IS
-  'Hara World subscriber lifecycle and versioned consent ledger. Delivery remains delegated to the configured provider.';
+COMMENT ON TABLE hara_learn.mailing_list_subscribers IS
+  'Hara Learn subscriber lifecycle and versioned consent ledger. Delivery remains delegated to the configured provider.';
 
 -- statement-breakpoint
 
-COMMENT ON COLUMN hara_world.mailing_list_subscribers.consent_evidence IS
+COMMENT ON COLUMN hara_learn.mailing_list_subscribers.consent_evidence IS
   'Minimal consent evidence. Raw IP addresses and full user-agent strings are deliberately not retained.';

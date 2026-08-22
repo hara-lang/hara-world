@@ -11,7 +11,7 @@ function base64(source) {
 test("grants review access from current repository write authority", async () => {
   const calls = [];
   const client = {
-    repository: "hara-lang/hara-world",
+    repository: "hara-lang/hara-learn",
     baseBranch: "main",
     async request(path) {
       calls.push(path);
@@ -26,7 +26,7 @@ test("grants review access from current repository write authority", async () =>
 
 test("falls back to merged reviewed profile roles when repository permission is absent", async () => {
   const client = {
-    repository: "hara-lang/hara-world",
+    repository: "hara-lang/hara-learn",
     baseBranch: "main",
     async request(path) {
       if (path.includes("/collaborators/")) {
@@ -54,7 +54,7 @@ test("falls back to merged reviewed profile roles when repository permission is 
 
 test("does not derive review authority from an unreviewed browser claim or ordinary profile role", async () => {
   const client = {
-    repository: "hara-lang/hara-world",
+    repository: "hara-lang/hara-learn",
     baseBranch: "main",
     async request(path) {
       if (path.includes("/collaborators/")) return { permission: "read" };

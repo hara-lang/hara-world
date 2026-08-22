@@ -120,7 +120,7 @@ function scalar(value) {
 
 export function buildAgentDocument({ identity, proposal, existing, now = Date.now() }) {
   if (!identity || !/^\d+$/.test(identity.id ?? "") || !identity.login) {
-    throw new TypeError("A verified World session is required to build an agent registration.");
+    throw new TypeError("A verified Learn session is required to build an agent registration.");
   }
   const previous = existing?.data ?? {};
   const date = new Date(now).toISOString().slice(0, 10);

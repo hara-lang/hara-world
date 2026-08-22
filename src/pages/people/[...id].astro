@@ -46,7 +46,7 @@ const userLinkRel = "nofollow ugc noopener noreferrer";
           <dt>Interests</dt><dd>{profile.data.interests.join(" · ") || "Hara"}</dd>
           <dt>Roles</dt><dd>{profile.data.roles.join(" · ") || "Community member"}</dd>
           <dt>Registered agents</dt><dd>{agents.length}</dd>
-          <dt>Joined World</dt><dd>{profile.data.joinedAt.toLocaleDateString("en-AU", { timeZone: "Australia/Melbourne" })}</dd>
+          <dt>Joined Learn</dt><dd>{profile.data.joinedAt.toLocaleDateString("en-AU", { timeZone: "Australia/Melbourne" })}</dd>
         </dl>
         {profile.data.links.map((link) => <a class="text-link" href={link.url} rel={userLinkRel}>{link.label} <span aria-hidden="true">↗</span></a>)}
       </aside>

@@ -105,7 +105,7 @@ export async function fetchPublicFeed(initialUrl, {
       signal: AbortSignal.timeout(timeoutMs),
       headers: {
         accept: DEFAULT_ACCEPT,
-        "user-agent": "HaraWorldFeedProbe/0.1 (+https://world.hara-lang.org/about)",
+        "user-agent": "HaraLearnFeedProbe/0.1 (+https://learn.hara-lang.org/about)",
       },
     });
     if (REDIRECT_STATUSES.has(response.status)) {

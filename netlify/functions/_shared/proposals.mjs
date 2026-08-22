@@ -143,7 +143,7 @@ export async function recordProposalSubmission(input, {
   const proposal = normalizeProposalSubmission(input, { now });
   const timestamp = isoTime(now);
   const upsert = {
-    text: `INSERT INTO hara_world.community_proposals (
+    text: `INSERT INTO hara_learn.community_proposals (
       proposal_id, proposal_type, owner_github_user_id, resource_key, resource_title,
       repository, branch, base_branch, pull_request_number, pull_request_url,
       public_path, head_sha, state, review_state, checks_state, is_draft,
@@ -161,21 +161,21 @@ export async function recordProposalSubmission(input, {
       base_branch = EXCLUDED.base_branch,
       pull_request_number = EXCLUDED.pull_request_number,
       pull_request_url = EXCLUDED.pull_request_url,
-      public_path = COALESCE(EXCLUDED.public_path, hara_world.community_proposals.public_path),
-      head_sha = COALESCE(EXCLUDED.head_sha, hara_world.community_proposals.head_sha),
-      state = CASE WHEN $16::boolean THEN 'submitted' ELSE hara_world.community_proposals.state END,
-      review_state = CASE WHEN $16::boolean THEN 'pending' ELSE hara_world.community_proposals.review_state END,
-      checks_state = CASE WHEN $16::boolean THEN 'unknown' ELSE hara_world.community_proposals.checks_state END,
+      public_path = COALESCE(EXCLUDED.public_path, hara_learn.community_proposals.public_path),
+      head_sha = COALESCE(EXCLUDED.head_sha, hara_learn.community_proposals.head_sha),
+      state = CASE WHEN $16::boolean THEN 'submitted' ELSE hara_learn.community_proposals.state END,
+      review_state = CASE WHEN $16::boolean THEN 'pending' ELSE hara_learn.community_proposals.review_state END,
+      checks_state = CASE WHEN $16::boolean THEN 'unknown' ELSE hara_learn.community_proposals.checks_state END,
       is_draft = EXCLUDED.is_draft,
       submitted_at = CASE
-        WHEN hara_world.community_proposals.pull_request_number = EXCLUDED.pull_request_number
-          THEN hara_world.community_proposals.submitted_at
+        WHEN hara_learn.community_proposals.pull_request_number = EXCLUDED.pull_request_number
+          THEN hara_learn.community_proposals.submitted_at
         ELSE EXCLUDED.submitted_at
       END,
       updated_at = EXCLUDED.updated_at,
-      merged_at = CASE WHEN $16::boolean THEN NULL ELSE hara_world.community_proposals.merged_at END,
-      closed_at = CASE WHEN $16::boolean THEN NULL ELSE hara_world.community_proposals.closed_at END
-    WHERE hara_world.community_proposals.owner_github_user_id = EXCLUDED.owner_github_user_id
+      merged_at = CASE WHEN $16::boolean THEN NULL ELSE hara_learn.community_proposals.merged_at END,
+      closed_at = CASE WHEN $16::boolean THEN NULL ELSE hara_learn.community_proposals.closed_at END
+    WHERE hara_learn.community_proposals.owner_github_user_id = EXCLUDED.owner_github_user_id
     RETURNING ${RETURNING}`,
     params: [
       proposal.proposalId,
@@ -208,13 +208,13 @@ export async function recordProposalSubmission(input, {
     ? proposal.ownerGithubUserId
     : githubUserId(actorGithubUserId, "Proposal actor GitHub user ID");
   const event = {
-    text: `INSERT INTO hara_world.community_proposal_events (
+    text: `INSERT INTO hara_learn.community_proposal_events (
       proposal_id, provider, event_type, actor_github_user_id, actor_login, payload, created_at
     )
-    SELECT $1, 'world', $2, $3::bigint, $4, $5::jsonb, $6::timestamptz
+    SELECT $1, 'learn', $2, $3::bigint, $4, $5::jsonb, $6::timestamptz
      WHERE EXISTS (
        SELECT 1
-         FROM hara_world.community_proposals
+         FROM hara_learn.community_proposals
         WHERE proposal_id = $1
           AND owner_github_user_id = $3::bigint
      )`,
@@ -245,7 +245,7 @@ export async function listProposalsForOwner(ownerGithubUserId, {
   const bounded = Math.max(1, Math.min(200, Number(limit) || 100));
   const result = await db.query(
     `SELECT ${RETURNING}
-       FROM hara_world.community_proposals
+       FROM hara_learn.community_proposals
       WHERE owner_github_user_id = $1::bigint
       ORDER BY updated_at DESC, proposal_id
       LIMIT $2`,
@@ -261,7 +261,7 @@ export async function listReviewProposals({
   const bounded = Math.max(1, Math.min(300, Number(limit) || 200));
   const result = await db.query(
     `SELECT ${RETURNING}
-       FROM hara_world.community_proposals
+       FROM hara_learn.community_proposals
       ORDER BY
         CASE state
           WHEN 'changes-requested' THEN 0
@@ -287,7 +287,7 @@ export async function proposalForPullRequest(repository, pullRequestNumber, {
   const number = positiveInteger(pullRequestNumber, "Pull-request number");
   const result = await db.query(
     `SELECT ${RETURNING}
-       FROM hara_world.community_proposals
+       FROM hara_learn.community_proposals
       WHERE repository = $1 AND pull_request_number = $2`,
     [repo, number],
   );
@@ -310,7 +310,7 @@ export async function applyProposalLifecycleEvent(input, {
     throw new TypeError("Proposal ID is invalid.");
   }
   const provider = text(input?.provider || "github", 20, "Proposal event provider");
-  if (!new Set(["world", "github", "reconcile"]).has(provider)) throw new TypeError("Proposal event provider is invalid.");
+  if (!new Set(["learn", "github", "reconcile"]).has(provider)) throw new TypeError("Proposal event provider is invalid.");
   const deliveryKey = text(input?.deliveryKey, 240, "Provider delivery key", { required: false }) || null;
   const eventType = text(input?.eventType, 100, "Proposal event type");
   const action = text(input?.action, 100, "Proposal event action", { required: false }) || null;
@@ -332,14 +332,14 @@ export async function applyProposalLifecycleEvent(input, {
 
   const result = await db.query(
     `WITH accepted AS (
-       INSERT INTO hara_world.community_proposal_events (
+       INSERT INTO hara_learn.community_proposal_events (
          proposal_id, provider, provider_delivery_key, event_type, action,
          actor_github_user_id, actor_login, payload, created_at
        ) VALUES ($1, $2, $3, $4, $5, $6::bigint, $7, $8::jsonb, $9::timestamptz)
        ON CONFLICT (provider, provider_delivery_key) DO NOTHING
        RETURNING proposal_id
      )
-     UPDATE hara_world.community_proposals AS proposal SET
+     UPDATE hara_learn.community_proposals AS proposal SET
        state = COALESCE($10, proposal.state),
        review_state = COALESCE($11, proposal.review_state),
        checks_state = COALESCE($12, proposal.checks_state),
@@ -375,7 +375,7 @@ export async function applyProposalLifecycleEvent(input, {
   if (result.rows[0]) return { accepted: true, proposal: mapProposal(result.rows[0]) };
   const existing = await db.query(
     `SELECT ${RETURNING}
-       FROM hara_world.community_proposals
+       FROM hara_learn.community_proposals
       WHERE proposal_id = $1`,
     [proposalId],
   );
@@ -391,7 +391,7 @@ export async function markProposalWithdrawn(proposalType, resourceKey, {
   const proposalId = proposalIdFor(proposalType, resourceKey);
   return applyProposalLifecycleEvent({
     proposalId,
-    provider: "world",
+    provider: "learn",
     eventType: "proposal.withdrawn",
     action: "withdraw",
     actorGithubUserId,

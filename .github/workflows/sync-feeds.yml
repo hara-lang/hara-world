@@ -1,4 +1,4 @@
-name: Propose World Feed updates
+name: Propose Learn Feed updates
 
 on:
   schedule:
@@ -10,7 +10,7 @@ permissions:
   pull-requests: write
 
 concurrency:
-  group: hara-world-feed-sync
+  group: hara-learn-feed-sync
   cancel-in-progress: false
 
 jobs:
@@ -18,7 +18,7 @@ jobs:
     runs-on: ubuntu-24.04
     env:
       GH_TOKEN: ${{ github.token }}
-      BRANCH: automation/world-feed
+      BRANCH: automation/learn-feed
     steps:
       - uses: actions/checkout@v4
         with:
@@ -43,10 +43,10 @@ jobs:
             exit 0
           fi
 
-          git config user.name "hara-world-bot"
-          git config user.email "hara-world-bot@users.noreply.github.com"
+          git config user.name "hara-learn-bot"
+          git config user.email "hara-learn-bot@users.noreply.github.com"
           git add content/articles/syndicated registry/sync-state.json
-          git commit -m "Propose World Feed updates"
+          git commit -m "Propose Learn Feed updates"
           git push --force origin "HEAD:$BRANCH"
 
           number="$(gh pr list --base main --head "$BRANCH" --state open --json number --jq '.[0].number // empty')"
@@ -55,8 +55,8 @@ jobs:
               --draft \
               --base main \
               --head "$BRANCH" \
-              --title "Propose World Feed updates" \
+              --title "Propose Learn Feed updates" \
               --body $'Automated RSS/Atom intake for editorial review.\n\nReview provenance, title, date, excerpt, attribution, topics, and canonical URL before merging. The feed importer does not grant itself publication permission.'
           else
-            gh pr comment "$number" --body "World Feed intake refreshed from the current canonical branch."
+            gh pr comment "$number" --body "Learn Feed intake refreshed from the current canonical branch."
           fi

@@ -1,13 +1,13 @@
 import { createHash, createHmac, randomBytes, timingSafeEqual } from "node:crypto";
 import { getEnv } from "./env.mjs";
 
-export const WORLD_SESSION_COOKIE = "hara_world_session";
-export const WORLD_AUTH_STATE_COOKIE = "hara_world_auth_state";
-export const WORLD_AUTH_VERIFIER_COOKIE = "hara_world_auth_verifier";
-export const WORLD_AUTH_RETURN_COOKIE = "hara_world_auth_return";
-export const WORLD_AUTH_COOKIE_TTL_SECONDS = 10 * 60;
-export const WORLD_SESSION_TTL_SECONDS = 2 * 60 * 60;
-export const WORLD_CLIENT_ID = "world";
+export const LEARN_SESSION_COOKIE = "hara_learn_session";
+export const LEARN_AUTH_STATE_COOKIE = "hara_learn_auth_state";
+export const LEARN_AUTH_VERIFIER_COOKIE = "hara_learn_auth_verifier";
+export const LEARN_AUTH_RETURN_COOKIE = "hara_learn_auth_return";
+export const LEARN_AUTH_COOKIE_TTL_SECONDS = 10 * 60;
+export const LEARN_SESSION_TTL_SECONDS = 2 * 60 * 60;
+export const LEARN_CLIENT_ID = "learn";
 
 const LOGIN_PATTERN = /^[A-Za-z0-9](?:[A-Za-z0-9-]{0,37}[A-Za-z0-9])?$/;
 const COOKIE_NAME_PATTERN = /^[!#$%&'*+.^_`|~0-9A-Za-z-]+$/;
@@ -124,17 +124,17 @@ export function identityOriginForRequest(requestUrl, env = {}) {
     return origin;
   }
   if (isLoopback(request.hostname)) return "http://localhost:9999";
-  return request.hostname === "world.testing.hara-lang.org" || request.hostname.endsWith(".testing.hara-lang.org")
+  return request.hostname === "learn.testing.hara-lang.org" || request.hostname.endsWith(".testing.hara-lang.org")
     ? "https://id.testing.hara-lang.org"
     : "https://id.hara-lang.org";
 }
 
-export function worldOrigin(requestUrl) {
+export function learnOrigin(requestUrl) {
   return new URL(requestUrl).origin;
 }
 
-export function worldRedirectUri(requestUrl) {
-  return new URL("/api/auth/callback", worldOrigin(requestUrl)).toString();
+export function learnCallbackUri(requestUrl) {
+  return new URL("/api/auth/callback", learnOrigin(requestUrl)).toString();
 }
 
 export function safeLocalReturnTo(value, requestUrl) {
@@ -150,31 +150,31 @@ export function safeLocalReturnTo(value, requestUrl) {
   }
 }
 
-export function readWorldAuthConfig(env = {}, requestUrl = "https://world.hara-lang.org/") {
-  const handoffSecret = envValue(env, "HARA_WORLD_HANDOFF_SECRET");
-  const sessionSecret = envValue(env, "HARA_WORLD_SESSION_SECRET");
+export function readLearnAuthConfig(env = {}, requestUrl = "https://learn.hara-lang.org/") {
+  const handoffSecret = envValue(env, "HARA_LEARN_HANDOFF_SECRET");
+  const sessionSecret = envValue(env, "HARA_LEARN_SESSION_SECRET");
   if (handoffSecret.length < 32 || sessionSecret.length < 32) {
-    throw new Error("Hara World authentication is not configured.");
+    throw new Error("Hara Learn authentication is not configured.");
   }
   return {
-    clientId: WORLD_CLIENT_ID,
+    clientId: LEARN_CLIENT_ID,
     handoffSecret,
     sessionSecret,
     identityOrigin: identityOriginForRequest(requestUrl, env),
-    redirectUri: worldRedirectUri(requestUrl),
+    redirectUri: learnCallbackUri(requestUrl),
   };
 }
 
-export function isWorldAuthConfigured(env = {}, requestUrl = "https://world.hara-lang.org/") {
+export function isLearnAuthConfigured(env = {}, requestUrl = "https://learn.hara-lang.org/") {
   try {
-    readWorldAuthConfig(env, requestUrl);
+    readLearnAuthConfig(env, requestUrl);
     return true;
   } catch {
     return false;
   }
 }
 
-export function createWorldAuthAttempt(returnTo, requestUrl) {
+export function createLearnAuthAttempt(returnTo, requestUrl) {
   const verifier = randomToken(48);
   return {
     state: randomToken(32),
@@ -187,15 +187,15 @@ export function createWorldAuthAttempt(returnTo, requestUrl) {
 export function authAttemptCookies(attempt, requestUrl) {
   const options = {
     path: "/api/auth/callback",
-    maxAge: WORLD_AUTH_COOKIE_TTL_SECONDS,
+    maxAge: LEARN_AUTH_COOKIE_TTL_SECONDS,
     secure: isSecure(requestUrl),
     httpOnly: true,
     sameSite: "Lax",
   };
   return [
-    serializeCookie(WORLD_AUTH_STATE_COOKIE, attempt.state, options),
-    serializeCookie(WORLD_AUTH_VERIFIER_COOKIE, attempt.verifier, options),
-    serializeCookie(WORLD_AUTH_RETURN_COOKIE, attempt.returnTo, options),
+    serializeCookie(LEARN_AUTH_STATE_COOKIE, attempt.state, options),
+    serializeCookie(LEARN_AUTH_VERIFIER_COOKIE, attempt.verifier, options),
+    serializeCookie(LEARN_AUTH_RETURN_COOKIE, attempt.returnTo, options),
   ];
 }
 
@@ -207,29 +207,29 @@ export function clearAuthAttemptCookies(requestUrl) {
     sameSite: "Lax",
   };
   return [
-    clearCookie(WORLD_AUTH_STATE_COOKIE, options),
-    clearCookie(WORLD_AUTH_VERIFIER_COOKIE, options),
-    clearCookie(WORLD_AUTH_RETURN_COOKIE, options),
+    clearCookie(LEARN_AUTH_STATE_COOKIE, options),
+    clearCookie(LEARN_AUTH_VERIFIER_COOKIE, options),
+    clearCookie(LEARN_AUTH_RETURN_COOKIE, options),
   ];
 }
 
-export function assertWorldCallback(requestUrl, cookieHeader) {
+export function assertLearnCallback(requestUrl, cookieHeader) {
   const url = new URL(requestUrl);
   const cookies = parseCookies(cookieHeader);
   const code = url.searchParams.get("code");
   const state = url.searchParams.get("state");
-  const expectedState = cookies[WORLD_AUTH_STATE_COOKIE];
-  const verifier = cookies[WORLD_AUTH_VERIFIER_COOKIE];
+  const expectedState = cookies[LEARN_AUTH_STATE_COOKIE];
+  const verifier = cookies[LEARN_AUTH_VERIFIER_COOKIE];
   if (!code || !state || !expectedState || !safeEqual(state, expectedState)) {
-    throw new Error("The World identity handoff state is invalid or expired.");
+    throw new Error("The Learn identity handoff state is invalid or expired.");
   }
   if (!verifier || verifier.length < 43) {
-    throw new Error("The World identity handoff verifier is missing or expired.");
+    throw new Error("The Learn identity handoff verifier is missing or expired.");
   }
   return {
     code,
     verifier,
-    returnTo: safeLocalReturnTo(cookies[WORLD_AUTH_RETURN_COOKIE], requestUrl),
+    returnTo: safeLocalReturnTo(cookies[LEARN_AUTH_RETURN_COOKIE], requestUrl),
   };
 }
 
@@ -255,7 +255,7 @@ export function validateHandoffPayload(payload, config, now = Date.now()) {
     || Date.parse(handoff.expiresAt) <= now
     || Date.parse(handoff.expiresAt) > now + 120_000
   ) {
-    throw new Error("Identity returned an invalid World handoff.");
+    throw new Error("Identity returned an invalid Learn handoff.");
   }
   return {
     handoffId: handoff.id,
@@ -270,12 +270,12 @@ export function validateHandoffPayload(payload, config, now = Date.now()) {
   };
 }
 
-export function signWorldSession(identity, secret, {
+export function signLearnSession(identity, secret, {
   issuer,
   now = Date.now(),
-  ttlSeconds = WORLD_SESSION_TTL_SECONDS,
+  ttlSeconds = LEARN_SESSION_TTL_SECONDS,
 } = {}) {
-  if (typeof secret !== "string" || secret.length < 32) throw new Error("World session secret is not configured.");
+  if (typeof secret !== "string" || secret.length < 32) throw new Error("Learn session secret is not configured.");
   if (!identity?.handoffId || !/^\d+$/.test(identity?.id ?? "") || !LOGIN_PATTERN.test(identity?.login ?? "")) {
     throw new TypeError("A verified Hara identity handoff is required.");
   }
@@ -283,7 +283,7 @@ export function signWorldSession(identity, secret, {
   const payload = {
     v: 1,
     iss: new URL(issuer).origin,
-    aud: "hara-world",
+    aud: "hara-learn",
     sub: `github:${identity.id}`,
     id: identity.id,
     login: identity.login,
@@ -299,7 +299,7 @@ export function signWorldSession(identity, secret, {
   return `${encoded}.${signature}`;
 }
 
-export function verifyWorldSession(token, secret, {
+export function verifyLearnSession(token, secret, {
   issuer,
   now = Date.now(),
 } = {}) {
@@ -318,7 +318,7 @@ export function verifyWorldSession(token, secret, {
   if (
     payload?.v !== 1
     || payload.iss !== new URL(issuer).origin
-    || payload.aud !== "hara-world"
+    || payload.aud !== "hara-learn"
     || payload.sub !== `github:${payload.id}`
     || typeof payload.id !== "string"
     || !/^\d+$/.test(payload.id)
@@ -342,18 +342,18 @@ export function verifyWorldSession(token, secret, {
   };
 }
 
-export function worldSessionCookie(token, requestUrl) {
-  return serializeCookie(WORLD_SESSION_COOKIE, token, {
+export function learnSessionCookie(token, requestUrl) {
+  return serializeCookie(LEARN_SESSION_COOKIE, token, {
     path: "/",
-    maxAge: WORLD_SESSION_TTL_SECONDS,
+    maxAge: LEARN_SESSION_TTL_SECONDS,
     secure: isSecure(requestUrl),
     httpOnly: true,
     sameSite: "Lax",
   });
 }
 
-export function clearWorldSessionCookie(requestUrl) {
-  return clearCookie(WORLD_SESSION_COOKIE, {
+export function clearLearnSessionCookie(requestUrl) {
+  return clearCookie(LEARN_SESSION_COOKIE, {
     path: "/",
     secure: isSecure(requestUrl),
     httpOnly: true,
@@ -361,12 +361,12 @@ export function clearWorldSessionCookie(requestUrl) {
   });
 }
 
-export function readWorldSession(request, env = {}, now = Date.now()) {
-  if (!isWorldAuthConfigured(env, request.url)) return null;
-  const config = readWorldAuthConfig(env, request.url);
+export function readLearnSession(request, env = {}, now = Date.now()) {
+  if (!isLearnAuthConfigured(env, request.url)) return null;
+  const config = readLearnAuthConfig(env, request.url);
   const cookies = parseCookies(request.headers.get("cookie") || "");
-  return verifyWorldSession(cookies[WORLD_SESSION_COOKIE], config.sessionSecret, {
-    issuer: worldOrigin(request.url),
+  return verifyLearnSession(cookies[LEARN_SESSION_COOKIE], config.sessionSecret, {
+    issuer: learnOrigin(request.url),
     now,
   });
 }
@@ -375,7 +375,7 @@ export function sameOrigin(request, env = {}) {
   const origin = request.headers.get("origin");
   if (!origin) return true;
   const allowed = new Set([new URL(request.url).origin]);
-  const configured = envValue(env, "HARA_WORLD_SITE");
+  const configured = envValue(env, "HARA_LEARN_SITE");
   if (configured) {
     try { allowed.add(new URL(configured).origin); } catch {}
   }

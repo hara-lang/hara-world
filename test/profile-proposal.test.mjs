@@ -7,13 +7,13 @@ import {
   normalizeProfileProposal,
   parseProfileDocument,
 } from "../netlify/functions/_shared/profile-proposal.mjs";
-import { WORLD_SESSION_COOKIE, signWorldSession } from "../netlify/functions/_shared/world-auth.mjs";
+import { LEARN_SESSION_COOKIE, signLearnSession } from "../netlify/functions/_shared/learn-auth.mjs";
 import { handle } from "../netlify/functions/profile-proposal.mjs";
 
 const ENV = {
-  HARA_WORLD_HANDOFF_SECRET: "h".repeat(64),
-  HARA_WORLD_SESSION_SECRET: "s".repeat(64),
-  HARA_WORLD_SITE: "https://world.hara-lang.org",
+  HARA_LEARN_HANDOFF_SECRET: "h".repeat(64),
+  HARA_LEARN_SESSION_SECRET: "s".repeat(64),
+  HARA_LEARN_SITE: "https://learn.hara-lang.org",
 };
 const NOW = Date.parse("2026-08-07T00:00:00Z");
 const IDENTITY = {
@@ -27,11 +27,11 @@ const IDENTITY = {
 const EMPTY_INDEX = { version: 1, profiles: [], byGithubId: {}, bySlug: {} };
 
 function sessionCookie() {
-  const token = signWorldSession(IDENTITY, ENV.HARA_WORLD_SESSION_SECRET, {
-    issuer: "https://world.hara-lang.org",
+  const token = signLearnSession(IDENTITY, ENV.HARA_LEARN_SESSION_SECRET, {
+    issuer: "https://learn.hara-lang.org",
     now: NOW,
   });
-  return `${WORLD_SESSION_COOKIE}=${encodeURIComponent(token)}`;
+  return `${LEARN_SESSION_COOKIE}=${encodeURIComponent(token)}`;
 }
 
 function profileSource({ slug = "chris-zheng", login = "zcaudate" } = {}) {
@@ -48,36 +48,36 @@ function fakeClient({ existingProfile = null, existingPull = null } = {}) {
   } : EMPTY_INDEX;
   let branchExists = Boolean(existingPull);
   return {
-    repository: "hara-lang/hara-world",
+    repository: "hara-lang/hara-learn",
     baseBranch: "main",
     installationPermissions: { contents: "write", pull_requests: "write" },
     calls,
     async request(path, options = {}) {
       calls.push({ path, options });
-      if (path.startsWith("/repos/hara-lang/hara-world/contents/registry/profiles.json?")) {
+      if (path.startsWith("/repos/hara-lang/hara-learn/contents/registry/profiles.json?")) {
         return { encoding: "base64", content: Buffer.from(`${JSON.stringify(index, null, 2)}\n`).toString("base64"), sha: "index-sha" };
       }
-      if (existingProfile && path.startsWith(`/repos/hara-lang/hara-world/contents/content/profiles/${existingProfile.slug}.md?`)) {
+      if (existingProfile && path.startsWith(`/repos/hara-lang/hara-learn/contents/content/profiles/${existingProfile.slug}.md?`)) {
         return { encoding: "base64", content: Buffer.from(profileSource(existingProfile)).toString("base64"), sha: "profile-sha" };
       }
-      if (path === "/repos/hara-lang/hara-world/git/ref/heads/main") return { object: { sha: "base-sha" } };
-      if (path === "/repos/hara-lang/hara-world/git/ref/heads/profile/github-6685337") {
+      if (path === "/repos/hara-lang/hara-learn/git/ref/heads/main") return { object: { sha: "base-sha" } };
+      if (path === "/repos/hara-lang/hara-learn/git/ref/heads/profile/github-6685337") {
         if (!branchExists) { const error = new Error("Not found"); error.status = 404; throw error; }
         return { object: { sha: "proposal-sha" } };
       }
-      if (path === "/repos/hara-lang/hara-world/git/refs" && options.method === "POST") {
+      if (path === "/repos/hara-lang/hara-learn/git/refs" && options.method === "POST") {
         branchExists = true;
         return { ref: options.body.ref };
       }
-      if (path === "/repos/hara-lang/hara-world/git/refs/heads/profile/github-6685337" && options.method === "PATCH") {
+      if (path === "/repos/hara-lang/hara-learn/git/refs/heads/profile/github-6685337" && options.method === "PATCH") {
         return { object: { sha: options.body.sha } };
       }
       if (options.method === "PUT" && path.includes("/contents/")) return { content: { sha: "new-sha" } };
-      if (path.startsWith("/repos/hara-lang/hara-world/pulls?")) return existingPull ? [existingPull] : [];
-      if (path === "/repos/hara-lang/hara-world/pulls" && options.method === "POST") {
-        return { number: 42, html_url: "https://github.com/hara-lang/hara-world/pull/42" };
+      if (path.startsWith("/repos/hara-lang/hara-learn/pulls?")) return existingPull ? [existingPull] : [];
+      if (path === "/repos/hara-lang/hara-learn/pulls" && options.method === "POST") {
+        return { number: 42, html_url: "https://github.com/hara-lang/hara-learn/pull/42" };
       }
-      if (existingPull && path === `/repos/hara-lang/hara-world/pulls/${existingPull.number}` && options.method === "PATCH") {
+      if (existingPull && path === `/repos/hara-lang/hara-learn/pulls/${existingPull.number}` && options.method === "PATCH") {
         return { ...existingPull, html_url: existingPull.html_url };
       }
       throw new Error(`Unexpected GitHub request: ${path} ${options.method || "GET"}`);
@@ -97,11 +97,11 @@ const INPUT = {
 };
 
 function proposalRequest(body = INPUT) {
-  return new Request("https://world.hara-lang.org/api/profile", {
+  return new Request("https://learn.hara-lang.org/api/profile", {
     method: "POST",
     headers: {
       Cookie: sessionCookie(),
-      Origin: "https://world.hara-lang.org",
+      Origin: "https://learn.hara-lang.org",
       "Content-Type": "application/json",
       "X-Hara-Request": "profile-proposal",
     },
@@ -132,17 +132,17 @@ test("builds deterministic Markdown from session identity and preserves reviewed
   assert.doesNotMatch(document, /attacker|githubId: "999"|owner/);
 });
 
-test("requires a current active World account and same-origin request", async () => {
-  const unauthenticated = await handle(new Request("https://world.hara-lang.org/api/profile"), { env: ENV, githubClient: fakeClient(), now: NOW });
+test("requires a current active Learn account and same-origin request", async () => {
+  const unauthenticated = await handle(new Request("https://learn.hara-lang.org/api/profile"), { env: ENV, githubClient: fakeClient(), now: NOW });
   assert.equal(unauthenticated.status, 401);
 
   const inactive = await handle(proposalRequest(), {
     env: ENV, githubClient: fakeClient(), now: NOW, communityAccountStatusImpl: async () => "suspended",
   });
   assert.equal(inactive.status, 403);
-  assert.match(inactive.headers.get("set-cookie"), new RegExp(`${WORLD_SESSION_COOKIE}=;`));
+  assert.match(inactive.headers.get("set-cookie"), new RegExp(`${LEARN_SESSION_COOKIE}=;`));
 
-  const rejected = await handle(new Request("https://world.hara-lang.org/api/profile", {
+  const rejected = await handle(new Request("https://learn.hara-lang.org/api/profile", {
     method: "POST",
     headers: { Cookie: sessionCookie(), Origin: "https://evil.example", "Content-Type": "application/json" },
     body: JSON.stringify(INPUT),
@@ -158,7 +158,7 @@ test("opens one scoped draft PR and updates the reciprocal profile index", async
   assert.equal(response.status, 201);
   const body = await response.json();
   assert.equal(body.branch, "profile/github-6685337");
-  assert.equal(body.pullRequestUrl, "https://github.com/hara-lang/hara-world/pull/42");
+  assert.equal(body.pullRequestUrl, "https://github.com/hara-lang/hara-learn/pull/42");
   assert.equal(body.reused, false);
 
   const puts = client.calls.filter((call) => call.options.method === "PUT");
@@ -173,14 +173,14 @@ test("opens one scoped draft PR and updates the reciprocal profile index", async
   assert.equal(index.bySlug["chris-zheng"], "6685337");
   const pull = client.calls.find((call) => call.path.endsWith("/pulls") && call.options.method === "POST");
   assert.equal(pull.options.body.draft, true);
-  assert.match(pull.options.body.body, /hara-world-profile:github:6685337/);
+  assert.match(pull.options.body.body, /hara-learn-profile:github:6685337/);
 });
 
 test("reuses the stable branch and existing open proposal instead of creating PR spam", async () => {
   const existingPull = {
     number: 12,
-    html_url: "https://github.com/hara-lang/hara-world/pull/12",
-    body: "<!-- hara-world-profile-proposal -->",
+    html_url: "https://github.com/hara-lang/hara-learn/pull/12",
+    body: "<!-- hara-learn-profile-proposal -->",
   };
   const client = fakeClient({ existingProfile: { slug: "chris-zheng" }, existingPull });
   const response = await handle(proposalRequest(INPUT), {

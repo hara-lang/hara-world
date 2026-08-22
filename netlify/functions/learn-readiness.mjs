@@ -1,7 +1,7 @@
 import { getEnv } from "./_shared/env.mjs";
 import { createGitHubAppClient } from "./_shared/github-app.mjs";
 import { getDatabase } from "./_shared/neon-http.mjs";
-import { identityOriginForRequest, readWorldAuthConfig, worldOrigin } from "./_shared/world-auth.mjs";
+import { identityOriginForRequest, readLearnAuthConfig, learnOrigin } from "./_shared/learn-auth.mjs";
 
 function check(name, ok, code = ok ? "ready" : "unavailable") {
   return { name, ready: Boolean(ok), code };
@@ -24,22 +24,22 @@ function refPath(branch) {
   return String(branch).split("/").map(encodeURIComponent).join("/");
 }
 
-export async function checkWorldReadiness(request, options = {}) {
+export async function checkLearnReadiness(request, options = {}) {
   const env = options.env ?? {};
-  const issuer = worldOrigin(request.url);
+  const issuer = learnOrigin(request.url);
   const centralIssuer = identityOriginForRequest(request.url, env);
   const checks = [];
   let authConfig;
   try {
-    authConfig = readWorldAuthConfig(env, request.url);
-    checks.push(check("world-auth", true));
+    authConfig = readLearnAuthConfig(env, request.url);
+    checks.push(check("learn-auth", true));
   } catch {
-    checks.push(check("world-auth", false, "world-auth-not-configured"));
+    checks.push(check("learn-auth", false, "learn-auth-not-configured"));
   }
 
   try {
     const response = await (options.fetchImpl ?? fetch)(new URL("/.well-known/hara-handoff", centralIssuer), {
-      headers: { Accept: "application/json", "User-Agent": "hara-world-readiness" },
+      headers: { Accept: "application/json", "User-Agent": "hara-learn-readiness" },
       cache: "no-store",
     });
     const payload = await response.json();
@@ -48,7 +48,7 @@ export async function checkWorldReadiness(request, options = {}) {
       && payload?.issuer === centralIssuer
       && Array.isArray(payload?.codeChallengeMethodsSupported)
       && payload.codeChallengeMethodsSupported.includes("S256")
-      && payload.clients?.some?.((client) => client.id === "world" && client.redirectUri === `${issuer}/api/auth/callback`);
+      && payload.clients?.some?.((client) => client.id === "learn" && client.redirectUri === `${issuer}/api/auth/callback`);
     checks.push(check("identity-handoff", registered, registered ? "ready" : "identity-handoff-invalid"));
   } catch {
     checks.push(check("identity-handoff", false, "identity-handoff-unreachable"));
@@ -58,26 +58,26 @@ export async function checkWorldReadiness(request, options = {}) {
     const db = options.db ?? getDatabase();
     const result = await db.query(
       `SELECT
-         to_regclass('hara_world.community_accounts')::text AS accounts,
-         to_regclass('hara_world.community_identity_handoffs')::text AS handoffs,
-         to_regclass('hara_world.community_post_drafts')::text AS post_drafts,
-         to_regclass('hara_world.community_post_events')::text AS post_events,
-         to_regclass('hara_world.community_proposals')::text AS proposals,
-         to_regclass('hara_world.community_proposal_events')::text AS proposal_events`,
+         to_regclass('hara_learn.community_accounts')::text AS accounts,
+         to_regclass('hara_learn.community_identity_handoffs')::text AS handoffs,
+         to_regclass('hara_learn.community_post_drafts')::text AS post_drafts,
+         to_regclass('hara_learn.community_post_events')::text AS post_events,
+         to_regclass('hara_learn.community_proposals')::text AS proposals,
+         to_regclass('hara_learn.community_proposal_events')::text AS proposal_events`,
     );
     const row = result.rows[0] ?? {};
-    const migrated = row.accounts === "hara_world.community_accounts"
-      && row.handoffs === "hara_world.community_identity_handoffs"
-      && row.post_drafts === "hara_world.community_post_drafts"
-      && row.post_events === "hara_world.community_post_events"
-      && row.proposals === "hara_world.community_proposals"
-      && row.proposal_events === "hara_world.community_proposal_events";
+    const migrated = row.accounts === "hara_learn.community_accounts"
+      && row.handoffs === "hara_learn.community_identity_handoffs"
+      && row.post_drafts === "hara_learn.community_post_drafts"
+      && row.post_events === "hara_learn.community_post_events"
+      && row.proposals === "hara_learn.community_proposals"
+      && row.proposal_events === "hara_learn.community_proposal_events";
     checks.push(check("database", migrated, migrated ? "ready" : "proposal-lifecycle-migration-missing"));
   } catch {
     checks.push(check("database", false, "database-unreachable"));
   }
 
-  const webhookSecret = envValue(env, "HARA_WORLD_GITHUB_WEBHOOK_SECRET");
+  const webhookSecret = envValue(env, "HARA_LEARN_GITHUB_WEBHOOK_SECRET");
   const webhookReady = webhookSecret.length >= 32;
   checks.push(check("github-proposal-webhook", webhookReady, webhookReady ? "ready" : "github-webhook-not-configured"));
 
@@ -107,14 +107,14 @@ export async function checkWorldReadiness(request, options = {}) {
   };
 }
 
-export default async function worldReadiness(request) {
+export default async function learnReadiness(request) {
   if (request.method !== "GET" && request.method !== "HEAD") {
     return new Response(`${JSON.stringify({ error: { code: "METHOD_NOT_ALLOWED", message: "Only GET and HEAD are supported." } })}\n`, {
       status: 405,
       headers: { Allow: "GET, HEAD", "Cache-Control": "no-store", "Content-Type": "application/json; charset=utf-8" },
     });
   }
-  const body = await checkWorldReadiness(request);
+  const body = await checkLearnReadiness(request);
   return new Response(request.method === "HEAD" ? null : `${JSON.stringify(body)}\n`, {
     status: body.ready ? 200 : 503,
     headers: {
@@ -127,7 +127,7 @@ export default async function worldReadiness(request) {
 }
 
 export const config = {
-  path: "/.well-known/hara-world-readiness",
+  path: "/.well-known/hara-learn-readiness",
   rateLimit: {
     windowLimit: 30,
     windowSize: 60,

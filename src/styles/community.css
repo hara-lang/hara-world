@@ -282,7 +282,7 @@
 }
 
 .feed-entry--invitation .feed-entry__avatar {
-  color: var(--world-on-signal);
+  color: var(--learn-on-signal);
   border-color: var(--hara-signal);
   background: var(--hara-signal);
   font-size: 1.15rem;
@@ -402,7 +402,7 @@
 }
 
 .people-widget__avatars span:last-child {
-  color: var(--world-on-signal);
+  color: var(--learn-on-signal);
   background: var(--hara-signal);
 }
 

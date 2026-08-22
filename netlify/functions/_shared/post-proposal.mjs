@@ -1,7 +1,7 @@
 import { createHash } from "node:crypto";
 
 export const POST_TYPES = Object.freeze(["note", "question", "showcase", "release", "lesson"]);
-export const POST_PROPOSAL_MARKER = "<!-- hara-world-post-proposal -->";
+export const POST_PROPOSAL_MARKER = "<!-- hara-learn-post-proposal -->";
 
 const POST_TYPE_SET = new Set(POST_TYPES);
 const SLUG_PATTERN = /^[a-z0-9](?:[a-z0-9-]{0,62}[a-z0-9])?$/;
@@ -74,7 +74,7 @@ export function assertDraftId(value) {
 
 export function assertPostIdentity(identity) {
   if (!identity || !/^\d+$/.test(String(identity.id ?? "")) || !GITHUB_LOGIN_PATTERN.test(String(identity.login ?? ""))) {
-    throw new TypeError("A verified World GitHub identity is required.");
+    throw new TypeError("A verified Learn GitHub identity is required.");
   }
   return {
     id: String(identity.id),
@@ -182,12 +182,12 @@ export function postPullRequestBody({ identity, draft, draftId, contentSha256 })
   const fingerprint = String(contentSha256 ?? postContentSha256(post));
   return [
     POST_PROPOSAL_MARKER,
-    `<!-- hara-world-post:draft:${id} -->`,
-    `<!-- hara-world-author:github:${author.id} -->`,
-    `<!-- hara-world-content-sha256:${fingerprint} -->`,
-    "## Hara World community post proposal",
+    `<!-- hara-learn-post:draft:${id} -->`,
+    `<!-- hara-learn-author:github:${author.id} -->`,
+    `<!-- hara-learn-content-sha256:${fingerprint} -->`,
+    "## Hara Learn community post proposal",
     "",
-    `Prepared from the authenticated World session for \`github:${author.id}\` (\`@${author.login}\`).`,
+    `Prepared from the authenticated Learn session for \`github:${author.id}\` (\`@${author.login}\`).`,
     "",
     `- Type: \`${post.postType}\``,
     `- Topics: ${post.topics.length ? post.topics.map((topic) => `\`${topic}\``).join(", ") : "none"}`,

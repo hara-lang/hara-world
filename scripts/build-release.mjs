@@ -5,12 +5,12 @@ import { contentHash, findArticle, splitForNarration, stripMarkdown, truncate } 
 import { writeJson } from "./lib/release.mjs";
 
 const args = parseArgs();
-const articleId = required(args.article ?? args._[0] ?? process.env.HARA_WORLD_ARTICLE, "--article");
+const articleId = required(args.article ?? args._[0] ?? process.env.HARA_LEARN_ARTICLE, "--article");
 const article = await findArticle(articleId);
-const site = new URL(process.env.HARA_WORLD_SITE ?? "https://world.hara-lang.org");
+const site = new URL(process.env.HARA_LEARN_SITE ?? "https://learn.hara-lang.org");
 const articleUrl = new URL(`/articles/${article.id}`, site).toString();
 const canonicalUrl = article.data.canonicalUrl || articleUrl;
-const outputDirectory = path.resolve(args.output ?? `.hara-world/releases/${article.id}`);
+const outputDirectory = path.resolve(args.output ?? `.hara-learn/releases/${article.id}`);
 const plainBody = stripMarkdown(article.body);
 const hash = contentHash(article.source);
 const releaseId = `${article.id.replaceAll("/", "-")}-${hash}`;
@@ -108,11 +108,11 @@ function validateArticle(value) {
 }
 
 function buildSocial({ title, description, author, topics, articleUrl: url, canonicalUrl: canonical }) {
-  const attribution = author === "Hara World" ? "Hara World" : `By ${author}`;
+  const attribution = author === "Hara Learn" ? "Hara Learn" : `By ${author}`;
   const tags = topics.slice(0, 3).map((topic) => `#${topic.replace(/[^a-z0-9]/gi, "")}`).filter((tag) => tag.length > 1).join(" ");
   const compactLead = `${title}\n\n${description}`;
   const mastodonLead = `${title}\n\n${description}\n\n${attribution}${tags ? `\n\n${tags}` : ""}`;
-  const linkedInLead = `${title}\n\n${description}\n\n${attribution}. Read the canonical edition on Hara World:`;
+  const linkedInLead = `${title}\n\n${description}\n\n${attribution}. Read the canonical edition on Hara Learn:`;
 
   return {
     version: 1,
@@ -138,7 +138,7 @@ function buildSocial({ title, description, author, topics, articleUrl: url, cano
       requiresReview: true
     },
     instagram: {
-      caption: truncate(`${title}\n\n${description}\n\n${attribution}. Link in profile or Hara World.\n\n${tags}`, 2200),
+      caption: truncate(`${title}\n\n${description}\n\n${attribution}. Link in profile or Hara Learn.\n\n${tags}`, 2200),
       media: "short.mp4",
       requiresReview: true
     },
@@ -169,7 +169,7 @@ function buildStoryboard(value, url) {
     })),
     {
       type: "close",
-      eyebrow: "Hara World",
+      eyebrow: "Hara Learn",
       headline: "Read the canonical dispatch.",
       body: new URL(url).host,
       narration: `Read the complete canonical dispatch at ${new URL(url).host}.`
@@ -191,14 +191,14 @@ function buildStoryboard(value, url) {
     version: 1,
     format: { width: 1080, height: 1920, framesPerSecond: 30, orientation: "vertical" },
     durationSeconds: cursor,
-    syntheticNarrationDisclosure: "Visuals and narration may be generated from the approved Hara World article.",
+    syntheticNarrationDisclosure: "Visuals and narration may be generated from the approved Hara Learn article.",
     scenes: timed
   };
 }
 
 
 function kindLabel(kind) {
-  return ({ dispatch: "Dispatch", syndicated: "World Feed", release: "Release", "field-note": "Field note" })[kind] ?? "Hara World";
+  return ({ dispatch: "Dispatch", syndicated: "Learn Feed", release: "Release", "field-note": "Field note" })[kind] ?? "Hara Learn";
 }
 
 function buildCaptions(scenes) {
@@ -221,8 +221,8 @@ function srtTime(seconds) {
 function buildNewsletter(value, url, plainBody) {
   const sourceLine = value.data.canonicalUrl
     ? `Originally published by ${value.data.author} at ${value.data.canonicalUrl}.`
-    : `Written by ${value.data.author} for Hara World.`;
-  return `<!-- buttondown-editor-mode: plaintext -->\n# ${value.data.title}\n\n${value.data.description}\n\n${sourceLine}\n\n${truncate(plainBody, 1100)}\n\n[Read the canonical edition →](${url})\n\n---\n\nHara World publishes independent dispatches, releases, field notes, and permissioned community writing from the Hara Lisp world.\n`;
+    : `Written by ${value.data.author} for Hara Learn.`;
+  return `<!-- buttondown-editor-mode: plaintext -->\n# ${value.data.title}\n\n${value.data.description}\n\n${sourceLine}\n\n${truncate(plainBody, 1100)}\n\n[Read the canonical edition →](${url})\n\n---\n\nHara Learn publishes independent dispatches, releases, field notes, and permissioned community writing from the Hara Lisp world.\n`;
 }
 
 function buildYouTube(value, url, narration) {
@@ -245,7 +245,7 @@ function buildYouTube(value, url, narration) {
 }
 
 function buildReleaseReadme(value) {
-  return `# Release ${value.releaseId}\n\nCanonical article: ${value.article.url}\n\nThis directory is generated from an approved Hara World article. Review every projection before publication. Default states are draft, review, or private; publisher scripts require an explicit \`--publish\` flag.\n`;
+  return `# Release ${value.releaseId}\n\nCanonical article: ${value.article.url}\n\nThis directory is generated from an approved Hara Learn article. Review every projection before publication. Default states are draft, review, or private; publisher scripts require an explicit \`--publish\` flag.\n`;
 }
 
 function composeWithUrl(lead, url, maximum) {

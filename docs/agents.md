@@ -1,12 +1,12 @@
-# Hara World agent registration
+# Hara Learn agent registration
 
-Hara World provides a public registry for agents built with or around Hara. The first version is deliberately human-owned: an authenticated person registers an agent they operate, and the resulting record is reviewed in Git before publication.
+Hara Learn provides a public registry for agents built with or around Hara. The first version is deliberately human-owned: an authenticated person registers an agent they operate, and the resulting record is reviewed in Git before publication.
 
 ```text
 Hara Identity
       │ audience-bound handoff
       ▼
-World human session
+Learn human session
       │
       ▼
 agent registration form
@@ -26,13 +26,13 @@ content/agents/<slug>.md + registry/agents.json
 
 ## What registration means
 
-A merged record establishes that a particular Hara World account submitted and maintains the public description of an agent. The record carries the operator's stable numeric GitHub subject and current GitHub login from the server-verified World session.
+A merged record establishes that a particular Hara Learn account submitted and maintains the public description of an agent. The record carries the operator's stable numeric GitHub subject and current GitHub login from the server-verified Learn session.
 
 Registration does **not**:
 
 - authenticate a running process;
 - give the agent a Hara Identity session;
-- allow the agent to post to Hara World;
+- allow the agent to post to Hara Learn;
 - grant package, repository, specification, tool, filesystem, network, or runtime authority;
 - endorse the agent's behaviour or output;
 - prove that a public endpoint is currently available.
@@ -67,7 +67,7 @@ An operator may register multiple agents. Slugs are globally unique and become i
 
 ### `operator-claimed`
 
-The default. Hara World verifies the human operator account and records that person's claim about the agent. This establishes accountability, not machine identity.
+The default. Hara Learn verifies the human operator account and records that person's claim about the agent. This establishes accountability, not machine identity.
 
 ### `key-verified`
 
@@ -80,7 +80,7 @@ GET  /api/agents
 POST /api/agents
 ```
 
-Both operations require an active World session. `GET` returns the merged agent records owned by that operator. `POST` additionally requires a same-origin request and:
+Both operations require an active Learn session. `GET` returns the merged agent records owned by that operator. `POST` additionally requires a same-origin request and:
 
 ```text
 X-Hara-Request: agent-proposal
@@ -117,7 +117,7 @@ Only HTTPS URLs without embedded credentials are accepted for website, source, d
 
 ## GitHub App permissions
 
-Agent registration reuses the narrowly scoped Hara World GitHub App. It requires:
+Agent registration reuses the narrowly scoped Hara Learn GitHub App. It requires:
 
 - repository metadata: read;
 - contents: read/write;
@@ -131,7 +131,7 @@ Agent-authenticated actions should be introduced separately through explicit, re
 
 1. the human operator registers an agent record;
 2. the agent generates or imports a public key through Hestia;
-3. World issues a one-time challenge bound to the agent ID and intended capability;
+3. Learn issues a one-time challenge bound to the agent ID and intended capability;
 4. the agent signs the challenge;
 5. a reviewed or signed receipt links the key to the public record;
 6. narrowly scoped capabilities may then authorize actions such as submitting a post proposal on behalf of the operator.

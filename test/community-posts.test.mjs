@@ -2,13 +2,13 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import test from "node:test";
 import { handle } from "../netlify/functions/posts.mjs";
-import { WORLD_SESSION_COOKIE, signWorldSession } from "../netlify/functions/_shared/world-auth.mjs";
+import { LEARN_SESSION_COOKIE, signLearnSession } from "../netlify/functions/_shared/learn-auth.mjs";
 
 const NOW = Date.parse("2026-08-17T08:30:00Z");
 const ENV = {
-  HARA_WORLD_HANDOFF_SECRET: "h".repeat(64),
-  HARA_WORLD_SESSION_SECRET: "s".repeat(64),
-  HARA_WORLD_SITE: "https://world.hara-lang.org",
+  HARA_LEARN_HANDOFF_SECRET: "h".repeat(64),
+  HARA_LEARN_SESSION_SECRET: "s".repeat(64),
+  HARA_LEARN_SITE: "https://learn.hara-lang.org",
 };
 const IDENTITY = {
   handoffId: "handoff-01234567890123456789",
@@ -46,15 +46,15 @@ const DRAFT = {
 };
 
 function sessionCookie() {
-  const token = signWorldSession(IDENTITY, ENV.HARA_WORLD_SESSION_SECRET, {
-    issuer: "https://world.hara-lang.org",
+  const token = signLearnSession(IDENTITY, ENV.HARA_LEARN_SESSION_SECRET, {
+    issuer: "https://learn.hara-lang.org",
     now: NOW,
   });
-  return `${WORLD_SESSION_COOKIE}=${encodeURIComponent(token)}`;
+  return `${LEARN_SESSION_COOKIE}=${encodeURIComponent(token)}`;
 }
 
-function request(path, { method = "GET", body, origin = "https://world.hara-lang.org", requestHeader = true } = {}) {
-  return new Request(`https://world.hara-lang.org${path}`, {
+function request(path, { method = "GET", body, origin = "https://learn.hara-lang.org", requestHeader = true } = {}) {
+  return new Request(`https://learn.hara-lang.org${path}`, {
     method,
     headers: {
       Cookie: sessionCookie(),
@@ -96,36 +96,36 @@ function githubClient() {
   const calls = [];
   let branchExists = false;
   return {
-    repository: "hara-lang/hara-world",
+    repository: "hara-lang/hara-learn",
     baseBranch: "main",
     installationPermissions: { contents: "write", pull_requests: "write" },
     calls,
     async request(path, options = {}) {
       calls.push({ path, options });
-      if (path.startsWith("/repos/hara-lang/hara-world/contents/content/articles/community/") && options.method !== "PUT") {
+      if (path.startsWith("/repos/hara-lang/hara-learn/contents/content/articles/community/") && options.method !== "PUT") {
         const error = new Error("Not found"); error.status = 404; throw error;
       }
-      if (path === "/repos/hara-lang/hara-world/git/ref/heads/main") return { object: { sha: "a".repeat(40) } };
+      if (path === "/repos/hara-lang/hara-learn/git/ref/heads/main") return { object: { sha: "a".repeat(40) } };
       if (path.includes("/git/ref/heads/post/github-6685337/1111111111114111")) {
         if (!branchExists) { const error = new Error("Not found"); error.status = 404; throw error; }
         return { object: { sha: "b".repeat(40) } };
       }
-      if (path === "/repos/hara-lang/hara-world/git/refs" && options.method === "POST") {
+      if (path === "/repos/hara-lang/hara-learn/git/refs" && options.method === "POST") {
         branchExists = true;
         return { ref: options.body.ref };
       }
       if (options.method === "PUT" && path.includes("/contents/content/articles/community/")) return { content: { sha: "d".repeat(40) } };
-      if (path.startsWith("/repos/hara-lang/hara-world/pulls?")) return [];
-      if (path === "/repos/hara-lang/hara-world/pulls" && options.method === "POST") {
-        return { number: 92, html_url: "https://github.com/hara-lang/hara-world/pull/92" };
+      if (path.startsWith("/repos/hara-lang/hara-learn/pulls?")) return [];
+      if (path === "/repos/hara-lang/hara-learn/pulls" && options.method === "POST") {
+        return { number: 92, html_url: "https://github.com/hara-lang/hara-learn/pull/92" };
       }
       throw new Error(`Unexpected GitHub request: ${path} ${options.method || "GET"}`);
     },
   };
 }
 
-test("requires an active audience-bound World session and same-origin mutation", async () => {
-  const unauthenticated = await handle(new Request("https://world.hara-lang.org/api/posts"), {
+test("requires an active audience-bound Learn session and same-origin mutation", async () => {
+  const unauthenticated = await handle(new Request("https://learn.hara-lang.org/api/posts"), {
     env: ENV,
     now: NOW,
     postStore: store(),
@@ -140,7 +140,7 @@ test("requires an active audience-bound World session and same-origin mutation",
     communityAccountStatusImpl: async () => "suspended",
   });
   assert.equal(inactive.status, 403);
-  assert.match(inactive.headers.get("set-cookie"), new RegExp(`${WORLD_SESSION_COOKIE}=;`));
+  assert.match(inactive.headers.get("set-cookie"), new RegExp(`${LEARN_SESSION_COOKIE}=;`));
 
   const crossOrigin = await handle(request("/api/posts", { method: "POST", body: INPUT, origin: "https://evil.example" }), {
     env: ENV,
@@ -204,9 +204,9 @@ test("submits one private draft through the GitHub App and records its proposal"
 
 test("the database migration keeps private drafts separate from public Markdown", async () => {
   const migration = await readFile(new URL("../database/migrations/004_community_posts.sql", import.meta.url), "utf8");
-  assert.match(migration, /CREATE TABLE IF NOT EXISTS hara_world\.community_post_drafts/);
-  assert.match(migration, /CREATE TABLE IF NOT EXISTS hara_world\.community_post_events/);
-  assert.match(migration, /REFERENCES hara_world\.community_accounts/);
+  assert.match(migration, /CREATE TABLE IF NOT EXISTS hara_learn\.community_post_drafts/);
+  assert.match(migration, /CREATE TABLE IF NOT EXISTS hara_learn\.community_post_events/);
+  assert.match(migration, /REFERENCES hara_learn\.community_accounts/);
   assert.match(migration, /proposal_content_sha256/);
   assert.doesNotMatch(migration, /article_body|published_articles|public_feed/);
 });

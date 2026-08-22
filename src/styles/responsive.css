@@ -12,20 +12,20 @@
     padding-inline: var(--hara-space-page);
   }
 
-  .world-hero {
+  .learn-hero {
     min-height: auto;
   }
 
-  .world-hero__inner {
+  .learn-hero__inner {
     grid-template-columns: 1fr;
     gap: 3.5rem;
   }
 
-  .world-hero__copy {
+  .learn-hero__copy {
     max-width: 760px;
   }
 
-  .world-feature {
+  .learn-feature {
     min-height: 0;
   }
 
@@ -102,39 +102,39 @@
     font-size: clamp(2.75rem, 17vw, 5rem);
   }
 
-  .world-hero__inner {
+  .learn-hero__inner {
     gap: 2.8rem;
     padding-block: 66px 54px;
   }
 
-  .world-hero h1 {
+  .learn-hero h1 {
     font-size: clamp(3.15rem, 15vw, 5.3rem);
   }
 
-  .world-hero__note {
+  .learn-hero__note {
     max-width: 30ch;
     line-height: 1.7;
   }
 
-  .world-feature__visual {
+  .learn-feature__visual {
     min-height: 170px;
   }
 
-  .world-feature__mark svg {
+  .learn-feature__mark svg {
     width: 150px;
     height: 150px;
   }
 
-  .world-feature__body {
+  .learn-feature__body {
     padding: 1.35rem;
   }
 
-  .world-feature h2 {
+  .learn-feature h2 {
     font-size: clamp(2rem, 11vw, 2.8rem);
   }
 
-  .world-feature__rail,
-  .world-feature__footer {
+  .learn-feature__rail,
+  .learn-feature__footer {
     align-items: flex-start;
     flex-direction: column;
     gap: .35rem;

@@ -35,5 +35,5 @@ export function required(value, label) {
 }
 
 export function isPublishMode(args) {
-  return args.publish === true || args.publish === "true" || process.env.HARA_WORLD_PUBLISH === "true";
+  return args.publish === true || args.publish === "true" || process.env.HARA_LEARN_PUBLISH === "true";
 }

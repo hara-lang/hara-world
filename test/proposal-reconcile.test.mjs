@@ -7,14 +7,14 @@ import {
 } from "../netlify/functions/_shared/proposal-reconcile.mjs";
 import { proposalIdFor } from "../netlify/functions/_shared/proposals.mjs";
 
-const REPOSITORY = "hara-lang/hara-world";
+const REPOSITORY = "hara-lang/hara-learn";
 const SHA = "c".repeat(40);
 
 function sourcePull({ number = 44, owner = "6685337", sourceId = "hara-notes", state = "open", mergedAt = null } = {}) {
   return {
     number,
     title: "Source: Hara Notes",
-    body: `<!-- hara-world-source-proposal -->\n<!-- hara-world-source:github:${owner}:${sourceId} -->`,
+    body: `<!-- hara-learn-source-proposal -->\n<!-- hara-learn-source:github:${owner}:${sourceId} -->`,
     state,
     draft: state === "open",
     merged: Boolean(mergedAt),
@@ -32,7 +32,7 @@ function profilePull({ number = 51, owner = "6685337" } = {}) {
   return {
     number,
     title: "Profile: @zcaudate",
-    body: `<!-- hara-world-profile-proposal -->\n<!-- hara-world-profile:github:${owner} -->`,
+    body: `<!-- hara-learn-profile-proposal -->\n<!-- hara-learn-profile:github:${owner} -->`,
     state: "open",
     draft: true,
     merged: false,
@@ -52,9 +52,9 @@ function postPull({ number = 52, owner = "6685337" } = {}) {
     number,
     title: "Post: Small Hara agent",
     body: [
-      "<!-- hara-world-post-proposal -->",
-      `<!-- hara-world-post:draft:${draftId} -->`,
-      `<!-- hara-world-author:github:${owner} -->`,
+      "<!-- hara-learn-post-proposal -->",
+      `<!-- hara-learn-post:draft:${draftId} -->`,
+      `<!-- hara-learn-author:github:${owner} -->`,
     ].join("\n"),
     state: "open",
     draft: true,
@@ -181,7 +181,7 @@ test("reconciles pull, review, and check state after verifying immutable markers
   assert.equal(result.reviewState, "approved");
   assert.equal(result.checksState, "passing");
   assert.equal(result.headSha, SHA);
-  assert.match(applied[0].deliveryKey, /^proposal:hara-lang\/hara-world:44:/);
+  assert.match(applied[0].deliveryKey, /^proposal:hara-lang\/hara-learn:44:/);
   assert.equal(applied[0].provider, "reconcile");
 });
 

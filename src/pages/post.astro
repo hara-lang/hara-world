@@ -1,11 +1,11 @@
 ---
 import SiteLayout from "../layouts/SiteLayout.astro";
 ---
-<SiteLayout title="Post" description="Write a private Hara World draft and submit it as a Git-reviewed community post.">
+<SiteLayout title="Post" description="Write a private Hara Learn draft and submit it as a Git-reviewed community post.">
   <header class="page-hero post-hero">
     <div class="shell">
       <p class="eyebrow">Community posting / private draft</p>
-      <h1>Post to Hara World.</h1>
+      <h1>Post to Hara Learn.</h1>
       <p class="lede">Draft privately, then submit portable Markdown for community review. Nothing enters the public feed until its pull request is merged.</p>
     </div>
   </header>
@@ -14,9 +14,9 @@ import SiteLayout from "../layouts/SiteLayout.astro";
     <div class="shell post-stack">
       <article class="post-gate">
         <div>
-          <p class="eyebrow">World session</p>
+          <p class="eyebrow">Learn session</p>
           <h2 data-session-title>Checking your account…</h2>
-          <p data-session-copy>Hara World is checking for an audience-bound community session.</p>
+          <p data-session-copy>Hara Learn is checking for an audience-bound community session.</p>
         </div>
         <a class="button" href="/api/auth/start?returnTo=/post" data-authorize hidden>Enable community posting</a>
       </article>
@@ -66,7 +66,7 @@ import SiteLayout from "../layouts/SiteLayout.astro";
 
   <section class="section section--tight post-contract">
     <div class="shell policy-grid">
-      <article class="policy-card"><h3>Private until submitted</h3><p>Draft text lives in World’s private Neon store and is visible only to its authenticated owner.</p></article>
+      <article class="policy-card"><h3>Private until submitted</h3><p>Draft text lives in Learn’s private Neon store and is visible only to its authenticated owner.</p></article>
       <article class="policy-card"><h3>Identity is server supplied</h3><p>The browser cannot choose the post’s stable GitHub subject or current login.</p></article>
       <article class="policy-card"><h3>Review is public</h3><p>Submission creates or updates one draft GitHub pull request.</p></article>
       <article class="policy-card"><h3>Merge publishes</h3><p>Only merged Markdown enters the site, RSS feed, and JSON Feed.</p></article>
@@ -101,7 +101,7 @@ import SiteLayout from "../layouts/SiteLayout.astro";
         headers: { Accept: "application/json", ...(options.body ? { "Content-Type": "application/json" } : {}), ...(options.method && options.method !== "GET" ? { "X-Hara-Request": "community-post" } : {}), ...(options.headers || {}) },
       });
       const body = response.status === 204 ? {} : await response.json().catch(() => ({}));
-      if (!response.ok) throw new Error(body?.error?.message || `World returned HTTP ${response.status}.`);
+      if (!response.ok) throw new Error(body?.error?.message || `Learn returned HTTP ${response.status}.`);
       return body;
     };
 
@@ -195,7 +195,7 @@ import SiteLayout from "../layouts/SiteLayout.astro";
         authorize.hidden = signedIn || session?.configured === false;
         workspace.hidden = !signedIn;
         sessionTitle.textContent = signedIn ? `Posting as @${session.profile.login}` : session?.configured === false ? "Community posting is not configured" : "Sign in to create a private draft";
-        sessionCopy.textContent = signedIn ? "Your stable GitHub identity is supplied server-side. Draft contents remain private until submission." : "Use Hara Identity to establish a World session; your GitHub provider token is never sent here.";
+        sessionCopy.textContent = signedIn ? "Your stable GitHub identity is supplied server-side. Draft contents remain private until submission." : "Use Hara Identity to establish a Learn session; your GitHub provider token is never sent here.";
         if (signedIn) { const body = await api("/api/posts"); drafts = body.drafts ?? []; setDraft(drafts[0] ?? null); }
       } catch (error) { sessionTitle.textContent = "Community posting is unavailable"; sessionCopy.textContent = error.message; workspace.hidden = true; authorize.hidden = false; }
     };

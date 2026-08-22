@@ -26,11 +26,11 @@ import {
 } from "./_shared/proposal-recording.mjs";
 import { markProposalWithdrawn as markLifecycleWithdrawn } from "./_shared/proposals.mjs";
 import {
-  clearWorldSessionCookie,
+  clearLearnSessionCookie,
   json,
-  readWorldSession,
+  readLearnSession,
   sameOrigin,
-} from "./_shared/world-auth.mjs";
+} from "./_shared/learn-auth.mjs";
 
 const POSTS_PATH = "/api/posts";
 
@@ -111,7 +111,7 @@ async function putPostFile(client, path, source, branch) {
   await client.request(`/repos/${client.repository}/contents/${path}`, {
     method: "PUT",
     body: {
-      message: `Propose Hara World post ${path}`,
+      message: `Propose Hara Learn post ${path}`,
       content: Buffer.from(source).toString("base64"),
       branch,
     },
@@ -201,9 +201,9 @@ export async function createOrUpdatePostPullRequest(client, { identity, draft, n
 }
 
 function inactiveResponse(request, status) {
-  return error(403, "WORLD_ACCOUNT_INACTIVE", "This Hara World account is not active.", {
-    "Set-Cookie": clearWorldSessionCookie(request.url),
-    "X-Hara-World-Account-Status": String(status),
+  return error(403, "LEARN_ACCOUNT_INACTIVE", "This Hara Learn account is not active.", {
+    "Set-Cookie": clearLearnSessionCookie(request.url),
+    "X-Hara-Learn-Account-Status": String(status),
   });
 }
 
@@ -225,20 +225,20 @@ export async function handle(request, options = {}) {
   const store = resolvePostStore(options);
   if (!route) return error(404, "NOT_FOUND", "Unknown community post endpoint.");
 
-  const identity = readWorldSession(request, env, now);
-  if (!identity) return error(401, "WORLD_SESSION_REQUIRED", "Establish a Hara World session before working with private post drafts.");
+  const identity = readLearnSession(request, env, now);
+  if (!identity) return error(401, "LEARN_SESSION_REQUIRED", "Establish a Hara Learn session before working with private post drafts.");
 
   let accountStatus;
   try {
     accountStatus = await (options.communityAccountStatusImpl ?? communityAccountStatus)(identity.id, { db: options.db });
   } catch {
-    return error(503, "WORLD_ACCOUNT_CHECK_FAILED", "World could not verify the community account.");
+    return error(503, "LEARN_ACCOUNT_CHECK_FAILED", "Learn could not verify the community account.");
   }
   if (accountStatus !== "active") return inactiveResponse(request, accountStatus);
 
   const mutating = ["POST", "PATCH", "DELETE"].includes(request.method);
   if (mutating && (!sameOrigin(request, env) || request.headers.get("x-hara-request") !== "community-post")) {
-    return error(403, "POST_REQUEST_REJECTED", "The post request must come from Hara World.");
+    return error(403, "POST_REQUEST_REJECTED", "The post request must come from Hara Learn.");
   }
 
   try {
@@ -290,7 +290,7 @@ export async function handle(request, options = {}) {
         if (cause instanceof PostProposalConflictError) {
           return error(409, "POST_PATH_CONFLICT", cause.message);
         }
-        console.error("World post proposal failed", { status: cause?.status, name: cause?.name });
+        console.error("Learn post proposal failed", { status: cause?.status, name: cause?.name });
         try { await store.markError(identity, route.id, cause?.message, { db: options.db, now }); } catch {}
         return error(502, "POST_PROPOSAL_FAILED", "The post pull request could not be created.");
       }
@@ -301,7 +301,7 @@ export async function handle(request, options = {}) {
         nextDraft = await store.markSubmitted(identity, route.id, proposal, { db: options.db, now });
       } catch (cause) {
         recorded = false;
-        console.error("World post proposal state could not be recorded", { name: cause?.name });
+        console.error("Learn post proposal state could not be recorded", { name: cause?.name });
       }
       const lifecycle = await recordPublishedProposal({
         proposalType: "post",
@@ -337,7 +337,7 @@ export async function handle(request, options = {}) {
             body: { state: "closed" },
           });
         } catch (cause) {
-          console.error("World post withdrawal failed", { status: cause?.status, name: cause?.name });
+          console.error("Learn post withdrawal failed", { status: cause?.status, name: cause?.name });
           return error(502, "POST_WITHDRAWAL_FAILED", "The post proposal pull request could not be closed.");
         }
       }
@@ -354,7 +354,7 @@ export async function handle(request, options = {}) {
         });
       } catch (cause) {
         lifecycleRecorded = false;
-        console.error("World post lifecycle withdrawal could not be recorded", { name: cause?.name });
+        console.error("Learn post lifecycle withdrawal could not be recorded", { name: cause?.name });
       }
       return json(200, { ok: true, draft: withdrawn, lifecycleRecorded });
     }
@@ -372,7 +372,7 @@ export async function handle(request, options = {}) {
       return error(400, "POST_DRAFT_INVALID", cause.message);
     }
     if (cause?.code === "23505") return error(409, "POST_SLUG_TAKEN", "You already have a draft using this post slug.");
-    console.error("World post operation failed", { name: cause?.name, code: cause?.code });
+    console.error("Learn post operation failed", { name: cause?.name, code: cause?.code });
     return error(503, "POST_STORAGE_UNAVAILABLE", "Private post storage is unavailable.");
   }
 }

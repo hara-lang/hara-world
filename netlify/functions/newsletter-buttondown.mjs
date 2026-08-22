@@ -20,11 +20,11 @@ function json(status, body) {
 
 async function recordEvent(db, eventKey, eventType, payload) {
   const result = await db.query(
-    `INSERT INTO hara_world.mailing_list_provider_events (
+    `INSERT INTO hara_learn.mailing_list_provider_events (
        provider, event_key, event_type, payload, attempts, received_at, last_attempt_at
      ) VALUES ('buttondown', $1, $2, $3::jsonb, 1, now(), now())
      ON CONFLICT (provider, event_key) DO UPDATE SET
-       attempts = hara_world.mailing_list_provider_events.attempts + 1,
+       attempts = hara_learn.mailing_list_provider_events.attempts + 1,
        last_attempt_at = now(),
        error = NULL
      RETURNING processed_at`,
@@ -35,7 +35,7 @@ async function recordEvent(db, eventKey, eventType, payload) {
 
 async function finishEvent(db, eventKey, error = null) {
   await db.query(
-    `UPDATE hara_world.mailing_list_provider_events
+    `UPDATE hara_learn.mailing_list_provider_events
      SET processed_at = CASE WHEN $2::text IS NULL THEN now() ELSE processed_at END,
          error = $2,
          last_attempt_at = now()
@@ -49,11 +49,11 @@ async function syncSubscriber(db, subscriber, eventType) {
   const email = projection.email_address;
   if (!isValidEmail(email)) throw new Error("Buttondown event did not resolve to a valid subscriber email.");
   const status = mapButtondownType(projection.type, eventType);
-  const interests = projection.metadata?.hara_world_interests;
+  const interests = projection.metadata?.hara_learn_interests;
   const normalizedInterests = Array.isArray(interests) && interests.length ? interests : ["dispatch"];
 
   await db.query(
-    `INSERT INTO hara_world.mailing_list_subscribers (
+    `INSERT INTO hara_learn.mailing_list_subscribers (
        email, status, provider, provider_subscriber_id, provider_type, interests,
        consent_at, consent_source, consent_text_version, consent_evidence,
        confirmed_at, unsubscribed_at, suppressed_at, deleted_at,
@@ -74,20 +74,20 @@ async function syncSubscriber(db, subscriber, eventType) {
        provider_type = EXCLUDED.provider_type,
        interests = CASE
          WHEN jsonb_array_length(EXCLUDED.interests) > 0 THEN EXCLUDED.interests
-         ELSE hara_world.mailing_list_subscribers.interests
+         ELSE hara_learn.mailing_list_subscribers.interests
        END,
        confirmed_at = CASE WHEN EXCLUDED.status = 'active'
-         THEN COALESCE(hara_world.mailing_list_subscribers.confirmed_at, now())
-         ELSE hara_world.mailing_list_subscribers.confirmed_at END,
+         THEN COALESCE(hara_learn.mailing_list_subscribers.confirmed_at, now())
+         ELSE hara_learn.mailing_list_subscribers.confirmed_at END,
        unsubscribed_at = CASE WHEN EXCLUDED.status = 'unsubscribed'
-         THEN COALESCE(hara_world.mailing_list_subscribers.unsubscribed_at, now())
-         ELSE hara_world.mailing_list_subscribers.unsubscribed_at END,
+         THEN COALESCE(hara_learn.mailing_list_subscribers.unsubscribed_at, now())
+         ELSE hara_learn.mailing_list_subscribers.unsubscribed_at END,
        suppressed_at = CASE WHEN EXCLUDED.status = 'suppressed'
-         THEN COALESCE(hara_world.mailing_list_subscribers.suppressed_at, now())
-         ELSE hara_world.mailing_list_subscribers.suppressed_at END,
+         THEN COALESCE(hara_learn.mailing_list_subscribers.suppressed_at, now())
+         ELSE hara_learn.mailing_list_subscribers.suppressed_at END,
        deleted_at = CASE WHEN EXCLUDED.status = 'deleted'
-         THEN COALESCE(hara_world.mailing_list_subscribers.deleted_at, now())
-         ELSE hara_world.mailing_list_subscribers.deleted_at END,
+         THEN COALESCE(hara_learn.mailing_list_subscribers.deleted_at, now())
+         ELSE hara_learn.mailing_list_subscribers.deleted_at END,
        last_provider_event_at = now(),
        provider_payload = EXCLUDED.provider_payload,
        last_error = NULL,
@@ -147,7 +147,7 @@ export default async function buttondownWebhook(request) {
     const projected = projectButtondownSubscriber(subscriber);
     if (deletedEvent && !isValidEmail(projected.email_address) && event.subscriberId) {
       const deleted = await db.query(
-        `UPDATE hara_world.mailing_list_subscribers
+        `UPDATE hara_learn.mailing_list_subscribers
          SET status = 'deleted',
              provider_type = 'removed',
              deleted_at = COALESCE(deleted_at, now()),

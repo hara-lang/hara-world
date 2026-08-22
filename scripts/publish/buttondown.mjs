@@ -15,7 +15,7 @@ const payload = {
   canonical_url: manifest.article.url,
   status: "draft",
   metadata: {
-    hara_world_release_id: manifest.releaseId,
+    hara_learn_release_id: manifest.releaseId,
     canonical_url: manifest.article.canonicalUrl
   }
 };

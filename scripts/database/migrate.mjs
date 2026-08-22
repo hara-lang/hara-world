@@ -10,8 +10,8 @@ if (!databaseUrl) throw new Error("Set DATABASE_URL to the Neon PostgreSQL conne
 
 const db = createNeonHttpClient(databaseUrl, { timeoutMs: 30_000 });
 await db.transaction([
-  "CREATE SCHEMA IF NOT EXISTS hara_world",
-  `CREATE TABLE IF NOT EXISTS hara_world.schema_migrations (
+  "CREATE SCHEMA IF NOT EXISTS hara_learn",
+  `CREATE TABLE IF NOT EXISTS hara_learn.schema_migrations (
      name text PRIMARY KEY,
      applied_at timestamptz NOT NULL DEFAULT now()
    )`
@@ -23,7 +23,7 @@ const files = (await readdir(migrationDirectory))
 
 for (const name of files) {
   const applied = await db.query(
-    "SELECT name FROM hara_world.schema_migrations WHERE name = $1",
+    "SELECT name FROM hara_learn.schema_migrations WHERE name = $1",
     [name]
   );
   if (applied.rows.length) {
@@ -40,7 +40,7 @@ for (const name of files) {
 
   await db.transaction([
     ...statements,
-    { text: "INSERT INTO hara_world.schema_migrations (name) VALUES ($1)", params: [name] }
+    { text: "INSERT INTO hara_learn.schema_migrations (name) VALUES ($1)", params: [name] }
   ]);
   console.log(`apply ${name} (${statements.length} statements)`);
 }

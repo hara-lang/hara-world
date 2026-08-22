@@ -4,9 +4,9 @@ import test from "node:test";
 
 const read = (path) => readFile(new URL(`../${path}`, import.meta.url), "utf8");
 
-test("My World presents the cross-resource lifecycle without replacing Git review", async () => {
+test("My Learn presents the cross-resource lifecycle without replacing Git review", async () => {
   const page = await read("src/pages/me.astro");
-  assert.match(page, /<h1>My World\.<\/h1>/);
+  assert.match(page, /<h1>My Learn\.<\/h1>/);
   assert.match(page, /\/api\/proposals\/reconcile/);
   assert.match(page, /X-Hara-Request": "proposal-reconcile"/);
   assert.match(page, /Your proposal activity\./);
@@ -22,7 +22,7 @@ test("the review queue is read-only, authority-gated, and lifecycle-aware", asyn
     read("src/pages/review.astro"),
     read("netlify/functions/review-proposals.mjs"),
   ]);
-  assert.match(page, /<h1>Review the World\.<\/h1>/);
+  assert.match(page, /<h1>Review the Learn\.<\/h1>/);
   assert.match(page, /Attention/);
   assert.match(page, /Needs review/);
   assert.match(page, /Approved/);
@@ -59,11 +59,11 @@ test("the proposal lifecycle has a migration, signed webhook, owner API, and sch
     read("netlify/functions/github-events.mjs"),
     read("netlify/functions/proposals.mjs"),
     read("netlify/functions/proposal-reconcile-scheduled.mjs"),
-    read("netlify/functions/world-readiness.mjs"),
+    read("netlify/functions/learn-readiness.mjs"),
     read(".env.example"),
   ]);
-  assert.match(migration, /CREATE TABLE IF NOT EXISTS hara_world\.community_proposals/);
-  assert.match(migration, /CREATE TABLE IF NOT EXISTS hara_world\.community_proposal_events/);
+  assert.match(migration, /CREATE TABLE IF NOT EXISTS hara_learn\.community_proposals/);
+  assert.match(migration, /CREATE TABLE IF NOT EXISTS hara_learn\.community_proposal_events/);
   assert.match(migration, /UNIQUE \(provider, provider_delivery_key\)/);
   assert.match(webhook, /verifyGitHubWebhookSignature/);
   assert.match(webhook, /x-github-delivery/);
@@ -73,5 +73,5 @@ test("the proposal lifecycle has a migration, signed webhook, owner API, and sch
   assert.match(schedule, /schedule: "17 \* \* \* \*"/);
   assert.match(readiness, /github-proposal-webhook/);
   assert.match(readiness, /community_proposal_events/);
-  assert.match(env, /HARA_WORLD_GITHUB_WEBHOOK_SECRET=/);
+  assert.match(env, /HARA_LEARN_GITHUB_WEBHOOK_SECRET=/);
 });

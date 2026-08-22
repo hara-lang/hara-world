@@ -12,7 +12,7 @@ import {
   verifyGitHubWebhookSignature,
 } from "../netlify/functions/_shared/github-proposals.mjs";
 
-const REPOSITORY = "hara-lang/hara-world";
+const REPOSITORY = "hara-lang/hara-learn";
 const SHA = "a".repeat(40);
 
 function pull({ number = 42, title, body, branch, state = "open", mergedAt = null, draft = true, headRepository = REPOSITORY } = {}) {
@@ -51,7 +51,7 @@ test("maps all managed proposal markers only when branch and repository provenan
       pull: pull({
         title: "Post: Small agent",
         branch: "post/github-6685337/1111111111114111",
-        body: `<!-- hara-world-post-proposal -->\n<!-- hara-world-post:draft:${draftId} -->\n<!-- hara-world-author:github:6685337 -->`,
+        body: `<!-- hara-learn-post-proposal -->\n<!-- hara-learn-post:draft:${draftId} -->\n<!-- hara-learn-author:github:6685337 -->`,
       }),
     },
     {
@@ -59,7 +59,7 @@ test("maps all managed proposal markers only when branch and repository provenan
       pull: pull({
         title: "Profile: @zcaudate",
         branch: "profile/github-6685337",
-        body: "<!-- hara-world-profile-proposal -->\n<!-- hara-world-profile:github:6685337 -->",
+        body: "<!-- hara-learn-profile-proposal -->\n<!-- hara-learn-profile:github:6685337 -->",
       }),
     },
     {
@@ -67,7 +67,7 @@ test("maps all managed proposal markers only when branch and repository provenan
       pull: pull({
         title: "Agent: Atlas",
         branch: "agent-registry/github-6685337/atlas",
-        body: "<!-- hara-world-agent-proposal -->\n<!-- hara-world-agent:agent:github:6685337:atlas -->",
+        body: "<!-- hara-learn-agent-proposal -->\n<!-- hara-learn-agent:agent:github:6685337:atlas -->",
       }),
     },
     {
@@ -75,7 +75,7 @@ test("maps all managed proposal markers only when branch and repository provenan
       pull: pull({
         title: "Source: Hara Notes",
         branch: "source-registry/github-6685337/hara-notes",
-        body: "<!-- hara-world-source-proposal -->\n<!-- hara-world-source:github:6685337:hara-notes -->",
+        body: "<!-- hara-learn-source-proposal -->\n<!-- hara-learn-source:github:6685337:hara-notes -->",
       }),
     },
   ];
@@ -91,7 +91,7 @@ test("maps all managed proposal markers only when branch and repository provenan
 
   assert.equal(proposalDescriptorFromPullRequest({ ...cases[2].pull, head: { ...cases[2].pull.head, ref: "attacker/atlas" } }), null);
   assert.equal(proposalDescriptorFromPullRequest({ ...cases[3].pull, head: { ...cases[3].pull.head, repo: { full_name: "someone/fork" } } }), null);
-  assert.equal(proposalDescriptorFromPullRequest(pull({ title: "Normal PR", branch: "feature", body: "No World markers" })), null);
+  assert.equal(proposalDescriptorFromPullRequest(pull({ title: "Normal PR", branch: "feature", body: "No Learn markers" })), null);
 });
 
 test("maps pull request, review, and check lifecycle states without conflating them", () => {

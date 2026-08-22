@@ -43,7 +43,7 @@ function proposalStore(options) {
 }
 
 function expectedRepository(options, env) {
-  return String(options.repository ?? envValue(env, "HARA_WORLD_GITHUB_REPOSITORY", "hara-lang/hara-world"));
+  return String(options.repository ?? envValue(env, "HARA_LEARN_GITHUB_REPOSITORY", "hara-lang/hara-learn"));
 }
 
 function repositoryFromPayload(payload) {
@@ -192,7 +192,7 @@ export async function handle(request, options = {}) {
   }
 
   const env = options.env ?? {};
-  const secret = String(options.secret ?? envValue(env, "HARA_WORLD_GITHUB_WEBHOOK_SECRET"));
+  const secret = String(options.secret ?? envValue(env, "HARA_LEARN_GITHUB_WEBHOOK_SECRET"));
   let verified = false;
   try {
     verified = verifyGitHubWebhookSignature(rawBody, request.headers.get("x-hub-signature-256"), secret);
@@ -231,7 +231,7 @@ export async function handle(request, options = {}) {
       result = { ignored: true, reason: "unsupported-event" };
     }
   } catch (error) {
-    console.error("Hara World GitHub webhook failed", { eventName, name: error?.name });
+    console.error("Hara Learn GitHub webhook failed", { eventName, name: error?.name });
     return response(500, { error: { code: "WEBHOOK_PROCESSING_FAILED", message: "The GitHub lifecycle event could not be recorded." } });
   }
 

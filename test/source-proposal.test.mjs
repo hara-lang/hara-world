@@ -5,13 +5,13 @@ import {
   sourceForId,
   updateSourceRegistry,
 } from "../netlify/functions/_shared/source-proposal.mjs";
-import { WORLD_SESSION_COOKIE, signWorldSession } from "../netlify/functions/_shared/world-auth.mjs";
+import { LEARN_SESSION_COOKIE, signLearnSession } from "../netlify/functions/_shared/learn-auth.mjs";
 import { handle } from "../netlify/functions/source-proposal.mjs";
 
 const ENV = {
-  HARA_WORLD_HANDOFF_SECRET: "h".repeat(64),
-  HARA_WORLD_SESSION_SECRET: "s".repeat(64),
-  HARA_WORLD_SITE: "https://world.hara-lang.org",
+  HARA_LEARN_HANDOFF_SECRET: "h".repeat(64),
+  HARA_LEARN_SESSION_SECRET: "s".repeat(64),
+  HARA_LEARN_SITE: "https://learn.hara-lang.org",
 };
 const NOW = Date.parse("2026-08-17T12:00:00Z");
 const IDENTITY = {
@@ -55,11 +55,11 @@ const PREVIEW = {
 };
 
 function sessionCookie() {
-  const token = signWorldSession(IDENTITY, ENV.HARA_WORLD_SESSION_SECRET, {
-    issuer: "https://world.hara-lang.org",
+  const token = signLearnSession(IDENTITY, ENV.HARA_LEARN_SESSION_SECRET, {
+    issuer: "https://learn.hara-lang.org",
     now: NOW,
   });
-  return `${WORLD_SESSION_COOKIE}=${encodeURIComponent(token)}`;
+  return `${LEARN_SESSION_COOKIE}=${encodeURIComponent(token)}`;
 }
 
 function existingSource() {
@@ -89,37 +89,37 @@ function fakeClient({ source = null, existingPull = null } = {}) {
   const registry = { version: 1, sources: source ? [source] : [] };
   let branchExists = Boolean(existingPull);
   return {
-    repository: "hara-lang/hara-world",
+    repository: "hara-lang/hara-learn",
     baseBranch: "main",
     installationPermissions: { contents: "write", pull_requests: "write" },
     calls,
     async request(path, options = {}) {
       calls.push({ path, options });
-      if (path.startsWith("/repos/hara-lang/hara-world/contents/registry/sources.json?")) {
+      if (path.startsWith("/repos/hara-lang/hara-learn/contents/registry/sources.json?")) {
         return {
           encoding: "base64",
           content: Buffer.from(`${JSON.stringify(registry, null, 2)}\n`).toString("base64"),
           sha: "registry-sha",
         };
       }
-      if (path === "/repos/hara-lang/hara-world/git/ref/heads/main") return { object: { sha: "base-sha" } };
-      if (path === "/repos/hara-lang/hara-world/git/ref/heads/source-registry/github-6685337/example-journal") {
+      if (path === "/repos/hara-lang/hara-learn/git/ref/heads/main") return { object: { sha: "base-sha" } };
+      if (path === "/repos/hara-lang/hara-learn/git/ref/heads/source-registry/github-6685337/example-journal") {
         if (!branchExists) { const error = new Error("Not found"); error.status = 404; throw error; }
         return { object: { sha: "proposal-sha" } };
       }
-      if (path === "/repos/hara-lang/hara-world/git/refs" && options.method === "POST") {
+      if (path === "/repos/hara-lang/hara-learn/git/refs" && options.method === "POST") {
         branchExists = true;
         return { ref: options.body.ref };
       }
-      if (path === "/repos/hara-lang/hara-world/git/refs/heads/source-registry/github-6685337/example-journal" && options.method === "PATCH") {
+      if (path === "/repos/hara-lang/hara-learn/git/refs/heads/source-registry/github-6685337/example-journal" && options.method === "PATCH") {
         return { object: { sha: options.body.sha } };
       }
       if (path.endsWith("/contents/registry/sources.json") && options.method === "PUT") return { content: { sha: "next-registry-sha" } };
-      if (path.startsWith("/repos/hara-lang/hara-world/pulls?")) return existingPull ? [existingPull] : [];
-      if (path === "/repos/hara-lang/hara-world/pulls" && options.method === "POST") {
-        return { number: 61, html_url: "https://github.com/hara-lang/hara-world/pull/61" };
+      if (path.startsWith("/repos/hara-lang/hara-learn/pulls?")) return existingPull ? [existingPull] : [];
+      if (path === "/repos/hara-lang/hara-learn/pulls" && options.method === "POST") {
+        return { number: 61, html_url: "https://github.com/hara-lang/hara-learn/pull/61" };
       }
-      if (existingPull && path === `/repos/hara-lang/hara-world/pulls/${existingPull.number}` && options.method === "PATCH") {
+      if (existingPull && path === `/repos/hara-lang/hara-learn/pulls/${existingPull.number}` && options.method === "PATCH") {
         return { ...existingPull, html_url: existingPull.html_url };
       }
       throw new Error(`Unexpected GitHub request: ${path} ${options.method || "GET"}`);
@@ -128,11 +128,11 @@ function fakeClient({ source = null, existingPull = null } = {}) {
 }
 
 function request(path = "/api/sources", body = INPUT, marker = "source-proposal") {
-  return new Request(`https://world.hara-lang.org${path}`, {
+  return new Request(`https://learn.hara-lang.org${path}`, {
     method: "POST",
     headers: {
       Cookie: sessionCookie(),
-      Origin: "https://world.hara-lang.org",
+      Origin: "https://learn.hara-lang.org",
       "Content-Type": "application/json",
       "X-Hara-Request": marker,
     },
@@ -140,7 +140,7 @@ function request(path = "/api/sources", body = INPUT, marker = "source-proposal"
   });
 }
 
-test("normalises proposal fields and derives registrant authority from the World session", () => {
+test("normalises proposal fields and derives registrant authority from the Learn session", () => {
   const proposal = normalizeSourceProposal({
     ...INPUT,
     registrantGithubId: "999",
@@ -181,11 +181,11 @@ test("preserves reviewer-controlled activation and polling policy for an owned s
     proposal,
     feedUrl: PREVIEW.finalUrl,
     now: NOW,
-  }), /another World account/);
+  }), /another Learn account/);
 });
 
-test("requires an active World account and same-origin request", async () => {
-  const unauthenticated = await handle(new Request("https://world.hara-lang.org/api/sources"), {
+test("requires an active Learn account and same-origin request", async () => {
+  const unauthenticated = await handle(new Request("https://learn.hara-lang.org/api/sources"), {
     env: ENV,
     githubClient: fakeClient(),
     now: NOW,
@@ -200,9 +200,9 @@ test("requires an active World account and same-origin request", async () => {
     communityAccountStatusImpl: async () => "suspended",
   });
   assert.equal(inactive.status, 403);
-  assert.match(inactive.headers.get("set-cookie"), new RegExp(`${WORLD_SESSION_COOKIE}=;`));
+  assert.match(inactive.headers.get("set-cookie"), new RegExp(`${LEARN_SESSION_COOKIE}=;`));
 
-  const rejected = await handle(new Request("https://world.hara-lang.org/api/sources", {
+  const rejected = await handle(new Request("https://learn.hara-lang.org/api/sources", {
     method: "POST",
     headers: { Cookie: sessionCookie(), Origin: "https://evil.example", "Content-Type": "application/json" },
     body: JSON.stringify(INPUT),
@@ -244,7 +244,7 @@ test("opens one scoped draft PR containing the server-probed canonical feed", as
   assert.equal(response.status, 201);
   const body = await response.json();
   assert.equal(body.branch, "source-registry/github-6685337/example-journal");
-  assert.equal(body.pullRequestUrl, "https://github.com/hara-lang/hara-world/pull/61");
+  assert.equal(body.pullRequestUrl, "https://github.com/hara-lang/hara-learn/pull/61");
   assert.equal(body.reused, false);
 
   const put = client.calls.find((call) => call.path.endsWith("/contents/registry/sources.json") && call.options.method === "PUT");
@@ -256,15 +256,15 @@ test("opens one scoped draft PR containing the server-probed canonical feed", as
 
   const pull = client.calls.find((call) => call.path.endsWith("/pulls") && call.options.method === "POST");
   assert.equal(pull.options.body.draft, true);
-  assert.match(pull.options.body.body, /hara-world-source:github:6685337:example-journal/);
+  assert.match(pull.options.body.body, /hara-learn-source:github:6685337:example-journal/);
   assert.match(pull.options.body.body, /server re-probed the feed/i);
 });
 
 test("reuses the stable branch and existing open source proposal", async () => {
   const existingPull = {
     number: 23,
-    html_url: "https://github.com/hara-lang/hara-world/pull/23",
-    body: "<!-- hara-world-source-proposal -->",
+    html_url: "https://github.com/hara-lang/hara-learn/pull/23",
+    body: "<!-- hara-learn-source-proposal -->",
   };
   const client = fakeClient({ source: existingSource(), existingPull });
   const response = await handle(request(), {
@@ -283,9 +283,9 @@ test("reuses the stable branch and existing open source proposal", async () => {
   assert.equal(client.calls.some((call) => call.path.endsWith("/pulls") && call.options.method === "POST"), false);
 });
 
-test("lists only merged sources registered by the current World identity", async () => {
+test("lists only merged sources registered by the current Learn identity", async () => {
   const client = fakeClient({ source: existingSource() });
-  const response = await handle(new Request("https://world.hara-lang.org/api/sources", {
+  const response = await handle(new Request("https://learn.hara-lang.org/api/sources", {
     headers: { Cookie: sessionCookie() },
   }), {
     env: ENV,

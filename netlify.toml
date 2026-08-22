@@ -4,7 +4,7 @@
 
 [build.environment]
   NODE_VERSION = "24"
-  HARA_WORLD_SITE = "https://world.hara-lang.org"
+  HARA_LEARN_SITE = "https://learn.hara-lang.org"
 
 [functions]
   directory = "netlify/functions"
@@ -15,6 +15,18 @@
   targetPort = 4321
   port = 8888
 framework = "#custom"
+
+[[redirects]]
+  from = "https://world.hara-lang.org/*"
+  to = "https://learn.hara-lang.org/:splat"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "https://world.testing.hara-lang.org/*"
+  to = "https://learn.testing.hara-lang.org/:splat"
+  status = 301
+  force = true
 
 [[redirects]]
   from = "/runtime/*"

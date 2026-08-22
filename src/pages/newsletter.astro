@@ -1,13 +1,13 @@
 ---
 import SiteLayout from "../layouts/SiteLayout.astro";
 import "../styles/newsletter.css";
-const manageUrl = import.meta.env.PUBLIC_HARA_WORLD_MANAGE_SUBSCRIPTION_URL;
+const manageUrl = import.meta.env.PUBLIC_HARA_LEARN_MANAGE_SUBSCRIPTION_URL;
 ---
-<SiteLayout title="Newsletter" description="Hara World Dispatch — a weekly editorial edition from the Hara community.">
+<SiteLayout title="Newsletter" description="Hara Learn Dispatch — a weekly editorial edition from the Hara community.">
   <header class="page-hero">
     <div class="shell">
       <p class="eyebrow">Mail / weekly edition</p>
-      <h1>Hara World Dispatch.</h1>
+      <h1>Hara Learn Dispatch.</h1>
       <p class="lede">One substantive argument, one working example, the strongest community writing of the week, and a precise record of what changed.</p>
       <div class="hero-actions">
         <a class="button button--primary" href="#join">Join the mailing list</a>
@@ -21,13 +21,13 @@ const manageUrl = import.meta.env.PUBLIC_HARA_WORLD_MANAGE_SUBSCRIPTION_URL;
       <div class="newsletter-join__copy">
         <p class="eyebrow">Confirmed subscription</p>
         <h2>One list, explicit consent.</h2>
-        <p>Hara World records your request and consent in its Neon ledger. Buttondown sends the confirmation and the editions. You are not subscribed until you confirm the email it sends.</p>
-        <p>No raw IP address is stored in the Hara World database. The delivery provider may receive and retain your IP address under its own policy for spam prevention when configured.</p>
+        <p>Hara Learn records your request and consent in its Neon ledger. Buttondown sends the confirmation and the editions. You are not subscribed until you confirm the email it sends.</p>
+        <p>No raw IP address is stored in the Hara Learn database. The delivery provider may receive and retain your IP address under its own policy for spam prevention when configured.</p>
         {manageUrl && <p><a class="arrow-link" href={manageUrl}>Manage an existing subscription →</a></p>}
       </div>
 
       <form class="newsletter-form" data-newsletter-form action="/api/newsletter/subscribe" method="post">
-        <input type="hidden" name="source" value="world-newsletter" />
+        <input type="hidden" name="source" value="learn-newsletter" />
         <input type="hidden" name="requestId" value="" data-newsletter-request-id />
         <label class="newsletter-honeypot" aria-hidden="true">
           Company
@@ -53,7 +53,7 @@ const manageUrl = import.meta.env.PUBLIC_HARA_WORLD_MANAGE_SUBSCRIPTION_URL;
 
         <label class="newsletter-consent">
           <input type="checkbox" name="consent" value="true" required />
-          <span>I agree to receive Hara World email. I understand that my email address, selected interests, consent record, and subscription status will be stored, and that I can unsubscribe at any time.</span>
+          <span>I agree to receive Hara Learn email. I understand that my email address, selected interests, consent record, and subscription status will be stored, and that I can unsubscribe at any time.</span>
         </label>
 
         <button class="button button--primary" type="submit" data-newsletter-submit>Request confirmation</button>

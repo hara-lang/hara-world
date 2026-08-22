@@ -66,7 +66,7 @@ console.log(JSON.stringify({ outputPath, durationSeconds: storyboard.durationSec
 
 async function resolveNarration(parsedArgs, directory, releaseManifest) {
   if (parsedArgs.audio) return path.resolve(parsedArgs.audio);
-  const endpoint = process.env.HARA_WORLD_TTS_ENDPOINT;
+  const endpoint = process.env.HARA_LEARN_TTS_ENDPOINT;
   if (!endpoint) return null;
 
   const narration = await readFile(path.join(directory, releaseManifest.assets.narration), "utf8");
@@ -74,11 +74,11 @@ async function resolveNarration(parsedArgs, directory, releaseManifest) {
     method: "POST",
     headers: {
       "content-type": "application/json",
-      ...(process.env.HARA_WORLD_TTS_TOKEN ? { authorization: `Bearer ${process.env.HARA_WORLD_TTS_TOKEN}` } : {})
+      ...(process.env.HARA_LEARN_TTS_TOKEN ? { authorization: `Bearer ${process.env.HARA_LEARN_TTS_TOKEN}` } : {})
     },
     body: JSON.stringify({
       text: narration,
-      voice: process.env.HARA_WORLD_TTS_VOICE || "hara-world",
+      voice: process.env.HARA_LEARN_TTS_VOICE || "hara-learn",
       format: "mp3",
       releaseId: releaseManifest.releaseId
     })
@@ -111,13 +111,13 @@ function sceneSvg(scene, story) {
       <path fill="#f4f6f8" d="M13 13h16v23h20V13h16v52H49V48H29v17H13z"/>
       <path fill="#2f7cff" d="M34 13h12v12H34z"/>
     </g>
-    <text x="190" y="160" fill="#f4f6f8" font-family="Arial, Helvetica, sans-serif" font-size="34" font-weight="700">Hara World</text>
+    <text x="190" y="160" fill="#f4f6f8" font-family="Arial, Helvetica, sans-serif" font-size="34" font-weight="700">Hara Learn</text>
     <text x="90" y="330" fill="#8db2ff" font-family="monospace" font-size="24" letter-spacing="5">${escapeXml(scene.eyebrow.toUpperCase())}</text>
     <text x="90" y="520" fill="#f4f6f8" font-family="Arial, Helvetica, sans-serif" font-size="${headline.length > 3 ? 78 : 90}" font-weight="650" letter-spacing="-3">${tspans(headline, 108)}</text>
     <text x="90" y="${950 + Math.max(0, headline.length - 3) * 92}" fill="#a0a8b1" font-family="Arial, Helvetica, sans-serif" font-size="42" font-weight="400">${tspans(body, 60)}</text>
     <rect x="90" y="1740" width="780" height="4" rx="2" fill="#dfe7f0" fill-opacity=".12"/>
     <rect x="90" y="1740" width="${progress.toFixed(1)}" height="4" rx="2" fill="#2f7cff"/>
-    <text x="90" y="1825" fill="#6f7882" font-family="monospace" font-size="22" letter-spacing="3">WORLD / ${String(scene.index + 1).padStart(2, "0")}</text>
+    <text x="90" y="1825" fill="#6f7882" font-family="monospace" font-size="22" letter-spacing="3">LEARN / ${String(scene.index + 1).padStart(2, "0")}</text>
     <text x="990" y="1825" text-anchor="end" fill="#6f7882" font-family="monospace" font-size="22">HARA-LANG.ORG</text>
   </svg>`;
 }

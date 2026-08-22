@@ -1,12 +1,12 @@
 ---
 import SiteLayout from "../layouts/SiteLayout.astro";
 ---
-<SiteLayout title="Add a feed" description="Register an RSS or Atom publication through a reviewed Hara World proposal.">
+<SiteLayout title="Add a feed" description="Register an RSS or Atom publication through a reviewed Hara Learn proposal.">
   <header class="page-hero source-submit-hero">
     <div class="shell">
-      <p class="eyebrow">World Feed / source registry</p>
+      <p class="eyebrow">Learn Feed / source registry</p>
       <h1>Bring your own publication.</h1>
-      <p class="lede">Connect an RSS or Atom feed you own or are authorised to represent. World inspects the feed safely, attaches your verified operator identity, and prepares the registry change for review without sending you to a GitHub issue form.</p>
+      <p class="lede">Connect an RSS or Atom feed you own or are authorised to represent. Learn inspects the feed safely, attaches your verified operator identity, and prepares the registry change for review without sending you to a GitHub issue form.</p>
     </div>
   </header>
 
@@ -15,8 +15,8 @@ import SiteLayout from "../layouts/SiteLayout.astro";
       <article class="source-session-gate">
         <div>
           <p class="eyebrow">Accountable registrant</p>
-          <h2 data-session-title>Checking your World session…</h2>
-          <p data-session-copy>Hara World is checking for an audience-bound identity before accepting a source proposal.</p>
+          <h2 data-session-title>Checking your Learn session…</h2>
+          <p data-session-copy>Hara Learn is checking for an audience-bound identity before accepting a source proposal.</p>
         </div>
         <a class="button button--primary" href="/api/auth/start?returnTo=/submit" data-authorize hidden>Enable feed registration</a>
       </article>
@@ -118,7 +118,7 @@ import SiteLayout from "../layouts/SiteLayout.astro";
           </label>
 
           <label>
-            <span>Why this belongs in Hara World</span>
+            <span>Why this belongs in Hara Learn</span>
             <textarea name="relevance" required maxlength="1200" rows="7" placeholder="Describe the publication's relationship to Hara, Lisp, language tools, runtimes, agents, or programmable media."></textarea>
           </label>
 
@@ -140,7 +140,7 @@ import SiteLayout from "../layouts/SiteLayout.astro";
 
   <section class="section section--tight source-contract">
     <div class="shell policy-grid">
-      <article class="policy-card"><h3>Identity</h3><p>The server supplies the stable Hara World registrant identity. The form cannot impersonate another account.</p></article>
+      <article class="policy-card"><h3>Identity</h3><p>The server supplies the stable Hara Learn registrant identity. The form cannot impersonate another account.</p></article>
       <article class="policy-card"><h3>Network safety</h3><p>Every probe and submission rechecks public HTTPS DNS targets, redirects, response size, timeout, and XML structure.</p></article>
       <article class="policy-card"><h3>Permission</h3><p>Feed availability proves transport, not republication rights. Reviewers separately check the declared permission basis.</p></article>
       <article class="policy-card"><h3>Publication</h3><p>The GitHub App writes one reusable proposal branch. Merge records the source; activation remains an explicit reviewed state.</p></article>
@@ -203,7 +203,7 @@ import SiteLayout from "../layouts/SiteLayout.astro";
         },
       });
       const body = await response.json().catch(() => ({}));
-      if (!response.ok) throw new Error(body?.error?.message || `World returned HTTP ${response.status}.`);
+      if (!response.ok) throw new Error(body?.error?.message || `Learn returned HTTP ${response.status}.`);
       return body;
     };
 
@@ -369,7 +369,7 @@ import SiteLayout from "../layouts/SiteLayout.astro";
             : "Sign in to add a feed";
         sessionCopy.textContent = signedIn
           ? "Your stable registrant identity will be attached by the server to every proposed source record."
-          : "Use Hara Identity to establish a World session. The form then prepares the GitHub change through the server.";
+          : "Use Hara Identity to establish a Learn session. The form then prepares the GitHub change through the server.";
         if (signedIn) {
           const body = await api("/api/sources");
           sources = body.sources ?? [];

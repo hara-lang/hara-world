@@ -6,7 +6,7 @@ const db = createNeonHttpClient(databaseUrl, { timeoutMs: 30_000 });
 
 const result = await db.query(
   `SELECT email, interests, confirmed_at
-   FROM hara_world.mailing_list_active
+   FROM hara_learn.mailing_list_active
    ORDER BY confirmed_at NULLS LAST, email`
 );
 

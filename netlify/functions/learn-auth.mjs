@@ -1,25 +1,25 @@
 import { communityAccountStatus, recordIdentityHandoff } from "./_shared/community-accounts.mjs";
 import {
-  WORLD_SESSION_COOKIE,
+  LEARN_SESSION_COOKIE,
   appendCookies,
-  assertWorldCallback,
+  assertLearnCallback,
   authAttemptCookies,
   clearAuthAttemptCookies,
-  clearWorldSessionCookie,
-  createWorldAuthAttempt,
+  clearLearnSessionCookie,
+  createLearnAuthAttempt,
   identityOriginForRequest,
-  isWorldAuthConfigured,
+  isLearnAuthConfigured,
   json,
   parseCookies,
-  readWorldAuthConfig,
+  readLearnAuthConfig,
   redirect,
   sameOrigin,
-  signWorldSession,
+  signLearnSession,
   validateHandoffPayload,
-  verifyWorldSession,
-  worldOrigin,
-  worldSessionCookie,
-} from "./_shared/world-auth.mjs";
+  verifyLearnSession,
+  learnOrigin,
+  learnSessionCookie,
+} from "./_shared/learn-auth.mjs";
 
 const START_PATH = "/api/auth/start";
 const CALLBACK_PATH = "/api/auth/callback";
@@ -29,22 +29,22 @@ const LOGOUT_PATH = "/api/auth/logout";
 const PRODUCTION_RETURN_ORIGINS = new Set([
   "https://hara-lang.org",
   "https://www.hara-lang.org",
-  "https://world.hara-lang.org",
-  "https://specs.hara-lang.org",
+  "https://learn.hara-lang.org",
+  "https://build.hara-lang.org",
   "https://packages.hara-lang.org",
   "https://id.hara-lang.org",
 ]);
 const TESTING_RETURN_ORIGINS = new Set([
   "https://www.testing.hara-lang.org",
-  "https://world.testing.hara-lang.org",
-  "https://specs.testing.hara-lang.org",
+  "https://learn.testing.hara-lang.org",
+  "https://build.testing.hara-lang.org",
   "https://packages.testing.hara-lang.org",
   "https://id.testing.hara-lang.org",
 ]);
 
 function authErrorRedirect(request, message) {
   const target = new URL("/me", request.url);
-  target.searchParams.set("auth_error", String(message || "World authentication is unavailable.").slice(0, 180));
+  target.searchParams.set("auth_error", String(message || "Learn authentication is unavailable.").slice(0, 180));
   return redirect(target.toString(), clearAuthAttemptCookies(request.url));
 }
 
@@ -54,7 +54,7 @@ function safeGlobalReturnTo(value, requestUrl) {
   if (typeof value !== "string" || !value.trim() || /[\r\n\0\\]/.test(value)) return fallback;
   let target;
   try { target = new URL(value, request.origin); } catch { return fallback; }
-  const testing = request.hostname === "world.testing.hara-lang.org"
+  const testing = request.hostname === "learn.testing.hara-lang.org"
     || request.hostname.endsWith(".testing.hara-lang.org");
   const allowed = testing ? TESTING_RETURN_ORIGINS : PRODUCTION_RETURN_ORIGINS;
   if (!allowed.has(target.origin) || target.protocol !== "https:" || target.username || target.password) return fallback;
@@ -80,10 +80,10 @@ function frontChannelLogoutResponse(request) {
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="referrer" content="no-referrer">
-  <title>Signing out · Hara World</title>
+  <title>Signing out · Hara Learn</title>
 </head>
 <body>
-  <p>Hara World signed out.</p>
+  <p>Hara Learn signed out.</p>
   <p><a data-hara-logout-return href="${href}">Continue</a></p>
   <script>location.replace(document.querySelector("[data-hara-logout-return]").href)</script>
 </body>
@@ -95,7 +95,7 @@ function frontChannelLogoutResponse(request) {
     "Referrer-Policy": "no-referrer",
     "X-Content-Type-Options": "nosniff",
     "X-Frame-Options": "DENY",
-  }), [clearWorldSessionCookie(request.url)]);
+  }), [clearLearnSessionCookie(request.url)]);
   return new Response(body, { status: 200, headers });
 }
 
@@ -111,9 +111,9 @@ function jsonWithCookies(status, body, cookies = []) {
 
 async function start(request, env) {
   if (request.method !== "GET") return json(405, { error: { code: "METHOD_NOT_ALLOWED", message: "Only GET is supported." } }, { Allow: "GET" });
-  const config = readWorldAuthConfig(env, request.url);
+  const config = readLearnAuthConfig(env, request.url);
   const url = new URL(request.url);
-  const attempt = createWorldAuthAttempt(url.searchParams.get("returnTo") ?? "/me", request.url);
+  const attempt = createLearnAuthAttempt(url.searchParams.get("returnTo") ?? "/me", request.url);
   const authorize = new URL("/v1/handoffs/authorize", config.identityOrigin);
   authorize.searchParams.set("client_id", config.clientId);
   authorize.searchParams.set("redirect_uri", config.redirectUri);
@@ -127,12 +127,12 @@ async function callback(request, env, fetchImpl, now, recordIdentity) {
   if (request.method !== "GET") return json(405, { error: { code: "METHOD_NOT_ALLOWED", message: "Only GET is supported." } }, { Allow: "GET" });
   let callbackData;
   try {
-    callbackData = assertWorldCallback(request.url, request.headers.get("cookie") || "");
+    callbackData = assertLearnCallback(request.url, request.headers.get("cookie") || "");
   } catch (error) {
     return authErrorRedirect(request, error.message);
   }
 
-  const config = readWorldAuthConfig(env, request.url);
+  const config = readLearnAuthConfig(env, request.url);
   let response;
   try {
     response = await fetchImpl(new URL("/v1/handoffs/token", config.identityOrigin), {
@@ -141,7 +141,7 @@ async function callback(request, env, fetchImpl, now, recordIdentity) {
         Accept: "application/json",
         Authorization: `Basic ${Buffer.from(`${config.clientId}:${config.handoffSecret}`).toString("base64")}`,
         "Content-Type": "application/x-www-form-urlencoded",
-        "User-Agent": "hara-world",
+        "User-Agent": "hara-learn",
       },
       body: new URLSearchParams({
         grant_type: "authorization_code",
@@ -151,12 +151,12 @@ async function callback(request, env, fetchImpl, now, recordIdentity) {
       }).toString(),
     });
   } catch {
-    return authErrorRedirect(request, "Identity could not be reached to establish the World session.");
+    return authErrorRedirect(request, "Identity could not be reached to establish the Learn session.");
   }
 
   let payload = {};
   try { payload = await response.json(); } catch {}
-  if (!response.ok) return authErrorRedirect(request, payload?.error?.message || "Identity rejected the World session handoff.");
+  if (!response.ok) return authErrorRedirect(request, payload?.error?.message || "Identity rejected the Learn session handoff.");
 
   let identity;
   try { identity = validateHandoffPayload(payload, config, now); }
@@ -164,13 +164,13 @@ async function callback(request, env, fetchImpl, now, recordIdentity) {
 
   let accepted;
   try { accepted = await recordIdentity(identity); }
-  catch { return authErrorRedirect(request, "World could not record the identity handoff."); }
+  catch { return authErrorRedirect(request, "Learn could not record the identity handoff."); }
   if (!accepted) return authErrorRedirect(request, "This identity handoff is unavailable, has already been used, or the account is inactive.");
 
-  const token = signWorldSession(identity, config.sessionSecret, { issuer: worldOrigin(request.url), now });
+  const token = signLearnSession(identity, config.sessionSecret, { issuer: learnOrigin(request.url), now });
   return redirect(callbackData.returnTo, [
     ...clearAuthAttemptCookies(request.url),
-    worldSessionCookie(token, request.url),
+    learnSessionCookie(token, request.url),
   ]);
 }
 
@@ -178,13 +178,13 @@ async function session(request, env, now, accountStatus) {
   if (request.method !== "GET" && request.method !== "HEAD") {
     return json(405, { error: { code: "METHOD_NOT_ALLOWED", message: "Only GET and HEAD are supported." } }, { Allow: "GET, HEAD" });
   }
-  const configured = isWorldAuthConfigured(env, request.url);
+  const configured = isLearnAuthConfigured(env, request.url);
   let profile = null;
   if (configured) {
-    const config = readWorldAuthConfig(env, request.url);
+    const config = readLearnAuthConfig(env, request.url);
     const cookies = parseCookies(request.headers.get("cookie") || "");
-    profile = verifyWorldSession(cookies[WORLD_SESSION_COOKIE], config.sessionSecret, {
-      issuer: worldOrigin(request.url),
+    profile = verifyLearnSession(cookies[LEARN_SESSION_COOKIE], config.sessionSecret, {
+      issuer: learnOrigin(request.url),
       now,
     });
   }
@@ -194,19 +194,19 @@ async function session(request, env, now, accountStatus) {
     try {
       accountStatusValue = await accountStatus(profile.id);
     } catch {
-      return json(503, { error: { code: "WORLD_ACCOUNT_CHECK_FAILED", message: "World could not verify the community account." } });
+      return json(503, { error: { code: "LEARN_ACCOUNT_CHECK_FAILED", message: "Learn could not verify the community account." } });
     }
     if (accountStatusValue !== "active") {
       const body = {
         authenticated: false,
         configured,
-        issuer: worldOrigin(request.url),
+        issuer: learnOrigin(request.url),
         centralIssuer: identityOriginForRequest(request.url, env),
         profile: null,
         identity: null,
         accountStatus: accountStatusValue,
       };
-      const response = jsonWithCookies(200, body, [clearWorldSessionCookie(request.url)]);
+      const response = jsonWithCookies(200, body, [clearLearnSessionCookie(request.url)]);
       return request.method === "HEAD"
         ? new Response(null, { status: 200, headers: response.headers })
         : response;
@@ -216,7 +216,7 @@ async function session(request, env, now, accountStatus) {
   const body = {
     authenticated: Boolean(profile),
     configured,
-    issuer: worldOrigin(request.url),
+    issuer: learnOrigin(request.url),
     centralIssuer: identityOriginForRequest(request.url, env),
     profile,
     identity: profile ? { provider: "github", subject: profile.id, login: profile.login } : null,
@@ -237,9 +237,9 @@ function logout(request, env) {
   if (request.method !== "POST") return json(405, { error: { code: "METHOD_NOT_ALLOWED", message: "Only GET and POST are supported." } }, { Allow: "GET, POST" });
   if (
     !sameOrigin(request, env)
-    || !["world-sign-out", "central-sign-out"].includes(request.headers.get("x-hara-request"))
-  ) return json(403, { error: { code: "ORIGIN_NOT_ALLOWED", message: "The logout request must come from Hara World." } });
-  const headers = appendCookies(new Headers({ "Cache-Control": "no-store" }), [clearWorldSessionCookie(request.url)]);
+    || !["learn-sign-out", "central-sign-out"].includes(request.headers.get("x-hara-request"))
+  ) return json(403, { error: { code: "ORIGIN_NOT_ALLOWED", message: "The logout request must come from Hara Learn." } });
+  const headers = appendCookies(new Headers({ "Cache-Control": "no-store" }), [clearLearnSessionCookie(request.url)]);
   return new Response(null, { status: 204, headers });
 }
 
@@ -256,10 +256,10 @@ export async function handle(request, {
     if (pathname === CALLBACK_PATH) return await callback(request, env, fetchImpl, now, (identity) => recordIdentityHandoffImpl(identity));
     if (pathname === SESSION_PATH) return await session(request, env, now, (id) => communityAccountStatusImpl(id));
     if (pathname === LOGOUT_PATH) return logout(request, env);
-    return json(404, { error: { code: "NOT_FOUND", message: "Unknown Hara World authentication endpoint." } });
+    return json(404, { error: { code: "NOT_FOUND", message: "Unknown Hara Learn authentication endpoint." } });
   } catch (error) {
-    if (pathname === START_PATH || pathname === CALLBACK_PATH) return authErrorRedirect(request, error.message || "World authentication is unavailable.");
-    return json(503, { error: { code: "WORLD_AUTH_UNAVAILABLE", message: "Hara World authentication is unavailable." } });
+    if (pathname === START_PATH || pathname === CALLBACK_PATH) return authErrorRedirect(request, error.message || "Learn authentication is unavailable.");
+    return json(503, { error: { code: "LEARN_AUTH_UNAVAILABLE", message: "Hara Learn authentication is unavailable." } });
   }
 }
 

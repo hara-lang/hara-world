@@ -1,6 +1,6 @@
-# Hara World
+# Hara Learn
 
-**Hara World** is the community, syndication, and distribution layer for the Hara Lisp ecosystem. It combines an Astro publication, first-party community submission forms, Git-reviewed people and agent records, permissioned Discord and RSS/Atom intake, a Neon-backed mailing-list and identity ledger, newsletter generation, automated short-video production, and review-first social publishing.
+**Hara Learn** is the community, syndication, and distribution layer for the Hara Lisp ecosystem. It combines an Astro publication, first-party community submission forms, Git-reviewed people and agent records, permissioned Discord and RSS/Atom intake, a Neon-backed mailing-list and identity ledger, newsletter generation, automated short-video production, and review-first social publishing.
 
 The governing idea is simple:
 
@@ -16,7 +16,7 @@ An approved post may produce a website page, RSS and JSON Feed entries, newslett
 - First-party forms for posts, profiles, agents, publication feeds, and newsletter signup.
 - Public contributor profiles keyed by stable numeric GitHub identity.
 - Public human-owned agent registrations with a separate machine-verification boundary.
-- Central GitHub sign-in through Hara Identity, followed by an audience-bound World session for authenticated proposals.
+- Central GitHub sign-in through Hara Identity, followed by an audience-bound Learn session for authenticated proposals.
 - GitHub App-backed proposal branches and draft pull requests rather than direct writes to the publication branch.
 - Public source and Discord-channel registries with explicit review boundaries.
 - Scheduled feed and Discord-pin importers that open draft pull requests rather than publishing unchecked content.
@@ -45,9 +45,9 @@ npm run check
 
 ## Community identity and first-party forms
 
-GitHub OAuth is owned only by `id.hara-lang.org`. World creates random state and an S256 PKCE verifier, receives a one-time code at its exact callback, exchanges it server-to-server, records the handoff ID in Neon, and signs a separate two-hour host-only session.
+GitHub OAuth is owned only by `id.hara-lang.org`. Learn creates random state and an S256 PKCE verifier, receives a one-time code at its exact callback, exchanges it server-to-server, records the handoff ID in Neon, and signs a separate two-hour host-only session.
 
-The primary community forms remain on Hara World:
+The primary community forms remain on Hara Learn:
 
 ```text
 /post             native community posts
@@ -64,7 +64,7 @@ See [docs/community-posts.md](./docs/community-posts.md), [docs/agents.md](./doc
 
 ## Mailing list
 
-Hara World owns the consent and lifecycle record in Neon while Buttondown performs double opt-in confirmation, email delivery, unsubscribes, and subscriber self-service.
+Hara Learn owns the consent and lifecycle record in Neon while Buttondown performs double opt-in confirmation, email delivery, unsubscribes, and subscriber self-service.
 
 Apply the database migration with the pooled connection string from the Neon `neondb` Connect dialog:
 
@@ -78,8 +78,8 @@ The public form posts to `/api/newsletter/subscribe`. A signed Buttondown webhoo
 DATABASE_URL
 BUTTONDOWN_API_KEY
 BUTTONDOWN_WEBHOOK_SECRET
-HARA_WORLD_SITE=https://learn.hara-lang.org
-PUBLIC_HARA_WORLD_MANAGE_SUBSCRIPTION_URL=https://buttondown.com/login?subscriber=1
+HARA_LEARN_SITE=https://learn.hara-lang.org
+PUBLIC_HARA_LEARN_MANAGE_SUBSCRIPTION_URL=https://buttondown.com/login?subscriber=1
 ```
 
 Export only active subscribers as CSV:
@@ -92,7 +92,7 @@ See [docs/mailing-list.md](./docs/mailing-list.md) for setup, webhook, privacy, 
 
 ## Add a community post
 
-Use `/post` after establishing a World session. Private draft state is stored in Neon. Submission asks the GitHub App to create or update a deterministic Markdown proposal under `content/articles/community/`; merge publishes the post to the website and public feeds.
+Use `/post` after establishing a Learn session. Private draft state is stored in Neon. Submission asks the GitHub App to create or update a deterministic Markdown proposal under `content/articles/community/`; merge publishes the post to the website and public feeds.
 
 Maintainers may still add reviewed Markdown directly below `content/articles/`:
 
@@ -118,7 +118,7 @@ Kinds are `dispatch`, `syndicated`, `release`, and `field-note`.
 
 ## Register a publication
 
-Use the first-party form at `/submit`. It safely probes the RSS or Atom feed, attaches the verified registrant identity, and asks the Hara World GitHub App to prepare one reusable draft pull request. The browser does not write an issue or edit GitHub fields directly.
+Use the first-party form at `/submit`. It safely probes the RSS or Atom feed, attaches the verified registrant identity, and asks the Hara Learn GitHub App to prepare one reusable draft pull request. The browser does not write an issue or edit GitHub fields directly.
 
 A source is not activated until its owner or authorised representative supplies and reviewers verify:
 
@@ -160,7 +160,7 @@ npm run release:build -- \
   --article=2026-08-06-a-publication-for-the-programmable-world
 ```
 
-The bundle appears under `.hara-world/releases/<article-id>/` and includes:
+The bundle appears under `.hara-learn/releases/<article-id>/` and includes:
 
 - `manifest.json` — canonical metadata, policies, channel state, and asset paths;
 - `newsletter.md` — provider-independent Markdown;
@@ -173,10 +173,10 @@ Render the video:
 
 ```bash
 npm run video:render -- \
-  --release=.hara-world/releases/2026-08-06-a-publication-for-the-programmable-world
+  --release=.hara-learn/releases/2026-08-06-a-publication-for-the-programmable-world
 ```
 
-Without a narration provider, the render contains a silent audio track and fully legible on-screen copy. Set `HARA_WORLD_TTS_ENDPOINT` to a service that accepts `{ text, voice, format, releaseId }` and returns MP3 bytes, or pass `--audio=/path/to/narration.mp3`.
+Without a narration provider, the render contains a silent audio track and fully legible on-screen copy. Set `HARA_LEARN_TTS_ENDPOINT` to a service that accepts `{ text, voice, format, releaseId }` and returns MP3 bytes, or pass `--audio=/path/to/narration.mp3`.
 
 ## Publish adapters
 
@@ -214,7 +214,7 @@ Node version: 24
 
 Run all database migrations before accepting signups or private community-post drafts. Store database, handoff, session, GitHub App, webhook, and publisher credentials as encrypted Netlify or protected GitHub Actions environment variables. They must not be committed to source control.
 
-The source, profile, and agent proposal forms reuse the existing World session and GitHub App and do not require an additional database migration.
+The source, profile, and agent proposal forms reuse the existing Learn session and GitHub App and do not require an additional database migration.
 
 ## Licence
 

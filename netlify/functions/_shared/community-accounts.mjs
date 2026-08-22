@@ -18,7 +18,7 @@ export async function recordIdentityHandoff(identity, { db = getDatabase() } = {
 
   const result = await db.query(
     `WITH account_upsert AS (
-       INSERT INTO hara_world.community_accounts (
+       INSERT INTO hara_learn.community_accounts (
          github_user_id, github_login, display_name, avatar_url, profile_url,
          status, created_at, last_seen_at, updated_at
        ) VALUES ($2::bigint, $6, $7, $8, $9, 'active', now(), now(), now())
@@ -29,10 +29,10 @@ export async function recordIdentityHandoff(identity, { db = getDatabase() } = {
          profile_url = EXCLUDED.profile_url,
          last_seen_at = now(),
          updated_at = now()
-       WHERE hara_world.community_accounts.status = 'active'
+       WHERE hara_learn.community_accounts.status = 'active'
        RETURNING github_user_id
      ), accepted AS (
-       INSERT INTO hara_world.community_identity_handoffs (
+       INSERT INTO hara_learn.community_identity_handoffs (
          handoff_id, github_user_id, issuer, audience, expires_at, consumed_at
        )
        SELECT $1, github_user_id, $3, $4, $5::timestamptz, now()
@@ -61,7 +61,7 @@ export async function communityAccountStatus(githubUserId, { db = getDatabase() 
   const id = assertGitHubId(githubUserId);
   const result = await db.query(
     `SELECT status
-       FROM hara_world.community_accounts
+       FROM hara_learn.community_accounts
       WHERE github_user_id = $1::bigint`,
     [id],
   );

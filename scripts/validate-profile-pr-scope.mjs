@@ -27,7 +27,7 @@ const eventPath = process.env.GITHUB_EVENT_PATH;
 if (eventPath) {
   const event = JSON.parse(await readFile(eventPath, "utf8"));
   const body = String(event.pull_request?.body ?? "");
-  if (!body.includes("<!-- hara-world-profile-proposal -->") || !body.includes(`<!-- hara-world-profile:github:${githubId} -->`)) {
+  if (!body.includes("<!-- hara-learn-profile-proposal -->") || !body.includes(`<!-- hara-learn-profile:github:${githubId} -->`)) {
     console.error("The pull request does not carry the authenticated profile markers.");
     process.exit(1);
   }

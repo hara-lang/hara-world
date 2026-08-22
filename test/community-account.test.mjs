@@ -9,7 +9,7 @@ import {
 const IDENTITY = {
   handoffId: "handoff-01234567890123456789",
   handoffIssuer: "https://id.hara-lang.org",
-  handoffAudience: "world",
+  handoffAudience: "learn",
   handoffExpiresAt: "2026-08-07T00:01:00.000Z",
   id: "6685337",
   login: "zcaudate",

@@ -7,11 +7,11 @@ import {
 import { groupProposalCounts, listReviewProposals } from "./_shared/proposals.mjs";
 import { reviewAccess } from "./_shared/review-access.mjs";
 import {
-  clearWorldSessionCookie,
+  clearLearnSessionCookie,
   json,
-  readWorldSession,
+  readLearnSession,
   sameOrigin,
-} from "./_shared/world-auth.mjs";
+} from "./_shared/learn-auth.mjs";
 
 const REVIEW_PATH = "/api/review/proposals";
 const TERMINAL_STATES = new Set(["merged", "closed", "withdrawn"]);
@@ -32,9 +32,9 @@ function reviewStore(options) {
 }
 
 function inactiveResponse(request, status) {
-  return error(403, "WORLD_ACCOUNT_INACTIVE", "This Hara World account is not active.", {
-    "Set-Cookie": clearWorldSessionCookie(request.url),
-    "X-Hara-World-Account-Status": String(status),
+  return error(403, "LEARN_ACCOUNT_INACTIVE", "This Hara Learn account is not active.", {
+    "Set-Cookie": clearLearnSessionCookie(request.url),
+    "X-Hara-Learn-Account-Status": String(status),
   });
 }
 
@@ -44,17 +44,17 @@ export async function handle(request, options = {}) {
 
   const env = options.env ?? {};
   const now = options.now ?? Date.now();
-  const identity = readWorldSession(request, env, now);
-  if (!identity) return error(401, "WORLD_SESSION_REQUIRED", "Establish a Hara World session before opening the review queue.");
+  const identity = readLearnSession(request, env, now);
+  if (!identity) return error(401, "LEARN_SESSION_REQUIRED", "Establish a Hara Learn session before opening the review queue.");
   if (request.method === "POST" && (!sameOrigin(request, env) || request.headers.get("x-hara-request") !== "review-reconcile")) {
-    return error(403, "REVIEW_REQUEST_REJECTED", "Review reconciliation must come from Hara World.");
+    return error(403, "REVIEW_REQUEST_REJECTED", "Review reconciliation must come from Hara Learn.");
   }
 
   let accountStatus;
   try {
     accountStatus = await (options.communityAccountStatusImpl ?? communityAccountStatus)(identity.id, { db: options.db });
   } catch {
-    return error(503, "WORLD_ACCOUNT_CHECK_FAILED", "World could not verify the community account.");
+    return error(503, "LEARN_ACCOUNT_CHECK_FAILED", "Learn could not verify the community account.");
   }
   if (accountStatus !== "active") return inactiveResponse(request, accountStatus);
 
@@ -65,16 +65,16 @@ export async function handle(request, options = {}) {
   let access;
   try { access = await (options.reviewAccessImpl ?? reviewAccess)(identity, client); }
   catch (cause) {
-    console.error("World review access check failed", { name: cause?.name });
-    return error(503, "REVIEW_AUTHORITY_UNAVAILABLE", "World could not verify review authority.");
+    console.error("Learn review access check failed", { name: cause?.name });
+    return error(503, "REVIEW_AUTHORITY_UNAVAILABLE", "Learn could not verify review authority.");
   }
-  if (!access.allowed) return error(403, "REVIEW_ACCESS_REQUIRED", "A reviewed World role or repository write permission is required.");
+  if (!access.allowed) return error(403, "REVIEW_ACCESS_REQUIRED", "A reviewed Learn role or repository write permission is required.");
 
   const store = reviewStore(options);
   let proposals;
   try { proposals = await store.list({ db: options.db, limit: 300 }); }
   catch (cause) {
-    console.error("World review queue failed", { name: cause?.name });
+    console.error("Learn review queue failed", { name: cause?.name });
     return error(503, "PROPOSAL_LEDGER_UNAVAILABLE", "The proposal lifecycle ledger is not available.");
   }
 

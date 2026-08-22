@@ -16,11 +16,12 @@ test("source submission is an on-site authenticated form backed by the Learn API
 });
 
 test("profile calls-to-action stay on Hara Learn and use the existing profile API form", async () => {
-  const [people, site, me, home] = await Promise.all([
+  const [people, site, me, home, community] = await Promise.all([
     read("src/pages/people/index.astro"),
     read("src/lib/site.ts"),
     read("src/pages/me.astro"),
     read("src/pages/index.astro"),
+    read("src/components/learn-home/LearnCommunity.astro"),
   ]);
   assert.match(people, /href="\/me"/);
   assert.doesNotMatch(people, /issues\/new\?template=profile/);
@@ -28,7 +29,8 @@ test("profile calls-to-action stay on Hara Learn and use the existing profile AP
   assert.doesNotMatch(site, /issues\/new\?template/);
   assert.match(me, /api\("\/api\/profile"/);
   assert.match(me, /X-Hara-Request": "profile-proposal"/);
-  assert.match(home, /href=\{SITE\.profile\}/);
+  assert.match(home, /<LearnCommunity[\s\S]*?profiles=\{profiles\}/);
+  assert.match(community, /href=\{SITE\.profile\}/);
 });
 
 test("Learn discovery advertises the first-party source proposal and probe endpoints", async () => {

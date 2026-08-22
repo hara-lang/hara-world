@@ -3,7 +3,7 @@ import { readFile } from "node:fs/promises";
 import test from "node:test";
 
 const read = (path) => readFile(new URL(`../${path}`, import.meta.url), "utf8");
-const acceptedRevision = "a2ab66d0fde79edb1cee46b79528098b3fda68cf";
+const acceptedRevision = "b512a12e8d7191c9092d195ca0ddc894b0ba54d2";
 
 test("Learn pins the accepted merged visual-language revision", async () => {
   const packageJson = JSON.parse(await read("package.json"));
@@ -31,7 +31,7 @@ test("Learn keeps product-owned primary destinations and visible contribution ac
   assert.match(layout, /\{ href: "\/articles", label: "Feed" \}/);
   assert.match(layout, /\{ href: "\/people", label: "People" \}/);
   assert.match(layout, /\{ href: "\/agents", label: "Agents" \}/);
-  assert.match(layout, /\{ href: "\/learn\/koans\/", label: "Learn" \}/);
+  assert.match(layout, /\{ href: "\/learn\/koans\/", label: "Koans" \}/);
   assert.match(layout, /\{ href: "\/sources", label: "Sources" \}/);
   assert.match(layout, /href="\/submit">Add a feed<\/a>/);
   assert.match(layout, /class="learn-post-action"/);

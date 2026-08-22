@@ -1,10 +1,10 @@
 {
-  "name": "@hara-lang/world",
+  "name": "@hara-lang/learn",
   "version": "0.1.0",
   "private": true,
   "type": "module",
   "license": "MIT",
-  "description": "Hara World — community posts, people, agents, syndication, lessons, and review-first distribution for Hara Lisp.",
+  "description": "Hara Learn — community posts, people, agents, syndication, lessons, and review-first distribution for Hara Lisp.",
   "engines": { "node": ">=24" },
   "scripts": {
     "predev": "npm run assets:build",

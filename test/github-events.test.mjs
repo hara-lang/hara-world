@@ -5,14 +5,14 @@ import { handle } from "../netlify/functions/github-events.mjs";
 import { proposalIdFor } from "../netlify/functions/_shared/proposals.mjs";
 
 const SECRET = "github-proposal-webhook-secret-0123456789";
-const REPOSITORY = "hara-lang/hara-world";
+const REPOSITORY = "hara-lang/hara-learn";
 const SHA = "b".repeat(40);
 
 function profilePull(overrides = {}) {
   return {
     number: 31,
     title: "Profile: @zcaudate",
-    body: "<!-- hara-world-profile-proposal -->\n<!-- hara-world-profile:github:6685337 -->",
+    body: "<!-- hara-learn-profile-proposal -->\n<!-- hara-learn-profile:github:6685337 -->",
     state: "open",
     draft: true,
     merged: false,
@@ -30,7 +30,7 @@ function profilePull(overrides = {}) {
 function signedRequest(event, delivery, payload, { signature = true } = {}) {
   const body = JSON.stringify(payload);
   const digest = createHmac("sha256", SECRET).update(body).digest("hex");
-  return new Request("https://world.hara-lang.org/api/github/events", {
+  return new Request("https://learn.hara-lang.org/api/github/events", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",

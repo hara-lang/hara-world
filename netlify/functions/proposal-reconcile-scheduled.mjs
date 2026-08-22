@@ -40,14 +40,14 @@ export async function reconcileScheduledProposals(options = {}) {
 export default async function scheduledProposalReconciliation() {
   try {
     const result = await reconcileScheduledProposals();
-    console.log("Hara World proposal reconciliation", {
+    console.log("Hara Learn proposal reconciliation", {
       discoveredCount: result.discoveredCount,
       reconciledCount: result.reconciledCount,
       failureCount: result.failureCount,
     });
     return new Response(null, { status: 204 });
   } catch (error) {
-    console.error("Hara World scheduled proposal reconciliation failed", { name: error?.name });
+    console.error("Hara Learn scheduled proposal reconciliation failed", { name: error?.name });
     return new Response(null, { status: 500 });
   }
 }

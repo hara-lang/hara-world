@@ -47,7 +47,7 @@ test("registration keeps identity, machine verification, and authority separate"
     read("docs/agents.md"),
   ]);
 
-  assert.match(api, /readWorldSession/);
+  assert.match(api, /readLearnSession/);
   assert.match(api, /communityAccountStatus/);
   assert.match(api, /agent-registry\/github-/);
   assert.match(api, /Registration confirms the accountable human operator/);

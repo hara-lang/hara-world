@@ -1,10 +1,10 @@
-CREATE TABLE IF NOT EXISTS hara_world.community_proposals (
+CREATE TABLE IF NOT EXISTS hara_learn.community_proposals (
   proposal_id text PRIMARY KEY
     CHECK (proposal_id ~ '^proposal:(post|profile|agent|source):[0-9a-f]{24}$'),
   proposal_type text NOT NULL
     CHECK (proposal_type IN ('post', 'profile', 'agent', 'source')),
   owner_github_user_id bigint NOT NULL
-    REFERENCES hara_world.community_accounts (github_user_id)
+    REFERENCES hara_learn.community_accounts (github_user_id)
     ON DELETE CASCADE,
   resource_key text NOT NULL CHECK (char_length(resource_key) BETWEEN 1 AND 240),
   resource_title text NOT NULL CHECK (char_length(resource_title) BETWEEN 1 AND 240),
@@ -43,22 +43,22 @@ CREATE TABLE IF NOT EXISTS hara_world.community_proposals (
 -- statement-breakpoint
 
 CREATE INDEX IF NOT EXISTS community_proposals_owner_state_idx
-  ON hara_world.community_proposals (owner_github_user_id, state, updated_at DESC);
+  ON hara_learn.community_proposals (owner_github_user_id, state, updated_at DESC);
 
 -- statement-breakpoint
 
 CREATE INDEX IF NOT EXISTS community_proposals_review_queue_idx
-  ON hara_world.community_proposals (state, review_state, checks_state, updated_at DESC);
+  ON hara_learn.community_proposals (state, review_state, checks_state, updated_at DESC);
 
 -- statement-breakpoint
 
-CREATE TABLE IF NOT EXISTS hara_world.community_proposal_events (
+CREATE TABLE IF NOT EXISTS hara_learn.community_proposal_events (
   id bigint GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
   proposal_id text NOT NULL
-    REFERENCES hara_world.community_proposals (proposal_id)
+    REFERENCES hara_learn.community_proposals (proposal_id)
     ON DELETE CASCADE,
-  provider text NOT NULL DEFAULT 'world'
-    CHECK (provider IN ('world', 'github', 'reconcile')),
+  provider text NOT NULL DEFAULT 'learn'
+    CHECK (provider IN ('learn', 'github', 'reconcile')),
   provider_delivery_key text,
   event_type text NOT NULL CHECK (char_length(event_type) BETWEEN 1 AND 100),
   action text CHECK (action IS NULL OR char_length(action) BETWEEN 1 AND 100),
@@ -73,14 +73,14 @@ CREATE TABLE IF NOT EXISTS hara_world.community_proposal_events (
 -- statement-breakpoint
 
 CREATE INDEX IF NOT EXISTS community_proposal_events_proposal_idx
-  ON hara_world.community_proposal_events (proposal_id, created_at DESC, id DESC);
+  ON hara_learn.community_proposal_events (proposal_id, created_at DESC, id DESC);
 
 -- statement-breakpoint
 
-COMMENT ON TABLE hara_world.community_proposals IS
-  'Unified lifecycle state for Hara World post, profile, agent, and source pull-request proposals. Git merge remains the publication or registration authority.';
+COMMENT ON TABLE hara_learn.community_proposals IS
+  'Unified lifecycle state for Hara Learn post, profile, agent, and source pull-request proposals. Git merge remains the publication or registration authority.';
 
 -- statement-breakpoint
 
-COMMENT ON TABLE hara_world.community_proposal_events IS
+COMMENT ON TABLE hara_learn.community_proposal_events IS
   'Append-only local, webhook, and reconciliation events. Provider delivery keys make repeated GitHub webhook delivery harmless.';

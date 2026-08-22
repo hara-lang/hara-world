@@ -54,7 +54,7 @@ export async function recordPublishedProposal({
     });
     return { recorded: true, proposal };
   } catch (error) {
-    console.error("Hara World proposal lifecycle record failed", {
+    console.error("Hara Learn proposal lifecycle record failed", {
       proposalType,
       name: error?.name,
     });

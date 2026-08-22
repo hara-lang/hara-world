@@ -54,7 +54,7 @@ export function isConsentGranted(value) {
   return value === true || /^(1|true|yes|on)$/i.test(String(value ?? "").trim());
 }
 
-export function sanitizeSource(value, fallback = "world-newsletter") {
+export function sanitizeSource(value, fallback = "learn-newsletter") {
   const source = String(value ?? fallback).trim().slice(0, 120);
   return /^[a-z0-9][a-z0-9._:/-]*$/i.test(source) ? source : fallback;
 }
@@ -119,11 +119,11 @@ export function projectButtondownSubscriber(subscriber = {}) {
     undeliverability_date: subscriber.undeliverability_date ?? null,
     metadata: subscriber.metadata && typeof subscriber.metadata === "object"
       ? {
-          hara_world_request_id: subscriber.metadata.hara_world_request_id ?? null,
-          hara_world_interests: Array.isArray(subscriber.metadata.hara_world_interests)
-            ? subscriber.metadata.hara_world_interests
+          hara_learn_request_id: subscriber.metadata.hara_learn_request_id ?? null,
+          hara_learn_interests: Array.isArray(subscriber.metadata.hara_learn_interests)
+            ? subscriber.metadata.hara_learn_interests
             : [],
-          hara_world_consent_version: subscriber.metadata.hara_world_consent_version ?? null
+          hara_learn_consent_version: subscriber.metadata.hara_learn_consent_version ?? null
         }
       : {}
   };

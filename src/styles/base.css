@@ -1,7 +1,7 @@
 @import "@hara-lang/visual-language/tokens.css";
 
 :root {
-  --world-on-signal: #fff;
+  --learn-on-signal: #fff;
 }
 
 *,
@@ -50,7 +50,7 @@ svg {
 }
 
 ::selection {
-  color: var(--world-on-signal);
+  color: var(--learn-on-signal);
   background: var(--hara-signal);
 }
 

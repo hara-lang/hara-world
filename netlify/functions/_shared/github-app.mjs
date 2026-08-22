@@ -16,9 +16,9 @@ function normalizePrivateKey(value) {
 }
 
 export function createGitHubAppJwt({ appId, privateKey, now = Date.now() }) {
-  if (!/^\d+$/.test(String(appId))) throw new Error("HARA_WORLD_GITHUB_APP_ID must be numeric.");
+  if (!/^\d+$/.test(String(appId))) throw new Error("HARA_LEARN_GITHUB_APP_ID must be numeric.");
   const key = normalizePrivateKey(privateKey);
-  if (!key.includes("BEGIN") || !key.includes("PRIVATE KEY")) throw new Error("HARA_WORLD_GITHUB_APP_PRIVATE_KEY is invalid.");
+  if (!key.includes("BEGIN") || !key.includes("PRIVATE KEY")) throw new Error("HARA_LEARN_GITHUB_APP_PRIVATE_KEY is invalid.");
   const seconds = Math.floor(now / 1000);
   const header = encodeJson({ alg: "RS256", typ: "JWT" });
   const payload = encodeJson({ iat: seconds - 60, exp: seconds + 9 * 60, iss: String(appId) });
@@ -30,22 +30,22 @@ export function createGitHubAppJwt({ appId, privateKey, now = Date.now() }) {
 }
 
 export function readGitHubAppConfig(env = {}) {
-  const appId = envValue(env, "HARA_WORLD_GITHUB_APP_ID");
-  const privateKey = normalizePrivateKey(envValue(env, "HARA_WORLD_GITHUB_APP_PRIVATE_KEY"));
-  const installationId = envValue(env, "HARA_WORLD_GITHUB_INSTALLATION_ID");
-  const repository = envValue(env, "HARA_WORLD_GITHUB_REPOSITORY", "hara-lang/hara-world");
-  const baseBranch = envValue(env, "HARA_WORLD_GITHUB_BASE_BRANCH", "main");
+  const appId = envValue(env, "HARA_LEARN_GITHUB_APP_ID");
+  const privateKey = normalizePrivateKey(envValue(env, "HARA_LEARN_GITHUB_APP_PRIVATE_KEY"));
+  const installationId = envValue(env, "HARA_LEARN_GITHUB_INSTALLATION_ID");
+  const repository = envValue(env, "HARA_LEARN_GITHUB_REPOSITORY", "hara-lang/hara-learn");
+  const baseBranch = envValue(env, "HARA_LEARN_GITHUB_BASE_BRANCH", "main");
   if (
     !/^\d+$/.test(appId)
     || !/^\d+$/.test(installationId)
     || !privateKey.includes("BEGIN")
     || !privateKey.includes("PRIVATE KEY")
-  ) throw new Error("The Hara World GitHub App is not configured.");
+  ) throw new Error("The Hara Learn GitHub App is not configured.");
   if (!/^[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+$/.test(repository)) {
-    throw new Error("HARA_WORLD_GITHUB_REPOSITORY must use owner/name syntax.");
+    throw new Error("HARA_LEARN_GITHUB_REPOSITORY must use owner/name syntax.");
   }
   if (!/^[A-Za-z0-9._/-]+$/.test(baseBranch) || baseBranch.includes("..")) {
-    throw new Error("HARA_WORLD_GITHUB_BASE_BRANCH is invalid.");
+    throw new Error("HARA_LEARN_GITHUB_BASE_BRANCH is invalid.");
   }
   return { appId, privateKey, installationId, repository, baseBranch };
 }
@@ -70,7 +70,7 @@ export async function createGitHubAppClient({
     headers: {
       Accept: "application/vnd.github+json",
       Authorization: `Bearer ${jwt}`,
-      "User-Agent": "hara-world",
+      "User-Agent": "hara-learn",
       "X-GitHub-Api-Version": "2022-11-28",
     },
   });
@@ -86,7 +86,7 @@ export async function createGitHubAppClient({
         Accept: "application/vnd.github+json",
         Authorization: `Bearer ${tokenPayload.token}`,
         "Content-Type": "application/json",
-        "User-Agent": "hara-world",
+        "User-Agent": "hara-learn",
         "X-GitHub-Api-Version": "2022-11-28",
         ...headers,
       },

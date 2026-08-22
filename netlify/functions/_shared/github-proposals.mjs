@@ -20,7 +20,7 @@ function safeEqual(left, right) {
 export function verifyGitHubWebhookSignature(rawBody, signatureHeader, secret) {
   const key = String(secret ?? "");
   const signature = String(signatureHeader ?? "");
-  if (key.length < 32) throw new Error("HARA_WORLD_GITHUB_WEBHOOK_SECRET must contain at least 32 characters.");
+  if (key.length < 32) throw new Error("HARA_LEARN_GITHUB_WEBHOOK_SECRET must contain at least 32 characters.");
   if (!/^sha256=[0-9a-f]{64}$/i.test(signature)) return false;
   const expected = `sha256=${createHmac("sha256", key).update(String(rawBody ?? "")).digest("hex")}`;
   return safeEqual(expected, signature.toLowerCase());
@@ -59,9 +59,9 @@ export function proposalDescriptorFromPullRequest(pullRequest) {
     submittedAt: pull.created_at ?? pull.updated_at ?? Date.now(),
   };
 
-  const post = body.match(/<!--\s*hara-world-post:draft:([0-9a-f-]{36})\s*-->/i);
-  const postAuthor = body.match(/<!--\s*hara-world-author:github:(\d+)\s*-->/i);
-  if (body.includes("<!-- hara-world-post-proposal -->") && post && postAuthor && POST_DRAFT_PATTERN.test(post[1])) {
+  const post = body.match(/<!--\s*hara-learn-post:draft:([0-9a-f-]{36})\s*-->/i);
+  const postAuthor = body.match(/<!--\s*hara-learn-author:github:(\d+)\s*-->/i);
+  if (body.includes("<!-- hara-learn-post-proposal -->") && post && postAuthor && POST_DRAFT_PATTERN.test(post[1])) {
     const draftId = post[1].toLowerCase();
     const shortId = draftId.replace(/-/g, "").slice(0, 16);
     if (!branchIs(common.branch, `post/github-${postAuthor[1]}/${shortId}`)) return null;
@@ -74,8 +74,8 @@ export function proposalDescriptorFromPullRequest(pullRequest) {
     };
   }
 
-  const profile = body.match(/<!--\s*hara-world-profile:github:(\d+)\s*-->/i);
-  if (body.includes("<!-- hara-world-profile-proposal -->") && profile) {
+  const profile = body.match(/<!--\s*hara-learn-profile:github:(\d+)\s*-->/i);
+  if (body.includes("<!-- hara-learn-profile-proposal -->") && profile) {
     if (!branchIs(common.branch, `profile/github-${profile[1]}`)) return null;
     return {
       ...common,
@@ -86,8 +86,8 @@ export function proposalDescriptorFromPullRequest(pullRequest) {
     };
   }
 
-  const agent = body.match(/<!--\s*hara-world-agent:(agent:github:(\d+):([a-z0-9](?:[a-z0-9-]{0,62}[a-z0-9])?))\s*-->/i);
-  if (body.includes("<!-- hara-world-agent-proposal -->") && agent) {
+  const agent = body.match(/<!--\s*hara-learn-agent:(agent:github:(\d+):([a-z0-9](?:[a-z0-9-]{0,62}[a-z0-9])?))\s*-->/i);
+  if (body.includes("<!-- hara-learn-agent-proposal -->") && agent) {
     const slug = agent[3].toLowerCase();
     if (!branchIs(common.branch, `agent-registry/github-${agent[2]}/${slug}`)) return null;
     return {
@@ -99,8 +99,8 @@ export function proposalDescriptorFromPullRequest(pullRequest) {
     };
   }
 
-  const source = body.match(/<!--\s*hara-world-source:github:(\d+):([a-z0-9]+(?:-[a-z0-9]+)*)\s*-->/i);
-  if (body.includes("<!-- hara-world-source-proposal -->") && source) {
+  const source = body.match(/<!--\s*hara-learn-source:github:(\d+):([a-z0-9]+(?:-[a-z0-9]+)*)\s*-->/i);
+  if (body.includes("<!-- hara-learn-source-proposal -->") && source) {
     const sourceId = source[2].toLowerCase();
     if (!branchIs(common.branch, `source-registry/github-${source[1]}/${sourceId}`)) return null;
     return {

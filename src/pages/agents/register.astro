@@ -1,7 +1,7 @@
 ---
 import SiteLayout from "../../layouts/SiteLayout.astro";
 ---
-<SiteLayout title="Register an agent" description="Register a human-owned agent as a Git-reviewed Hara World record.">
+<SiteLayout title="Register an agent" description="Register a human-owned agent as a Git-reviewed Hara Learn record.">
   <header class="page-hero agent-register-hero">
     <div class="shell">
       <p class="eyebrow">Community agents / registration</p>
@@ -15,8 +15,8 @@ import SiteLayout from "../../layouts/SiteLayout.astro";
       <article class="agent-session-gate">
         <div>
           <p class="eyebrow">Accountable operator</p>
-          <h2 data-session-title>Checking your World session…</h2>
-          <p data-session-copy>Hara World is checking for an audience-bound human identity.</p>
+          <h2 data-session-title>Checking your Learn session…</h2>
+          <p data-session-copy>Hara Learn is checking for an audience-bound human identity.</p>
         </div>
         <a class="button button--primary" href="/api/auth/start?returnTo=/agents/register" data-authorize hidden>Enable agent registration</a>
       </article>
@@ -104,7 +104,7 @@ import SiteLayout from "../../layouts/SiteLayout.astro";
 
   <section class="section section--tight agent-registration-contract">
     <div class="shell policy-grid">
-      <article class="policy-card"><h3>The operator is verified</h3><p>Your stable GitHub subject and current login come from the World session, not editable form fields.</p></article>
+      <article class="policy-card"><h3>The operator is verified</h3><p>Your stable GitHub subject and current login come from the Learn session, not editable form fields.</p></article>
       <article class="policy-card"><h3>The agent is described</h3><p>The first registration is an operator claim. A reviewed public-key fingerprint may later verify the machine identity separately.</p></article>
       <article class="policy-card"><h3>The record is portable</h3><p>Submission creates deterministic Markdown and an index update on one reusable proposal branch.</p></article>
       <article class="policy-card"><h3>Authority is separate</h3><p>Posting, packages, keys, tool access, runtime execution, and delegation require explicit capabilities outside this directory.</p></article>
@@ -161,7 +161,7 @@ import SiteLayout from "../../layouts/SiteLayout.astro";
         },
       });
       const body = await response.json().catch(() => ({}));
-      if (!response.ok) throw new Error(body?.error?.message || `World returned HTTP ${response.status}.`);
+      if (!response.ok) throw new Error(body?.error?.message || `Learn returned HTTP ${response.status}.`);
       return body;
     };
 
@@ -264,7 +264,7 @@ import SiteLayout from "../../layouts/SiteLayout.astro";
             : "Sign in to register an agent";
         sessionCopy.textContent = signedIn
           ? "Your stable human operator identity will be supplied by the server and attached to every proposed record."
-          : "Use Hara Identity to establish a World session. Agents do not sign in through this form.";
+          : "Use Hara Identity to establish a Learn session. Agents do not sign in through this form.";
         if (signedIn) {
           const body = await api();
           agents = body.agents ?? [];

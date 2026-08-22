@@ -1,10 +1,10 @@
 # Discord pinned-announcement intake
 
-Hara World treats pins in explicitly reviewed public Discord channels as publication proposals. A pin never publishes directly: the scheduled importer writes deterministic Markdown to an automation branch and opens or refreshes a draft pull request. Merge remains the publication event.
+Hara Learn treats pins in explicitly reviewed public Discord channels as publication proposals. A pin never publishes directly: the scheduled importer writes deterministic Markdown to an automation branch and opens or refreshes a draft pull request. Merge remains the publication event.
 
 ## Discord application
 
-Create a dedicated Hara World bot and install it only in the Hara community server. For each allowlisted channel, grant only:
+Create a dedicated Hara Learn bot and install it only in the Hara community server. For each allowlisted channel, grant only:
 
 - View Channel
 - Read Message History
@@ -47,7 +47,7 @@ Each current pin becomes a stable file below `content/articles/discord/` with:
 - author, original timestamp, pin timestamp, and content hash;
 - `announcement`, `discord`, and channel topics;
 - a visible automation disclosure;
-- `kind: field-note`, so the existing World article/feed contract remains unchanged.
+- `kind: field-note`, so the existing Learn article/feed contract remains unchanged.
 
 User, role, channel, `@everyone`, and `@here` mentions are neutralised before publication. Attachment filenames are recorded, but Discord CDN URLs are not mirrored into the public article. Editors can deliberately add durable media during review when rights and hosting are clear.
 

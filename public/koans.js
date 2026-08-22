@@ -57,12 +57,12 @@ if (lab) {
       if (!passed) { status.textContent = "Not yet. Nothing was sent or stored."; return; }
       const solved = new Set(JSON.parse(localStorage.getItem("hara-koans:solved") || "[]"));
       solved.add(koan.id); localStorage.setItem("hara-koans:solved", JSON.stringify([...solved]));
-      status.textContent = "Passed in this browser. Saving if you have enabled a World session…";
+      status.textContent = "Passed in this browser. Saving if you have enabled a Learn session…";
       const response = await fetch(`/api/koans/${koan.id}/completion`, {
         method: "POST", headers: { "content-type": "application/json", "x-hara-request": "koan-completion" },
         body: JSON.stringify({ koanId: koan.id, version: koan.version, source: candidate, passed: true }),
       });
-      status.textContent = response.ok ? "Passed and saved to your World account." : "Passed locally. Sign in to sync and compare solutions.";
+      status.textContent = response.ok ? "Passed and saved to your Learn account." : "Passed locally. Sign in to sync and compare solutions.";
       if (response.ok) revealPeers();
     } catch (error) { status.textContent = `Could not run this koan: ${error.message}`; }
   });

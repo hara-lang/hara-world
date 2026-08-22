@@ -1,6 +1,6 @@
 # Native community posts
 
-Hara World provides a first-party posting path without turning the public community record into a mutable database feed.
+Hara Learn provides a first-party posting path without turning the public community record into a mutable database feed.
 
 The boundary is deliberate:
 
@@ -8,7 +8,7 @@ The boundary is deliberate:
 Hara Identity
       │ audience-bound handoff
       ▼
-World session ──► private Neon draft ──► reusable GitHub proposal branch
+Learn session ──► private Neon draft ──► reusable GitHub proposal branch
                                               │
                                               ▼
                                       draft pull request
@@ -25,17 +25,17 @@ Neon owns private, mutable workflow state. Git owns every published post. A succ
 
 ## User flow
 
-1. Sign in through `id.hara-lang.org` and establish a two-hour World session.
+1. Sign in through `id.hara-lang.org` and establish a two-hour Learn session.
 2. Open `/post` and create a private draft.
 3. Save manually or let an existing draft autosave after edits.
 4. Submit the draft for review.
-5. World derives the author identity from the verified session, creates deterministic Markdown, and opens a draft pull request through the Hara World GitHub App.
+5. Learn derives the author identity from the verified session, creates deterministic Markdown, and opens a draft pull request through the Hara Learn GitHub App.
 6. Resubmitting the same draft resets its stable proposal branch to the current base and updates the existing open pull request.
 7. Reviewers merge the pull request to publish the post through the existing Astro collection and feeds.
 
 ## API
 
-All endpoints require an active World session. Mutating requests also require a same-origin request and:
+All endpoints require an active Learn session. Mutating requests also require a same-origin request and:
 
 ```text
 X-Hara-Request: community-post
@@ -82,8 +82,8 @@ The public article schema stores `postType`, `authorGithubId`, and `authorGithub
 
 Migration `004_community_posts.sql` adds:
 
-- `hara_world.community_post_drafts` — owner-scoped draft content and current proposal state;
-- `hara_world.community_post_events` — append-only lifecycle events for audit and later reconciliation.
+- `hara_learn.community_post_drafts` — owner-scoped draft content and current proposal state;
+- `hara_learn.community_post_events` — append-only lifecycle events for audit and later reconciliation.
 
 Draft bodies are private application data. They are not selected into a public Astro endpoint and are not included in the static site build.
 
@@ -108,13 +108,13 @@ The draft's first submission time fixes the date component and public `published
 The pull request body carries machine-readable markers:
 
 ```html
-<!-- hara-world-post-proposal -->
-<!-- hara-world-post:draft:<uuid> -->
-<!-- hara-world-author:github:<numeric-id> -->
-<!-- hara-world-content-sha256:<fingerprint> -->
+<!-- hara-learn-post-proposal -->
+<!-- hara-learn-post:draft:<uuid> -->
+<!-- hara-learn-author:github:<numeric-id> -->
+<!-- hara-learn-content-sha256:<fingerprint> -->
 ```
 
-The GitHub App never writes to `main`. It requires only repository metadata read, contents read/write, and pull requests read/write for `hara-lang/hara-world`.
+The GitHub App never writes to `main`. It requires only repository metadata read, contents read/write, and pull requests read/write for `hara-lang/hara-learn`.
 
 If GitHub creates the pull request but Neon cannot record the result, the endpoint returns the canonical GitHub proposal with `stateRecorded: false`. Git remains authoritative and the proposal is not discarded or falsely reported as absent.
 
@@ -138,17 +138,17 @@ Submission validation rejects raw HTML and executable Markdown link targets befo
 
 ## Deployment
 
-The existing World backend variables are reused:
+The existing Learn backend variables are reused:
 
 ```text
 DATABASE_URL
-HARA_WORLD_HANDOFF_SECRET
-HARA_WORLD_SESSION_SECRET
-HARA_WORLD_GITHUB_APP_ID
-HARA_WORLD_GITHUB_APP_PRIVATE_KEY
-HARA_WORLD_GITHUB_INSTALLATION_ID
-HARA_WORLD_GITHUB_REPOSITORY=hara-lang/hara-world
-HARA_WORLD_GITHUB_BASE_BRANCH=main
+HARA_LEARN_HANDOFF_SECRET
+HARA_LEARN_SESSION_SECRET
+HARA_LEARN_GITHUB_APP_ID
+HARA_LEARN_GITHUB_APP_PRIVATE_KEY
+HARA_LEARN_GITHUB_INSTALLATION_ID
+HARA_LEARN_GITHUB_REPOSITORY=hara-lang/hara-learn
+HARA_LEARN_GITHUB_BASE_BRANCH=main
 ```
 
 Apply migrations before enabling `/post`:
@@ -160,7 +160,7 @@ DATABASE_URL='postgresql://…' npm run database:migrate
 Then verify:
 
 ```text
-/.well-known/hara-world-readiness
+/.well-known/hara-learn-readiness
 ```
 
 The readiness result now fails closed unless the community account, identity handoff, post draft, and post event tables all exist and the GitHub App can read the configured base branch with contents and pull-request write permission.

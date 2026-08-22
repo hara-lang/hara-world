@@ -1,4 +1,4 @@
-name: Build and distribute a Hara World release
+name: Build and distribute a Hara Learn release
 
 on:
   workflow_dispatch:
@@ -42,7 +42,7 @@ permissions:
   contents: read
 
 concurrency:
-  group: hara-world-release-${{ inputs.article_id }}
+  group: hara-learn-release-${{ inputs.article_id }}
   cancel-in-progress: false
 
 jobs:
@@ -50,8 +50,8 @@ jobs:
     runs-on: ubuntu-24.04
     env:
       ARTICLE_ID: ${{ inputs.article_id }}
-      RELEASE_DIR: .hara-world/releases/${{ inputs.article_id }}
-      HARA_WORLD_SITE: https://world.hara-lang.org
+      RELEASE_DIR: .hara-learn/releases/${{ inputs.article_id }}
+      HARA_LEARN_SITE: https://learn.hara-lang.org
       YOUTUBE_PRIVACY_STATUS: private
     steps:
       - uses: actions/checkout@v4
@@ -71,7 +71,7 @@ jobs:
         run: npm run video:render -- --release="$RELEASE_DIR"
       - uses: actions/upload-artifact@v4
         with:
-          name: hara-world-release-${{ github.run_id }}
+          name: hara-learn-release-${{ github.run_id }}
           path: ${{ env.RELEASE_DIR }}
           include-hidden-files: true
           if-no-files-found: error
@@ -80,10 +80,10 @@ jobs:
     if: inputs.publish_buttondown || inputs.publish_bluesky || inputs.publish_mastodon || inputs.upload_youtube || inputs.queue_managed_social
     needs: build
     runs-on: ubuntu-24.04
-    environment: hara-world-publishing
+    environment: hara-learn-publishing
     env:
       ARTICLE_ID: ${{ inputs.article_id }}
-      RELEASE_DIR: .hara-world/releases/${{ inputs.article_id }}
+      RELEASE_DIR: .hara-learn/releases/${{ inputs.article_id }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -92,7 +92,7 @@ jobs:
       - run: npm install
       - uses: actions/download-artifact@v4
         with:
-          name: hara-world-release-${{ github.run_id }}
+          name: hara-learn-release-${{ github.run_id }}
           path: ${{ env.RELEASE_DIR }}
       - name: Install FFmpeg for protected narration render
         if: inputs.upload_youtube || inputs.queue_managed_social
@@ -102,9 +102,9 @@ jobs:
       - name: Re-render with configured narration service
         if: inputs.upload_youtube || inputs.queue_managed_social
         env:
-          HARA_WORLD_TTS_ENDPOINT: ${{ secrets.HARA_WORLD_TTS_ENDPOINT }}
-          HARA_WORLD_TTS_TOKEN: ${{ secrets.HARA_WORLD_TTS_TOKEN }}
-          HARA_WORLD_TTS_VOICE: ${{ vars.HARA_WORLD_TTS_VOICE }}
+          HARA_LEARN_TTS_ENDPOINT: ${{ secrets.HARA_LEARN_TTS_ENDPOINT }}
+          HARA_LEARN_TTS_TOKEN: ${{ secrets.HARA_LEARN_TTS_TOKEN }}
+          HARA_LEARN_TTS_VOICE: ${{ vars.HARA_LEARN_TTS_VOICE }}
         run: npm run video:render -- --release="$RELEASE_DIR"
       - name: Create Buttondown draft
         if: inputs.publish_buttondown
@@ -142,7 +142,7 @@ jobs:
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: hara-world-receipts-${{ github.run_id }}
+          name: hara-learn-receipts-${{ github.run_id }}
           path: ${{ env.RELEASE_DIR }}/receipts
           include-hidden-files: true
           if-no-files-found: ignore

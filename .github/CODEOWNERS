@@ -1,7 +1,7 @@
 # Authentication and community publication boundaries require explicit review.
-/netlify/functions/world-auth.mjs @hoebat
-/netlify/functions/world-readiness.mjs @hoebat
-/netlify/functions/world-discovery.mjs @hoebat
+/netlify/functions/learn-auth.mjs @hoebat
+/netlify/functions/learn-readiness.mjs @hoebat
+/netlify/functions/learn-discovery.mjs @hoebat
 /netlify/functions/profile-proposal.mjs @hoebat
 /netlify/functions/agent-proposal.mjs @hoebat
 /netlify/functions/community-posts.mjs @hoebat
@@ -11,7 +11,7 @@
 /netlify/functions/proposals.mjs @hoebat
 /netlify/functions/review-proposals.mjs @hoebat
 /netlify/functions/proposal-reconcile-scheduled.mjs @hoebat
-/netlify/functions/_shared/world-auth.mjs @hoebat
+/netlify/functions/_shared/learn-auth.mjs @hoebat
 /netlify/functions/_shared/community-accounts.mjs @hoebat
 /netlify/functions/_shared/github-app.mjs @hoebat
 /netlify/functions/_shared/github-proposals.mjs @hoebat

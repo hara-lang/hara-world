@@ -1,4 +1,4 @@
-name: Validate Hara World
+name: Validate Hara Learn
 
 on:
   pull_request:
@@ -9,7 +9,7 @@ permissions:
   contents: read
 
 concurrency:
-  group: hara-world-validate-${{ github.event.pull_request.number || github.ref }}
+  group: hara-learn-validate-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
 
 jobs:

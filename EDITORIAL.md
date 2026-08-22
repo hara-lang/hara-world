@@ -1,8 +1,8 @@
-# Hara World editorial policy
+# Hara Learn editorial policy
 
 ## Mission
 
-Hara World makes serious work around Hara, Lisp, language implementation, runtime systems, and programmable media easier to discover and understand. It is allowed to advocate strongly. It is not allowed to disguise provenance, automation, sponsorship, or uncertainty.
+Hara Learn makes serious work around Hara, Lisp, language implementation, runtime systems, and programmable media easier to discover and understand. It is allowed to advocate strongly. It is not allowed to disguise provenance, automation, sponsorship, or uncertainty.
 
 “Propaganda” is used internally in its literal sense: material intended to propagate ideas. Public work should be persuasive through clarity, demonstration, and evidence rather than manipulation.
 
@@ -10,7 +10,7 @@ Hara World makes serious work around Hara, Lisp, language implementation, runtim
 
 Every article uses one of four labels:
 
-- **Dispatch** — original Hara World editorial or essay.
+- **Dispatch** — original Hara Learn editorial or essay.
 - **Release** — an official project announcement or release note.
 - **Field note** — practical, provisional, or experimental technical writing.
 - **Syndicated** — writing first published elsewhere and carried under a registered permission mode.
@@ -21,7 +21,7 @@ A community article is not an official Hara position unless it is explicitly mar
 
 An RSS or Atom feed is a transport, not a republication licence.
 
-- `link`: metadata and a short Hara World introduction; readers continue to the original.
+- `link`: metadata and a short Hara Learn introduction; readers continue to the original.
 - `excerpt`: a limited quotation or feed-provided excerpt, attribution, and canonical link.
 - `full`: full-text republication under owner permission, explicit authorisation, or a compatible open licence.
 
@@ -61,7 +61,7 @@ Private review is the default YouTube state. A human checks title, claims, capti
 
 The main list is a curated digest, not a mirror of every repository event. Initial target cadence:
 
-- one weekly Hara World Dispatch;
+- one weekly Hara Learn Dispatch;
 - optional lower-volume release-only list later;
 - no purchased addresses;
 - clear unsubscribe and archive access through the selected provider;

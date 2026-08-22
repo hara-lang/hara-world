@@ -1,9 +1,9 @@
-# Hara World proposal lifecycle
+# Hara Learn proposal lifecycle
 
-Hara World uses GitHub pull requests as the canonical review history for community posts, profiles, agents, and publication sources. The proposal lifecycle layer reflects that history back into World so contributors do not need to use GitHub as their day-to-day status dashboard.
+Hara Learn uses GitHub pull requests as the canonical review history for community posts, profiles, agents, and publication sources. The proposal lifecycle layer reflects that history back into Learn so contributors do not need to use GitHub as their day-to-day status dashboard.
 
 ```text
-World form
+Learn form
     │
     ▼
 GitHub proposal branch and draft pull request
@@ -20,7 +20,7 @@ community_proposals + append-only events
           │
     ┌─────┴──────────┐
     ▼                ▼
-My World          Review queue
+My Learn          Review queue
     │                │
     └──── reconciliation fallback ────► GitHub API
 ```
@@ -51,8 +51,8 @@ database/migrations/005_community_proposals.sql
 It creates:
 
 ```text
-hara_world.community_proposals
-hara_world.community_proposal_events
+hara_learn.community_proposals
+hara_learn.community_proposal_events
 ```
 
 `community_proposals` stores the current projection. `community_proposal_events` is append-only. GitHub delivery IDs are unique per provider, so repeated webhook delivery is harmless.
@@ -86,7 +86,7 @@ GET  /api/proposals
 POST /api/proposals/reconcile
 ```
 
-Both endpoints require an active World session. Reconciliation additionally requires a same-origin request with:
+Both endpoints require an active Learn session. Reconciliation additionally requires a same-origin request with:
 
 ```text
 X-Hara-Request: proposal-reconcile
@@ -96,7 +96,7 @@ X-Hara-Request: proposal-reconcile
 
 `POST` performs two repairs:
 
-1. discover recent same-repository pull requests carrying valid World markers and expected branch names;
+1. discover recent same-repository pull requests carrying valid Learn markers and expected branch names;
 2. re-read each open proposal, its reviews, and its check runs from GitHub.
 
 Discovery is important when GitHub created a PR but the initial Neon write or webhook delivery was lost.
@@ -108,10 +108,10 @@ GET  /api/review/proposals
 POST /api/review/proposals
 ```
 
-The review endpoint requires an active World session plus one of:
+The review endpoint requires an active Learn session plus one of:
 
 - current GitHub repository permission `write`, `maintain`, or `admin`;
-- a merged World profile carrying the reviewed role `maintainer`, `editor`, `reviewer`, or `moderator`.
+- a merged Learn profile carrying the reviewed role `maintainer`, `editor`, `reviewer`, or `moderator`.
 
 The queue is read-only in this version. It groups proposals that need attention, need first review, are approved, or were recently resolved. Comments, approvals, change requests, and merges continue in the canonical pull request.
 
@@ -126,13 +126,13 @@ X-Hara-Request: review-reconcile
 Configure the GitHub App webhook URL as:
 
 ```text
-https://world.hara-lang.org/api/github/events
+https://learn.hara-lang.org/api/github/events
 ```
 
 Set the same high-entropy secret in Netlify:
 
 ```text
-HARA_WORLD_GITHUB_WEBHOOK_SECRET
+HARA_LEARN_GITHUB_WEBHOOK_SECRET
 ```
 
 The endpoint verifies:
@@ -155,7 +155,7 @@ Check suite
 
 The endpoint accepts only the configured repository. It ignores pull requests that do not satisfy all of these conditions:
 
-- a recognized Hara World proposal marker is present;
+- a recognized Hara Learn proposal marker is present;
 - the stable owner and resource marker is present;
 - the head branch follows the exact proposal convention;
 - the head and base repositories are the same configured repository.
@@ -200,7 +200,7 @@ Review and check API reads are optional. If the GitHub App lacks access to those
 
 ### `/me`
 
-“My World” shows proposal counts and cards across all four resource types. It provides:
+“My Learn” shows proposal counts and cards across all four resource types. It provides:
 
 - current lifecycle state;
 - review and check state;
@@ -218,16 +218,16 @@ The review queue shows a cross-resource operational view for authorized reviewer
 
 ## Readiness
 
-`/.well-known/hara-world-readiness` returns unavailable until all of these are true:
+`/.well-known/hara-learn-readiness` returns unavailable until all of these are true:
 
-- World authentication is configured;
+- Learn authentication is configured;
 - the central Identity handoff client is valid;
 - community account, post draft, and proposal lifecycle migrations exist;
 - the GitHub App can reach the configured repository and base branch;
 - Contents and Pull requests permissions are sufficient;
-- `HARA_WORLD_GITHUB_WEBHOOK_SECRET` is configured.
+- `HARA_LEARN_GITHUB_WEBHOOK_SECRET` is configured.
 
-`/.well-known/hara-world` advertises the dashboard, contributor API, reviewer API, webhook endpoint, reconciliation endpoint, and publication boundary.
+`/.well-known/hara-learn` advertises the dashboard, contributor API, reviewer API, webhook endpoint, reconciliation endpoint, and publication boundary.
 
 ## Trust boundary
 

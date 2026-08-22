@@ -1,4 +1,4 @@
-# Hara World mailing list
+# Hara Learn mailing list
 
 The mailing list uses two deliberately separate systems:
 
@@ -19,21 +19,21 @@ DATABASE_URL='postgresql://…' npm run database:migrate
 
 The migration creates:
 
-- `hara_world.mailing_list_subscribers` — email, interests, versioned consent, provider identifiers, and lifecycle state;
-- `hara_world.mailing_list_provider_events` — idempotency and retry state for signed provider events;
-- `hara_world.mailing_list_active` — the exportable active audience view;
-- `hara_world.schema_migrations` — applied migration names.
+- `hara_learn.mailing_list_subscribers` — email, interests, versioned consent, provider identifiers, and lifecycle state;
+- `hara_learn.mailing_list_provider_events` — idempotency and retry state for signed provider events;
+- `hara_learn.mailing_list_active` — the exportable active audience view;
+- `hara_learn.schema_migrations` — applied migration names.
 
 ## 2. Configure Netlify secrets
 
-Set these as encrypted environment variables on the Hara World Netlify project:
+Set these as encrypted environment variables on the Hara Learn Netlify project:
 
 ```text
 DATABASE_URL=<the Neon pooled connection string>
 BUTTONDOWN_API_KEY=<Buttondown API key>
 BUTTONDOWN_WEBHOOK_SECRET=<long random signing key>
-HARA_WORLD_SITE=https://world.hara-lang.org
-PUBLIC_HARA_WORLD_MANAGE_SUBSCRIPTION_URL=https://buttondown.com/login?subscriber=1
+HARA_LEARN_SITE=https://learn.hara-lang.org
+PUBLIC_HARA_LEARN_MANAGE_SUBSCRIPTION_URL=https://buttondown.com/login?subscriber=1
 ```
 
 Optional controls:
@@ -44,14 +44,14 @@ BUTTONDOWN_USE_TAGS=false
 BUTTONDOWN_BYPASS_FIREWALL=false
 ```
 
-`BUTTONDOWN_FORWARD_IP=true` passes the request IP directly to Buttondown for its spam checks; Hara World does not persist it, while Buttondown may retain it under its own policy. Tags are optional because they require a Buttondown plan with tags enabled; interests always remain available in Neon.
+`BUTTONDOWN_FORWARD_IP=true` passes the request IP directly to Buttondown for its spam checks; Hara Learn does not persist it, while Buttondown may retain it under its own policy. Tags are optional because they require a Buttondown plan with tags enabled; interests always remain available in Neon.
 
 ## 3. Configure the Buttondown webhook
 
 Create a webhook targeting:
 
 ```text
-https://world.hara-lang.org/api/newsletter/buttondown
+https://learn.hara-lang.org/api/newsletter/buttondown
 ```
 
 Use exactly the same random value as `BUTTONDOWN_WEBHOOK_SECRET` for the webhook signing key. Subscribe at minimum to subscriber creation, confirmation/type changes, unsubscription, suppression/complaint, undeliverability, and deletion events available in the Buttondown dashboard.
@@ -76,7 +76,7 @@ The export is intentionally a local/operator command rather than a public admin 
 DATABASE_URL='postgresql://…' npm run newsletter:export > subscribers.csv
 ```
 
-Only rows in `hara_world.mailing_list_active` are emitted.
+Only rows in `hara_learn.mailing_list_active` are emitted.
 
 ## Privacy and operations
 

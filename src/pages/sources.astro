@@ -6,11 +6,11 @@ const sources = sourceRegistry.sources;
 const active = sources.filter((source) => source.status === "active");
 const proposed = sources.filter((source) => source.status === "proposed");
 ---
-<SiteLayout title="Sources" description="The permissioned RSS and Atom source registry behind Hara World.">
+<SiteLayout title="Sources" description="The permissioned RSS and Atom source registry behind Hara Learn.">
   <header class="page-hero">
     <div class="shell">
       <p class="eyebrow">Registry / provenance</p>
-      <h1>The publications behind the World Feed.</h1>
+      <h1>The publications behind the Learn Feed.</h1>
       <p class="lede">Every automated source is registered with its feed, accountable registrant, syndication mode, permission basis, relevance, and topic set. Active sources are fetched into reviewable article changes.</p>
       <div class="hero-actions"><a class="button button--primary" href="/submit">Add or update a feed</a><a class="button" href="/sources.json">Registry JSON</a><a class="button" href="/sources.opml">Download OPML</a></div>
     </div>

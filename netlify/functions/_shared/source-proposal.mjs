@@ -105,15 +105,15 @@ export function sourceForId(registry, id) {
 export function updateSourceRegistry(registry, { identity, proposal, feedUrl, now = Date.now() }) {
   const value = assertSourceRegistry(registry);
   if (!identity || !/^\d+$/.test(identity.id ?? "") || !GITHUB_LOGIN_PATTERN.test(String(identity.login ?? ""))) {
-    throw new TypeError("A verified World session is required to propose a source.");
+    throw new TypeError("A verified Learn session is required to propose a source.");
   }
   const resolvedFeed = cleanHttps(feedUrl ?? proposal.feed, "Probed feed URL", { required: true });
   const current = sourceForId(value, proposal.id);
   if (current && !current.registrantGithubId) {
-    throw new Error("That legacy source requires manual ownership assignment before it can be edited through World.");
+    throw new Error("That legacy source requires manual ownership assignment before it can be edited through Learn.");
   }
   if (current && String(current.registrantGithubId) !== identity.id) {
-    throw new Error("That source ID is maintained by another World account.");
+    throw new Error("That source ID is maintained by another Learn account.");
   }
   const feedOwner = value.sources.find((source) => source.feed === resolvedFeed && source.id !== proposal.id);
   if (feedOwner) throw new Error(`That feed is already registered as ${feedOwner.id}.`);

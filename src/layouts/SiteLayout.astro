@@ -35,7 +35,7 @@ const pageTitle = title === SITE.name ? title : `${title} — ${SITE.name}`;
 const pageUrl = new URL(canonicalPath, Astro.site).toString();
 const canonical = canonicalUrl ?? pageUrl;
 const isArticle = Boolean(articleMeta);
-const socialImage = new URL("/og-hara-world.jpg", Astro.site).toString();
+const socialImage = new URL("/og-hara-learn.jpg", Astro.site).toString();
 const activePath = Astro.url.pathname;
 const ecosystemNav = [
   { href: SITE.playground, label: "Play", external: true },

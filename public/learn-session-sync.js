@@ -23,11 +23,11 @@
         cache: "no-store",
         headers: { "X-Hara-Request": "central-sign-out" },
       });
-      dispatchEvent(new CustomEvent("hara:world-session-change", {
+      dispatchEvent(new CustomEvent("hara:learn-session-change", {
         detail: { authenticated: false, profile: null },
       }));
     } catch {
-      // The host-only World session expires independently if synchronization is unavailable.
+      // The host-only Learn session expires independently if synchronization is unavailable.
     } finally {
       clearing = false;
     }

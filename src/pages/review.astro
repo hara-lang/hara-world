@@ -1,14 +1,14 @@
 ---
 import SiteLayout from "../layouts/SiteLayout.astro";
 ---
-<SiteLayout title="Review queue" description="The Hara World review queue for community posts, profiles, agents, and publication sources.">
+<SiteLayout title="Review queue" description="The Hara Learn review queue for community posts, profiles, agents, and publication sources.">
   <header class="page-hero review-hero">
     <div class="shell">
       <p class="eyebrow">Community review / GitHub lifecycle</p>
-      <h1>Review the World.</h1>
+      <h1>Review the Learn.</h1>
       <p class="lede">A read-only operational queue for trusted maintainers, editors, reviewers, and repository collaborators. GitHub remains the place where review comments, approvals, and merges are recorded.</p>
       <div class="hero-actions">
-        <a class="button" href="/me">My World</a>
+        <a class="button" href="/me">My Learn</a>
         <button class="button button--primary" type="button" data-reconcile hidden>Refresh every open proposal</button>
       </div>
     </div>
@@ -20,7 +20,7 @@ import SiteLayout from "../layouts/SiteLayout.astro";
         <div>
           <p class="eyebrow">Review authority</p>
           <h2 data-title>Checking access…</h2>
-          <p data-copy>World is checking your active account and reviewed or repository-backed review authority.</p>
+          <p data-copy>Learn is checking your active account and reviewed or repository-backed review authority.</p>
         </div>
         <a class="button button--primary" href="/api/auth/start?returnTo=/review" data-authorize hidden>Enable review access</a>
       </article>
@@ -101,7 +101,7 @@ import SiteLayout from "../layouts/SiteLayout.astro";
       });
       const body = await response.json().catch(() => ({}));
       if (!response.ok) {
-        const error = new Error(body?.error?.message || `World returned HTTP ${response.status}.`);
+        const error = new Error(body?.error?.message || `Learn returned HTTP ${response.status}.`);
         error.status = response.status;
         error.code = body?.error?.code;
         throw error;
@@ -199,7 +199,7 @@ import SiteLayout from "../layouts/SiteLayout.astro";
       reconcile.hidden = false;
       title.textContent = body.reviewer?.source === "repository"
         ? `Repository review access: ${body.reviewer.permission}`
-        : `Reviewed World role: ${(body.reviewer?.roles || []).join(", ")}`;
+        : `Reviewed Learn role: ${(body.reviewer?.roles || []).join(", ")}`;
       copy.textContent = "The queue combines post, profile, agent, and source proposals using one lifecycle vocabulary.";
     };
 
@@ -230,8 +230,8 @@ import SiteLayout from "../layouts/SiteLayout.astro";
         const response = await fetch("/api/auth/session", { credentials: "include", headers: { Accept: "application/json" }, cache: "no-store" });
         const session = await response.json().catch(() => ({ authenticated: false }));
         if (!session?.authenticated) {
-          title.textContent = session?.configured === false ? "Review access is not configured" : "Sign in to review Hara World";
-          copy.textContent = "A World session is required before review authority can be checked.";
+          title.textContent = session?.configured === false ? "Review access is not configured" : "Sign in to review Hara Learn";
+          copy.textContent = "A Learn session is required before review authority can be checked.";
           authorize.hidden = session?.configured === false;
           status.textContent = "";
           return;

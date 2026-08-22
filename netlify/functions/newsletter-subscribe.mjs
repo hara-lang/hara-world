@@ -29,7 +29,7 @@ function allowedOrigin(request) {
   if (!origin) return true;
   const allowed = new Set([new URL(request.url).origin]);
   try {
-    allowed.add(new URL(getEnv("HARA_WORLD_SITE", "https://world.hara-lang.org")).origin);
+    allowed.add(new URL(getEnv("HARA_LEARN_SITE", "https://learn.hara-lang.org")).origin);
   } catch {
     // The request origin remains allowed even if configuration is malformed.
   }
@@ -71,7 +71,7 @@ export default async function newsletterSubscribe(request, context = {}) {
   const requestId = normalizeRequestId(body?.requestId, randomUUID());
   const interests = selectInterests(body?.interests);
   const source = sanitizeSource(body?.source);
-  const site = getEnv("HARA_WORLD_SITE", "https://world.hara-lang.org");
+  const site = getEnv("HARA_LEARN_SITE", "https://learn.hara-lang.org");
   const sourceUrl = `${site.replace(/\/$/, "")}/newsletter`;
   const consentEvidence = {
     request_id: requestId,
@@ -85,7 +85,7 @@ export default async function newsletterSubscribe(request, context = {}) {
   try {
     db = getDatabase();
     const upsert = await db.query(
-      `INSERT INTO hara_world.mailing_list_subscribers (
+      `INSERT INTO hara_learn.mailing_list_subscribers (
          email, status, interests, consent_at, consent_source, consent_text_version, consent_evidence,
          provider, updated_at
        ) VALUES ($1, 'pending', $2::jsonb, now(), $3, $4, $5::jsonb, 'buttondown', now())
@@ -129,7 +129,7 @@ export default async function newsletterSubscribe(request, context = {}) {
     const status = mapButtondownType(providerSubscriber.type);
 
     await db.query(
-      `UPDATE hara_world.mailing_list_subscribers
+      `UPDATE hara_learn.mailing_list_subscribers
        SET provider_subscriber_id = $2,
            provider_type = $3,
            status = $4,
@@ -146,7 +146,7 @@ export default async function newsletterSubscribe(request, context = {}) {
     );
   } catch (error) {
     await db.query(
-      `UPDATE hara_world.mailing_list_subscribers
+      `UPDATE hara_learn.mailing_list_subscribers
        SET status = CASE WHEN status = 'pending' THEN 'error' ELSE status END,
            last_error = $2,
            updated_at = now()

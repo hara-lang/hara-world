@@ -22,7 +22,7 @@ const eventPath = process.env.GITHUB_EVENT_PATH;
 if (eventPath) {
   const event = JSON.parse(await readFile(eventPath, "utf8"));
   const body = String(event.pull_request?.body ?? "");
-  if (!body.includes("<!-- hara-world-source-proposal -->") || !body.includes(`<!-- hara-world-source:github:${githubId}:${sourceId} -->`)) {
+  if (!body.includes("<!-- hara-learn-source-proposal -->") || !body.includes(`<!-- hara-learn-source:github:${githubId}:${sourceId} -->`)) {
     console.error("The pull request does not carry the authenticated source markers.");
     process.exit(1);
   }

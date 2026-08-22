@@ -28,7 +28,7 @@ export const GET: APIRoute = async (context) => {
         date_modified: article.data.updatedAt?.toISOString(),
         authors: [{ name: article.data.author }],
         tags: article.data.topics,
-        _hara_world: {
+        _hara_learn: {
           kind: article.data.kind,
           source_id: article.data.sourceId,
           generated: article.data.generated

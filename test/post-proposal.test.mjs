@@ -33,22 +33,22 @@ function fakeClient({ branchExists = false, existingPull = null, pathExists = fa
   const calls = [];
   let hasBranch = branchExists;
   return {
-    repository: "hara-lang/hara-world",
+    repository: "hara-lang/hara-learn",
     baseBranch: "main",
     installationPermissions: { contents: "write", pull_requests: "write" },
     calls,
     async request(path, options = {}) {
       calls.push({ path, options });
-      if (path.startsWith("/repos/hara-lang/hara-world/contents/content/articles/community/") && options.method !== "PUT") {
+      if (path.startsWith("/repos/hara-lang/hara-learn/contents/content/articles/community/") && options.method !== "PUT") {
         if (pathExists) return { sha: "b".repeat(40) };
         const error = new Error("Not found"); error.status = 404; throw error;
       }
-      if (path === "/repos/hara-lang/hara-world/git/ref/heads/main") return { object: { sha: "a".repeat(40) } };
+      if (path === "/repos/hara-lang/hara-learn/git/ref/heads/main") return { object: { sha: "a".repeat(40) } };
       if (path.includes("/git/ref/heads/post/github-6685337/1111111111114111")) {
         if (!hasBranch) { const error = new Error("Not found"); error.status = 404; throw error; }
         return { object: { sha: "c".repeat(40) } };
       }
-      if (path === "/repos/hara-lang/hara-world/git/refs" && options.method === "POST") {
+      if (path === "/repos/hara-lang/hara-learn/git/refs" && options.method === "POST") {
         hasBranch = true;
         return { ref: options.body.ref };
       }
@@ -58,11 +58,11 @@ function fakeClient({ branchExists = false, existingPull = null, pathExists = fa
       if (options.method === "PUT" && path.includes("/contents/content/articles/community/")) {
         return { content: { sha: "d".repeat(40) } };
       }
-      if (path.startsWith("/repos/hara-lang/hara-world/pulls?")) return existingPull ? [existingPull] : [];
-      if (path === "/repos/hara-lang/hara-world/pulls" && options.method === "POST") {
-        return { number: 91, html_url: "https://github.com/hara-lang/hara-world/pull/91" };
+      if (path.startsWith("/repos/hara-lang/hara-learn/pulls?")) return existingPull ? [existingPull] : [];
+      if (path === "/repos/hara-lang/hara-learn/pulls" && options.method === "POST") {
+        return { number: 91, html_url: "https://github.com/hara-lang/hara-learn/pull/91" };
       }
-      if (existingPull && path === `/repos/hara-lang/hara-world/pulls/${existingPull.number}` && options.method === "PATCH") {
+      if (existingPull && path === `/repos/hara-lang/hara-learn/pulls/${existingPull.number}` && options.method === "PATCH") {
         return { ...existingPull, html_url: existingPull.html_url };
       }
       throw new Error(`Unexpected GitHub request: ${path} ${options.method || "GET"}`);
@@ -90,8 +90,8 @@ test("derives stable branch and publication paths from verified identity and dra
     "content/articles/community/2026/08/6685337-small-hara-agent.md",
   );
   const body = postPullRequestBody({ identity: IDENTITY, draft: DRAFT, draftId: DRAFT.id });
-  assert.match(body, /hara-world-post:draft:11111111-1111-4111-8111-111111111111/);
-  assert.match(body, /hara-world-author:github:6685337/);
+  assert.match(body, /hara-learn-post:draft:11111111-1111-4111-8111-111111111111/);
+  assert.match(body, /hara-learn-author:github:6685337/);
   assert.match(body, /Merge remains the publication event/);
 });
 
@@ -117,8 +117,8 @@ test("creates one draft PR with deterministic Markdown and reuses an existing pr
 
   const existingPull = {
     number: 27,
-    html_url: "https://github.com/hara-lang/hara-world/pull/27",
-    body: "<!-- hara-world-post-proposal -->",
+    html_url: "https://github.com/hara-lang/hara-learn/pull/27",
+    body: "<!-- hara-learn-post-proposal -->",
   };
   const reusedClient = fakeClient({ branchExists: true, existingPull });
   const reused = await createOrUpdatePostPullRequest(reusedClient, {

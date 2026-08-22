@@ -18,15 +18,15 @@ import {
   recordPublishedProposal,
 } from "./_shared/proposal-recording.mjs";
 import {
-  clearWorldSessionCookie,
+  clearLearnSessionCookie,
   json,
-  readWorldSession,
+  readLearnSession,
   sameOrigin,
-} from "./_shared/world-auth.mjs";
+} from "./_shared/learn-auth.mjs";
 
 const PROFILE_PATH = "/api/profile";
 const PROFILE_INDEX_PATH = "registry/profiles.json";
-const PR_MARKER = "<!-- hara-world-profile-proposal -->";
+const PR_MARKER = "<!-- hara-learn-profile-proposal -->";
 
 function decodeContent(payload) {
   if (typeof payload?.content !== "string" || payload.encoding !== "base64") return "";
@@ -88,10 +88,10 @@ function refPath(branch) {
 function pullRequestBody(identity) {
   return [
     PR_MARKER,
-    `<!-- hara-world-profile:github:${identity.id} -->`,
-    "## Hara World profile proposal",
+    `<!-- hara-learn-profile:github:${identity.id} -->`,
+    "## Hara Learn profile proposal",
     "",
-    `Prepared from the authenticated World session for \`github:${identity.id}\` (\`@${identity.login}\`).`,
+    `Prepared from the authenticated Learn session for \`github:${identity.id}\` (\`@${identity.login}\`).`,
     "",
     "- The stable numeric GitHub identity and current login came from Hara Identity, not from form fields.",
     "- Existing reviewed roles and links are preserved.",
@@ -128,7 +128,7 @@ async function prepareProposalBranch(client, branch, baseSha) {
 
 async function putFile(client, path, source, branch, sha) {
   const body = {
-    message: `Propose World profile record ${path}`,
+    message: `Propose Learn profile record ${path}`,
     content: Buffer.from(source).toString("base64"),
     branch,
   };
@@ -199,11 +199,11 @@ async function createOrUpdateProfilePullRequest(client, { identity, proposal, st
 function inactiveResponse(request, status) {
   return json(403, {
     error: {
-      code: "WORLD_ACCOUNT_INACTIVE",
-      message: "This Hara World account is not active.",
+      code: "LEARN_ACCOUNT_INACTIVE",
+      message: "This Hara Learn account is not active.",
       status,
     },
-  }, { "Set-Cookie": clearWorldSessionCookie(request.url) });
+  }, { "Set-Cookie": clearLearnSessionCookie(request.url) });
 }
 
 export async function handle(request, options = {}) {
@@ -216,15 +216,15 @@ export async function handle(request, options = {}) {
     return json(405, { error: { code: "METHOD_NOT_ALLOWED", message: "Only GET and POST are supported." } }, { Allow: "GET, POST" });
   }
 
-  const identity = readWorldSession(request, env, now);
-  if (!identity) return json(401, { error: { code: "WORLD_SESSION_REQUIRED", message: "Establish a Hara World session before editing a profile." } });
+  const identity = readLearnSession(request, env, now);
+  if (!identity) return json(401, { error: { code: "LEARN_SESSION_REQUIRED", message: "Establish a Hara Learn session before editing a profile." } });
   if (request.method === "POST" && (!sameOrigin(request, env) || request.headers.get("x-hara-request") !== "profile-proposal")) {
-    return json(403, { error: { code: "PROFILE_REQUEST_REJECTED", message: "The profile request must come from Hara World." } });
+    return json(403, { error: { code: "PROFILE_REQUEST_REJECTED", message: "The profile request must come from Hara Learn." } });
   }
 
   let status;
   try { status = await (options.communityAccountStatusImpl ?? communityAccountStatus)(identity.id); }
-  catch { return json(503, { error: { code: "WORLD_ACCOUNT_CHECK_FAILED", message: "World could not verify the community account." } }); }
+  catch { return json(503, { error: { code: "LEARN_ACCOUNT_CHECK_FAILED", message: "Learn could not verify the community account." } }); }
   if (status !== "active") return inactiveResponse(request, status);
 
   let client;
@@ -234,7 +234,7 @@ export async function handle(request, options = {}) {
   let state;
   try { state = await loadProfileState(client, identity); }
   catch (error) {
-    console.error("World profile lookup failed", { status: error?.status, name: error?.name });
+    console.error("Learn profile lookup failed", { status: error?.status, name: error?.name });
     return json(502, { error: { code: "PROFILE_REGISTRY_UNAVAILABLE", message: "The profile registry could not be read from GitHub." } });
   }
 
@@ -261,7 +261,7 @@ export async function handle(request, options = {}) {
     return json(result.unchanged ? 200 : 201, { ok: true, ...result, lifecycleRecorded: lifecycle.recorded });
   } catch (error) {
     if (/slug/.test(error?.message ?? "")) return json(409, { error: { code: "PROFILE_SLUG_TAKEN", message: error.message } });
-    console.error("World profile proposal failed", { status: error?.status, name: error?.name });
+    console.error("Learn profile proposal failed", { status: error?.status, name: error?.name });
     return json(502, { error: { code: "PROFILE_PROPOSAL_FAILED", message: "The profile pull request could not be created." } });
   }
 }

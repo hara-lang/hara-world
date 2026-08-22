@@ -1,5 +1,5 @@
-CREATE TABLE IF NOT EXISTS hara_world.koan_completions (
-  github_user_id bigint NOT NULL REFERENCES hara_world.community_accounts (github_user_id) ON DELETE CASCADE,
+CREATE TABLE IF NOT EXISTS hara_learn.koan_completions (
+  github_user_id bigint NOT NULL REFERENCES hara_learn.community_accounts (github_user_id) ON DELETE CASCADE,
   koan_id text NOT NULL CHECK (koan_id ~ '^[0-9]{3}$'),
   koan_version integer NOT NULL CHECK (koan_version > 0),
   solution_source text NOT NULL CHECK (char_length(solution_source) BETWEEN 1 AND 12000),
@@ -12,9 +12,9 @@ CREATE TABLE IF NOT EXISTS hara_world.koan_completions (
 -- statement-breakpoint
 
 CREATE INDEX IF NOT EXISTS koan_completions_koan_idx
-  ON hara_world.koan_completions (koan_id, koan_version, completed_at);
+  ON hara_learn.koan_completions (koan_id, koan_version, completed_at);
 
 -- statement-breakpoint
 
-COMMENT ON TABLE hara_world.koan_completions IS
+COMMENT ON TABLE hara_learn.koan_completions IS
   'Browser-verified accepted Hara Koan source. Failed attempts are never stored.';

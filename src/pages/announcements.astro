@@ -6,7 +6,7 @@ import { getArticles } from "../lib/articles";
 const announcements = (await getArticles())
   .filter((article) => article.data.topics.includes("announcement"));
 ---
-<SiteLayout title="Announcements" description="Reviewed community and project announcements from Hara World.">
+<SiteLayout title="Announcements" description="Reviewed community and project announcements from Hara Learn.">
   <header class="page-hero">
     <div class="shell">
       <p class="eyebrow">Community / announcements</p>

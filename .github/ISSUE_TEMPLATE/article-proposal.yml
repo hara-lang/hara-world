@@ -1,5 +1,5 @@
 name: Propose an article
-description: Pitch an original Hara World dispatch, field note, release, or authorised syndication.
+description: Pitch an original Hara Learn dispatch, field note, release, or authorised syndication.
 title: "Article: "
 body:
   - type: dropdown

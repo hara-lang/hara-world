@@ -9,7 +9,7 @@ function proposal(state, number) {
     ownerGithubUserId: "6685337",
     resourceKey: `draft-${number}`,
     resourceTitle: `Proposal ${number}`,
-    repository: "hara-lang/hara-world",
+    repository: "hara-lang/hara-learn",
     pullRequestNumber: number,
     state,
   };
@@ -19,7 +19,7 @@ test("hourly repair discovers missing rows and reconciles only non-terminal prop
   const calls = [];
   const result = await reconcileScheduledProposals({
     db: { name: "db" },
-    githubClient: { repository: "hara-lang/hara-world", baseBranch: "main", async request() {} },
+    githubClient: { repository: "hara-lang/hara-learn", baseBranch: "main", async request() {} },
     discoverManagedProposalsImpl: async (_client, options) => {
       calls.push(["discover", options.db.name]);
       return [{ ok: true, proposal: proposal("submitted", 1) }, { ok: false, error: { code: "BROKEN" } }];

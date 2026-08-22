@@ -1,12 +1,12 @@
 # First-party source submissions
 
-Hara World accepts RSS and Atom publication proposals through `/submit`. The browser never asks the user to copy fields into a GitHub issue. It establishes a World session, probes the feed through a constrained server endpoint, and asks the Hara World GitHub App to prepare a reusable draft pull request.
+Hara Learn accepts RSS and Atom publication proposals through `/submit`. The browser never asks the user to copy fields into a GitHub issue. It establishes a Learn session, probes the feed through a constrained server endpoint, and asks the Hara Learn GitHub App to prepare a reusable draft pull request.
 
 ```text
 Hara Identity
       │ audience-bound handoff
       ▼
-World human session
+Learn human session
       │
       ├──► POST /api/sources/probe ─► safe public feed inspection
       │
@@ -33,7 +33,7 @@ POST /api/sources
 POST /api/sources/probe
 ```
 
-All operations require an active World account. Mutating operations also require a same-origin request and one of:
+All operations require an active Learn account. Mutating operations also require a same-origin request and one of:
 
 ```text
 X-Hara-Request: source-proposal
@@ -55,7 +55,7 @@ The form may propose:
 - licence or written-permission reference;
 - default author and language;
 - topics;
-- relevance to Hara World.
+- relevance to Hara Learn.
 
 The browser cannot choose:
 

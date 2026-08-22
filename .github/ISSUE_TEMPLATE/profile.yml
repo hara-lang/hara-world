@@ -1,5 +1,5 @@
 name: Submit or update a community profile
-description: Propose a public Git-reviewed profile for the Hara World people directory.
+description: Propose a public Git-reviewed profile for the Hara Learn people directory.
 title: "Profile: "
 body:
   - type: markdown
@@ -17,7 +17,7 @@ body:
     id: github-id
     attributes:
       label: Stable numeric GitHub user ID
-      description: Use the numeric account ID, not the changeable login. It is visible on the Hara World Account page after sign-in.
+      description: Use the numeric account ID, not the changeable login. It is visible on the Hara Learn Account page after sign-in.
       placeholder: "6685337"
     validations:
       required: true
@@ -65,7 +65,7 @@ body:
     attributes:
       label: Public-record acknowledgement
       options:
-        - label: I understand this information will be stored publicly in Git history and published on Hara World.
+        - label: I understand this information will be stored publicly in Git history and published on Hara Learn.
           required: true
         - label: I understand that roles and verified contribution claims require separate repository evidence or maintainer review.
           required: true

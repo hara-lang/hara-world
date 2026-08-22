@@ -262,7 +262,7 @@ export async function fetchPinnedItems(channelId, token, {
       headers: {
         Accept: "application/json",
         Authorization: `Bot ${token}`,
-        "User-Agent": "hara-world-discord-pins/1",
+        "User-Agent": "hara-learn-discord-pins/1",
       },
     });
     if (!response.ok) {

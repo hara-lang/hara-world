@@ -13,16 +13,16 @@ import {
   updateSourceRegistry,
 } from "./_shared/source-proposal.mjs";
 import {
-  clearWorldSessionCookie,
+  clearLearnSessionCookie,
   json,
-  readWorldSession,
+  readLearnSession,
   sameOrigin,
-} from "./_shared/world-auth.mjs";
+} from "./_shared/learn-auth.mjs";
 
 const SOURCES_PATH = "/api/sources";
 const PROBE_PATH = "/api/sources/probe";
 const REGISTRY_PATH = "registry/sources.json";
-const PR_MARKER = "<!-- hara-world-source-proposal -->";
+const PR_MARKER = "<!-- hara-learn-source-proposal -->";
 
 function decodeContent(payload) {
   if (typeof payload?.content !== "string" || payload.encoding !== "base64") return "";
@@ -75,10 +75,10 @@ function pullRequestBody(identity, proposal, preview) {
   const samples = preview.entries.slice(0, 3).map((entry) => `- ${entry.title || "Untitled entry"}${entry.url ? ` — ${entry.url}` : ""}`);
   return [
     PR_MARKER,
-    `<!-- hara-world-source:github:${identity.id}:${proposal.id} -->`,
-    "## Hara World source proposal",
+    `<!-- hara-learn-source:github:${identity.id}:${proposal.id} -->`,
+    "## Hara Learn source proposal",
     "",
-    `Prepared from the authenticated World session for \`github:${identity.id}\` (\`@${identity.login}\`).`,
+    `Prepared from the authenticated Learn session for \`github:${identity.id}\` (\`@${identity.login}\`).`,
     "",
     `Publication: **${proposal.name}** (\`${proposal.id}\`)`,
     `Feed detected as: **${preview.format.toUpperCase()}**${preview.title ? ` — ${preview.title}` : ""}`,
@@ -133,7 +133,7 @@ async function putRegistry(client, source, branch, sha) {
   await client.request(`/repos/${client.repository}/contents/${REGISTRY_PATH}`, {
     method: "PUT",
     body: {
-      message: "Propose Hara World source registry update",
+      message: "Propose Hara Learn source registry update",
       content: Buffer.from(source).toString("base64"),
       branch,
       sha,
@@ -198,11 +198,11 @@ async function createOrUpdateSourcePullRequest(client, { identity, proposal, pre
 function inactiveResponse(request, status) {
   return json(403, {
     error: {
-      code: "WORLD_ACCOUNT_INACTIVE",
-      message: "This Hara World account is not active.",
+      code: "LEARN_ACCOUNT_INACTIVE",
+      message: "This Hara Learn account is not active.",
       status,
     },
-  }, { "Set-Cookie": clearWorldSessionCookie(request.url) });
+  }, { "Set-Cookie": clearLearnSessionCookie(request.url) });
 }
 
 export async function handle(request, options = {}) {
@@ -216,19 +216,19 @@ export async function handle(request, options = {}) {
     return json(405, { error: { code: "METHOD_NOT_ALLOWED", message: "Unsupported source operation." } });
   }
 
-  const identity = readWorldSession(request, env, now);
-  if (!identity) return json(401, { error: { code: "WORLD_SESSION_REQUIRED", message: "Establish a Hara World session before submitting a publication feed." } });
+  const identity = readLearnSession(request, env, now);
+  if (!identity) return json(401, { error: { code: "LEARN_SESSION_REQUIRED", message: "Establish a Hara Learn session before submitting a publication feed." } });
 
   if (request.method === "POST") {
     const marker = path === PROBE_PATH ? "source-probe" : "source-proposal";
     if (!sameOrigin(request, env) || request.headers.get("x-hara-request") !== marker) {
-      return json(403, { error: { code: "SOURCE_REQUEST_REJECTED", message: "The source request must come from Hara World." } });
+      return json(403, { error: { code: "SOURCE_REQUEST_REJECTED", message: "The source request must come from Hara Learn." } });
     }
   }
 
   let status;
   try { status = await (options.communityAccountStatusImpl ?? communityAccountStatus)(identity.id); }
-  catch { return json(503, { error: { code: "WORLD_ACCOUNT_CHECK_FAILED", message: "World could not verify the community account." } }); }
+  catch { return json(503, { error: { code: "LEARN_ACCOUNT_CHECK_FAILED", message: "Learn could not verify the community account." } }); }
   if (status !== "active") return inactiveResponse(request, status);
 
   if (path === PROBE_PATH) {
@@ -250,7 +250,7 @@ export async function handle(request, options = {}) {
   let state;
   try { state = await readRegistry(client); }
   catch (error) {
-    console.error("World source registry lookup failed", { status: error?.status, name: error?.name });
+    console.error("Learn source registry lookup failed", { status: error?.status, name: error?.name });
     return json(502, { error: { code: "SOURCE_REGISTRY_UNAVAILABLE", message: "The source registry could not be read from GitHub." } });
   }
 
@@ -287,10 +287,10 @@ export async function handle(request, options = {}) {
       lifecycleRecorded: lifecycle.recorded,
     });
   } catch (error) {
-    if (/another World account|already registered|source ID|legacy source/i.test(error?.message ?? "")) {
+    if (/another Learn account|already registered|source ID|legacy source/i.test(error?.message ?? "")) {
       return json(409, { error: { code: "SOURCE_CONFLICT", message: error.message } });
     }
-    console.error("World source proposal failed", { status: error?.status, name: error?.name });
+    console.error("Learn source proposal failed", { status: error?.status, name: error?.name });
     return json(502, { error: { code: "SOURCE_PROPOSAL_FAILED", message: "The source registry pull request could not be created." } });
   }
 }

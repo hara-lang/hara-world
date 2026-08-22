@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://world.hara-lang.org/schemas/source-registry.json",
-  "title": "Hara World source registry",
+  "$id": "https://learn.hara-lang.org/schemas/source-registry.json",
+  "title": "Hara Learn source registry",
   "type": "object",
   "additionalProperties": false,
   "required": ["version", "sources"],

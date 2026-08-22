@@ -90,7 +90,7 @@ function scalar(value) {
 
 export function buildProfileDocument({ identity, proposal, existing, now = Date.now() }) {
   if (!identity || !/^\d+$/.test(identity.id ?? "") || !identity.login) {
-    throw new TypeError("A verified World session is required to build a profile proposal.");
+    throw new TypeError("A verified Learn session is required to build a profile proposal.");
   }
   const previous = existing?.data ?? {};
   const data = {

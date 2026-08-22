@@ -2,12 +2,12 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { handle as handleProposals } from "../netlify/functions/proposals.mjs";
 import { handle as handleReview } from "../netlify/functions/review-proposals.mjs";
-import { WORLD_SESSION_COOKIE, signWorldSession } from "../netlify/functions/_shared/world-auth.mjs";
+import { LEARN_SESSION_COOKIE, signLearnSession } from "../netlify/functions/_shared/learn-auth.mjs";
 
 const ENV = {
-  HARA_WORLD_HANDOFF_SECRET: "h".repeat(64),
-  HARA_WORLD_SESSION_SECRET: "s".repeat(64),
-  HARA_WORLD_SITE: "https://world.hara-lang.org",
+  HARA_LEARN_HANDOFF_SECRET: "h".repeat(64),
+  HARA_LEARN_SESSION_SECRET: "s".repeat(64),
+  HARA_LEARN_SITE: "https://learn.hara-lang.org",
 };
 const NOW = Date.parse("2026-08-18T04:00:00Z");
 const IDENTITY = {
@@ -18,19 +18,19 @@ const IDENTITY = {
 };
 
 function sessionCookie() {
-  const token = signWorldSession(IDENTITY, ENV.HARA_WORLD_SESSION_SECRET, {
-    issuer: "https://world.hara-lang.org",
+  const token = signLearnSession(IDENTITY, ENV.HARA_LEARN_SESSION_SECRET, {
+    issuer: "https://learn.hara-lang.org",
     now: NOW,
   });
-  return `${WORLD_SESSION_COOKIE}=${encodeURIComponent(token)}`;
+  return `${LEARN_SESSION_COOKIE}=${encodeURIComponent(token)}`;
 }
 
 function request(path, { method = "GET", marker } = {}) {
-  return new Request(`https://world.hara-lang.org${path}`, {
+  return new Request(`https://learn.hara-lang.org${path}`, {
     method,
     headers: {
       Cookie: sessionCookie(),
-      Origin: "https://world.hara-lang.org",
+      Origin: "https://learn.hara-lang.org",
       ...(marker ? { "X-Hara-Request": marker } : {}),
     },
   });
@@ -43,11 +43,11 @@ function proposal(overrides = {}) {
     ownerGithubUserId: "6685337",
     resourceKey: "11111111-1111-4111-8111-111111111111",
     resourceTitle: "Small Hara agent",
-    repository: "hara-lang/hara-world",
+    repository: "hara-lang/hara-learn",
     branch: "post/github-6685337/1111111111114111",
     baseBranch: "main",
     pullRequestNumber: 42,
-    pullRequestUrl: "https://github.com/hara-lang/hara-world/pull/42",
+    pullRequestUrl: "https://github.com/hara-lang/hara-learn/pull/42",
     publicPath: "/articles/community/2026/08/small-hara-agent",
     state: "submitted",
     reviewState: "pending",
@@ -58,8 +58,8 @@ function proposal(overrides = {}) {
   };
 }
 
-test("requires an active World session before exposing a contributor proposal list", async () => {
-  const unauthenticated = await handleProposals(new Request("https://world.hara-lang.org/api/proposals"), { env: ENV, now: NOW });
+test("requires an active Learn session before exposing a contributor proposal list", async () => {
+  const unauthenticated = await handleProposals(new Request("https://learn.hara-lang.org/api/proposals"), { env: ENV, now: NOW });
   assert.equal(unauthenticated.status, 401);
 
   const inactive = await handleProposals(request("/api/proposals"), {
@@ -69,7 +69,7 @@ test("requires an active World session before exposing a contributor proposal li
     proposalStore: { listForOwner: async () => [] },
   });
   assert.equal(inactive.status, 403);
-  assert.match(inactive.headers.get("set-cookie"), new RegExp(`${WORLD_SESSION_COOKIE}=;`));
+  assert.match(inactive.headers.get("set-cookie"), new RegExp(`${LEARN_SESSION_COOKIE}=;`));
 });
 
 test("returns only the signed-in owner's lifecycle records and summary counts", async () => {
@@ -103,7 +103,7 @@ test("reconciliation discovers missed owner proposals before refreshing open sta
     env: ENV,
     now: NOW,
     communityAccountStatusImpl: async () => "active",
-    githubClient: { repository: "hara-lang/hara-world", baseBranch: "main", async request() { throw new Error("not called"); } },
+    githubClient: { repository: "hara-lang/hara-learn", baseBranch: "main", async request() { throw new Error("not called"); } },
     proposalStore: {
       async listForOwner(owner) {
         calls.push(["list", owner]);
@@ -144,7 +144,7 @@ test("review queue requires repository or reviewed profile authority", async () 
     env: ENV,
     now: NOW,
     communityAccountStatusImpl: async () => "active",
-    githubClient: { repository: "hara-lang/hara-world", baseBranch: "main", async request() {} },
+    githubClient: { repository: "hara-lang/hara-learn", baseBranch: "main", async request() {} },
     reviewAccessImpl: async () => ({ allowed: false, source: "none", roles: [] }),
     reviewStore: { list: async () => [proposal()] },
   });
@@ -155,7 +155,7 @@ test("review queue requires repository or reviewed profile authority", async () 
     env: ENV,
     now: NOW,
     communityAccountStatusImpl: async () => "active",
-    githubClient: { repository: "hara-lang/hara-world", baseBranch: "main", async request() {} },
+    githubClient: { repository: "hara-lang/hara-learn", baseBranch: "main", async request() {} },
     reviewAccessImpl: async () => ({ allowed: true, source: "profile-role", permission: null, roles: ["editor"] }),
     reviewStore: { list: async () => [proposal()] },
   });
@@ -175,7 +175,7 @@ test("authorized review reconciliation discovers the whole repository queue", as
     env: ENV,
     now: NOW,
     communityAccountStatusImpl: async () => "active",
-    githubClient: { repository: "hara-lang/hara-world", baseBranch: "main", async request() {} },
+    githubClient: { repository: "hara-lang/hara-learn", baseBranch: "main", async request() {} },
     reviewAccessImpl: async () => ({ allowed: true, source: "repository", permission: "maintain", roles: [] }),
     reviewStore: {
       async list() {

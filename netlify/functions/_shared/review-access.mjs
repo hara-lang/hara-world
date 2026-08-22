@@ -12,7 +12,7 @@ function assertIdentity(identity) {
   const id = String(identity?.id ?? "");
   const login = String(identity?.login ?? "");
   if (!/^\d+$/.test(id) || !/^[A-Za-z0-9](?:[A-Za-z0-9-]{0,37}[A-Za-z0-9])?$/.test(login)) {
-    throw new TypeError("A verified World identity is required for review access.");
+    throw new TypeError("A verified Learn identity is required for review access.");
   }
   return { id, login };
 }

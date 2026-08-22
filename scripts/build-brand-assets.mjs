@@ -2,7 +2,7 @@ import { mkdir } from "node:fs/promises";
 import path from "node:path";
 import sharp from "sharp";
 
-const output = path.resolve("public/og-hara-world.jpg");
+const output = path.resolve("public/og-hara-learn.jpg");
 await mkdir(path.dirname(output), { recursive: true });
 
 const svg = `
@@ -26,7 +26,7 @@ const svg = `
   <rect x="280" y="220" width="132" height="132" rx="26" fill="#080a0d" stroke="#dfe7f0" stroke-opacity="0.18"/>
   <path fill="#f4f6f8" d="M302 242h27v37h38v-37h27v99h-27v-37h-38v37h-27z"/>
   <path fill="#2f7cff" d="M338 242h20v20h-20z"/>
-  <text x="280" y="515" fill="#f4f6f8" font-family="Arial, Helvetica, sans-serif" font-size="174" font-weight="650" letter-spacing="-8">Hara World</text>
+  <text x="280" y="515" fill="#f4f6f8" font-family="Arial, Helvetica, sans-serif" font-size="174" font-weight="650" letter-spacing="-8">Hara Learn</text>
   <text x="290" y="635" fill="#a0a8b1" font-family="Arial, Helvetica, sans-serif" font-size="54" font-weight="400">Dispatches from a programmable world.</text>
   <text x="290" y="1010" fill="#8db2ff" font-family="monospace" font-size="30" letter-spacing="8">WEB / RSS / MAIL / MOTION</text>
 </svg>`;

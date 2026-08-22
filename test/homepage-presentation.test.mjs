@@ -13,7 +13,7 @@ test("the homepage opens as a community feed rather than an editorial front page
   assert.match(home, /Lesson of the day/);
   assert.match(home, /Post something/);
   assert.match(home, /Add your feed/);
-  assert.doesNotMatch(home, /independent publication|transmission bands|Release algebra|world-feature/);
+  assert.doesNotMatch(home, /independent publication|transmission bands|Release algebra|learn-feature/);
 });
 
 test("the homepage exposes native posts, syndicated feeds, profiles, and a daily koan", async () => {

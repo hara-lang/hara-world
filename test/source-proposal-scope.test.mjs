@@ -37,10 +37,10 @@ function registry(status = "proposed") {
 }
 
 async function fixture(status = "proposed") {
-  const directory = await mkdtemp(path.join(tmpdir(), "hara-world-source-scope-"));
+  const directory = await mkdtemp(path.join(tmpdir(), "hara-learn-source-scope-"));
   await mkdir(path.join(directory, "registry"), { recursive: true });
   git(directory, "init", "-b", "main");
-  git(directory, "config", "user.name", "Hara World Test");
+  git(directory, "config", "user.name", "Hara Learn Test");
   git(directory, "config", "user.email", "test@hara-lang.org");
   await writeFile(path.join(directory, "registry", "sources.json"), `${JSON.stringify({ version: 1, sources: [] }, null, 2)}\n`);
   git(directory, "add", "registry/sources.json");
@@ -54,7 +54,7 @@ async function fixture(status = "proposed") {
   const eventPath = path.join(directory, "event.json");
   await writeFile(eventPath, JSON.stringify({
     pull_request: {
-      body: "<!-- hara-world-source-proposal -->\n<!-- hara-world-source:github:6685337:example-journal -->",
+      body: "<!-- hara-learn-source-proposal -->\n<!-- hara-learn-source:github:6685337:example-journal -->",
     },
   }));
   return { directory, eventPath };

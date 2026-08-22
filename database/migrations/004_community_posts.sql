@@ -1,7 +1,7 @@
-CREATE TABLE IF NOT EXISTS hara_world.community_post_drafts (
+CREATE TABLE IF NOT EXISTS hara_learn.community_post_drafts (
   id uuid PRIMARY KEY,
   github_user_id bigint NOT NULL
-    REFERENCES hara_world.community_accounts (github_user_id)
+    REFERENCES hara_learn.community_accounts (github_user_id)
     ON DELETE CASCADE,
   slug text NOT NULL
     CHECK (slug ~ '^[a-z0-9](?:[a-z0-9-]{0,62}[a-z0-9])?$'),
@@ -41,26 +41,26 @@ CREATE TABLE IF NOT EXISTS hara_world.community_post_drafts (
 -- statement-breakpoint
 
 CREATE UNIQUE INDEX IF NOT EXISTS community_post_drafts_branch_key
-  ON hara_world.community_post_drafts (proposal_branch)
+  ON hara_learn.community_post_drafts (proposal_branch)
   WHERE proposal_branch IS NOT NULL;
 
 -- statement-breakpoint
 
 CREATE UNIQUE INDEX IF NOT EXISTS community_post_drafts_pull_request_key
-  ON hara_world.community_post_drafts (pull_request_number)
+  ON hara_learn.community_post_drafts (pull_request_number)
   WHERE pull_request_number IS NOT NULL;
 
 -- statement-breakpoint
 
 CREATE INDEX IF NOT EXISTS community_post_drafts_owner_status_idx
-  ON hara_world.community_post_drafts (github_user_id, status, updated_at DESC);
+  ON hara_learn.community_post_drafts (github_user_id, status, updated_at DESC);
 
 -- statement-breakpoint
 
-CREATE TABLE IF NOT EXISTS hara_world.community_post_events (
+CREATE TABLE IF NOT EXISTS hara_learn.community_post_events (
   id bigint GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
   draft_id uuid NOT NULL
-    REFERENCES hara_world.community_post_drafts (id)
+    REFERENCES hara_learn.community_post_drafts (id)
     ON DELETE CASCADE,
   event_type text NOT NULL
     CHECK (event_type IN (
@@ -74,7 +74,7 @@ CREATE TABLE IF NOT EXISTS hara_world.community_post_events (
       'proposal.rejected'
     )),
   actor_github_user_id bigint
-    REFERENCES hara_world.community_accounts (github_user_id)
+    REFERENCES hara_learn.community_accounts (github_user_id)
     ON DELETE SET NULL,
   payload jsonb NOT NULL DEFAULT '{}'::jsonb
     CHECK (jsonb_typeof(payload) = 'object'),
@@ -84,14 +84,14 @@ CREATE TABLE IF NOT EXISTS hara_world.community_post_events (
 -- statement-breakpoint
 
 CREATE INDEX IF NOT EXISTS community_post_events_draft_idx
-  ON hara_world.community_post_events (draft_id, created_at DESC, id DESC);
+  ON hara_learn.community_post_events (draft_id, created_at DESC, id DESC);
 
 -- statement-breakpoint
 
-COMMENT ON TABLE hara_world.community_post_drafts IS
-  'Private Hara World post drafts and their Git-reviewed proposal state. Merged public Markdown remains the publication source of truth.';
+COMMENT ON TABLE hara_learn.community_post_drafts IS
+  'Private Hara Learn post drafts and their Git-reviewed proposal state. Merged public Markdown remains the publication source of truth.';
 
 -- statement-breakpoint
 
-COMMENT ON TABLE hara_world.community_post_events IS
+COMMENT ON TABLE hara_learn.community_post_events IS
   'Append-only lifecycle events for private drafts and GitHub proposal reconciliation.';

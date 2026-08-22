@@ -1,12 +1,12 @@
 ---
 import SiteLayout from "../layouts/SiteLayout.astro";
 ---
-<SiteLayout title="My World" description="Your Hara World identity, proposals, publications, agents, feeds, lessons, and profile.">
-  <header class="page-hero my-world-hero">
+<SiteLayout title="My Learn" description="Your Hara Learn identity, proposals, publications, agents, feeds, lessons, and profile.">
+  <header class="page-hero my-learn-hero">
     <div class="shell">
       <p class="eyebrow">Community account / proposal lifecycle</p>
-      <h1>My World.</h1>
-      <p class="lede">Write, register, and follow everything you contribute to Hara World without treating GitHub as the user interface. Git still holds the review history; this page tells you what is waiting, changing, approved, and published.</p>
+      <h1>My Learn.</h1>
+      <p class="lede">Write, register, and follow everything you contribute to Hara Learn without treating GitHub as the user interface. Git still holds the review history; this page tells you what is waiting, changing, approved, and published.</p>
       <div class="hero-actions">
         <a class="button button--primary" href="/post">Write a post</a>
         <a class="button" href="/agents/register">Register an agent</a>
@@ -21,23 +21,23 @@ import SiteLayout from "../layouts/SiteLayout.astro";
       <article class="account-panel identity-panel">
         <div class="section-heading">
           <div>
-            <p class="eyebrow">Identity and World session</p>
-            <h2 data-world-session-title>Checking World…</h2>
+            <p class="eyebrow">Identity and Learn session</p>
+            <h2 data-learn-session-title>Checking Learn…</h2>
           </div>
-          <p data-world-session-copy>World is checking for its audience-bound local session.</p>
+          <p data-learn-session-copy>Learn is checking for its audience-bound local session.</p>
         </div>
-        <dl class="definition-list" data-world-account-details hidden>
+        <dl class="definition-list" data-learn-account-details hidden>
           <dt>Provider</dt><dd>GitHub through <code>id.hara-lang.org</code></dd>
-          <dt>Stable subject</dt><dd data-world-account-id>—</dd>
-          <dt>Current login</dt><dd data-world-account-login>—</dd>
+          <dt>Stable subject</dt><dd data-learn-account-id>—</dd>
+          <dt>Current login</dt><dd data-learn-account-login>—</dd>
           <dt>Authority</dt><dd>Human identity only. Review, packages, repositories, agents, and publication remain separate capabilities.</dd>
         </dl>
         <div class="hero-actions">
-          <a class="button button--primary" href="/api/auth/start?returnTo=/me" data-world-authorize hidden>Enable My World</a>
-          <button class="button button--quiet" type="button" data-world-logout hidden>End World session</button>
+          <a class="button button--primary" href="/api/auth/start?returnTo=/me" data-learn-authorize hidden>Enable My Learn</a>
+          <button class="button button--quiet" type="button" data-learn-logout hidden>End Learn session</button>
           <a class="text-link" href="/review" data-review-link hidden>Open review queue <span aria-hidden="true">→</span></a>
         </div>
-        <p class="form-status" data-world-session-status aria-live="polite"></p>
+        <p class="form-status" data-learn-session-status aria-live="polite"></p>
       </article>
 
       <article class="account-panel proposal-dashboard" data-proposal-dashboard hidden>
@@ -63,7 +63,7 @@ import SiteLayout from "../layouts/SiteLayout.astro";
         <div class="proposal-empty" data-proposal-empty hidden>
           <p class="eyebrow">No proposals yet</p>
           <h3>Start with one small contribution.</h3>
-          <p>Write a working note, create your public profile, register an agent, or connect a publication feed. World will keep the resulting review state here.</p>
+          <p>Write a working note, create your public profile, register an agent, or connect a publication feed. Learn will keep the resulting review state here.</p>
           <div class="hero-actions">
             <a class="button button--primary" href="/post">Write a post</a>
             <a class="button" href="#profile">Create profile</a>
@@ -127,7 +127,7 @@ import SiteLayout from "../layouts/SiteLayout.astro";
 
       <div class="policy-grid account-boundaries">
         <article class="policy-card"><h3>One dashboard</h3><p>Posts, profiles, agents, and sources use one lifecycle vocabulary even though their public records remain separate.</p></article>
-        <article class="policy-card"><h3>Git remains review</h3><p>World reads GitHub review, check, close, and merge events. It does not replace the canonical pull-request history.</p></article>
+        <article class="policy-card"><h3>Git remains review</h3><p>Learn reads GitHub review, check, close, and merge events. It does not replace the canonical pull-request history.</p></article>
         <article class="policy-card"><h3>Webhook plus repair</h3><p>Signed events update quickly; explicit reconciliation repairs missed or delayed deliveries from GitHub.</p></article>
         <article class="policy-card"><h3>Merge remains authority</h3><p>A dashboard state never publishes content by itself. The reviewed merge is still the publication or registration event.</p></article>
       </div>
@@ -136,14 +136,14 @@ import SiteLayout from "../layouts/SiteLayout.astro";
 
   <script>
     const $ = (selector) => document.querySelector(selector);
-    const sessionTitle = $("[data-world-session-title]");
-    const sessionCopy = $("[data-world-session-copy]");
-    const sessionStatus = $("[data-world-session-status]");
-    const accountDetails = $("[data-world-account-details]");
-    const accountId = $("[data-world-account-id]");
-    const accountLogin = $("[data-world-account-login]");
-    const authorize = $("[data-world-authorize]");
-    const logout = $("[data-world-logout]");
+    const sessionTitle = $("[data-learn-session-title]");
+    const sessionCopy = $("[data-learn-session-copy]");
+    const sessionStatus = $("[data-learn-session-status]");
+    const accountDetails = $("[data-learn-account-details]");
+    const accountId = $("[data-learn-account-id]");
+    const accountLogin = $("[data-learn-account-login]");
+    const authorize = $("[data-learn-authorize]");
+    const logout = $("[data-learn-logout]");
     const reviewLink = $("[data-review-link]");
     const dashboard = $("[data-proposal-dashboard]");
     const proposalList = $("[data-proposal-list]");
@@ -179,7 +179,7 @@ import SiteLayout from "../layouts/SiteLayout.astro";
       });
       const body = await response.json().catch(() => ({}));
       if (!response.ok) {
-        const error = new Error(body?.error?.message || `World returned HTTP ${response.status}.`);
+        const error = new Error(body?.error?.message || `Learn returned HTTP ${response.status}.`);
         error.status = response.status;
         error.code = body?.error?.code;
         throw error;
@@ -313,22 +313,22 @@ import SiteLayout from "../layouts/SiteLayout.astro";
       accountDetails.hidden = !signedIn;
       if (signedIn) {
         sessionTitle.textContent = `Signed in as @${session.profile.login}`;
-        sessionCopy.textContent = `World access expires at ${new Date(session.profile.expiresAt).toLocaleString()}.`;
+        sessionCopy.textContent = `Learn access expires at ${new Date(session.profile.expiresAt).toLocaleString()}.`;
         sessionStatus.textContent = "Your server-verified identity can create proposals; each proposal still passes through review and merge.";
         accountId.textContent = `github:${session.profile.id}`;
         accountLogin.textContent = `@${session.profile.login}`;
         await Promise.allSettled([loadProfile(), loadProposals(), checkReviewAccess()]);
       } else {
-        sessionTitle.textContent = session?.configured === false ? "World is not configured" : "Sign in to open My World";
+        sessionTitle.textContent = session?.configured === false ? "Learn is not configured" : "Sign in to open My Learn";
         sessionCopy.textContent = session?.configured === false
-          ? "World still needs its handoff, database, GitHub App, lifecycle migration, and webhook deployment configuration."
-          : "Use Hara Identity to establish a local World session.";
-        sessionStatus.textContent = "The central header identity alone cannot authorize World writes.";
+          ? "Learn still needs its handoff, database, GitHub App, lifecycle migration, and webhook deployment configuration."
+          : "Use Hara Identity to establish a local Learn session.";
+        sessionStatus.textContent = "The central header identity alone cannot authorize Learn writes.";
         reviewLink.hidden = true;
       }
     };
 
-    const refreshWorld = async () => {
+    const refreshLearn = async () => {
       const response = await fetch("/api/auth/session", { credentials: "include", headers: { Accept: "application/json" }, cache: "no-store" });
       const body = await response.json().catch(() => ({ authenticated: false, configured: false }));
       await renderSession(body);
@@ -355,9 +355,9 @@ import SiteLayout from "../layouts/SiteLayout.astro";
       await fetch("/api/auth/logout", {
         method: "POST",
         credentials: "include",
-        headers: { "X-Hara-Request": "world-sign-out" },
+        headers: { "X-Hara-Request": "learn-sign-out" },
       }).catch(() => {});
-      await refreshWorld();
+      await refreshLearn();
       logout.disabled = false;
     });
 
@@ -410,7 +410,7 @@ import SiteLayout from "../layouts/SiteLayout.astro";
       initialised = true;
       const query = new URLSearchParams(location.search);
       if (query.get("auth_error")) sessionStatus.textContent = query.get("auth_error");
-      refreshWorld().catch(() => renderSession({ authenticated: false, configured: false }));
+      refreshLearn().catch(() => renderSession({ authenticated: false, configured: false }));
     };
 
     document.addEventListener("astro:page-load", initialise);
@@ -419,7 +419,7 @@ import SiteLayout from "../layouts/SiteLayout.astro";
   </script>
 
   <style>
-    .my-world-hero{background:linear-gradient(145deg,color-mix(in srgb,var(--hara-signal) 8%,transparent),transparent 56%)}
+    .my-learn-hero{background:linear-gradient(145deg,color-mix(in srgb,var(--hara-signal) 8%,transparent),transparent 56%)}
     .account-stack{display:grid;gap:1.25rem}.account-panel{padding:clamp(1.1rem,2vw,1.75rem);border:1px solid var(--hara-line);background:color-mix(in srgb,var(--hara-surface) 84%,transparent)}.button--quiet{background:transparent}
     .proposal-dashboard__heading{align-items:flex-end}.proposal-dashboard__controls{display:flex;gap:.7rem}.proposal-counts{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));margin-bottom:1.25rem;border-top:1px solid var(--hara-line);border-left:1px solid var(--hara-line)}.proposal-counts>div{display:grid;gap:.25rem;padding:1rem;border-right:1px solid var(--hara-line);border-bottom:1px solid var(--hara-line)}.proposal-counts strong{font-size:1.65rem}.proposal-counts span{color:var(--hara-muted);font-size:.72rem;text-transform:uppercase;letter-spacing:.06em}
     .proposal-list{display:grid;gap:.75rem}.proposal-card{display:grid;gap:1rem;padding:1rem;border:1px solid var(--hara-line);border-left:4px solid var(--hara-line-strong);background:var(--hara-surface-solid)}.proposal-card--changes-requested,.proposal-card--error{border-left-color:#c86d3c}.proposal-card--approved{border-left-color:var(--hara-signal)}.proposal-card--merged{border-left-color:#419b68}.proposal-card header{display:flex;align-items:flex-start;justify-content:space-between;gap:1rem}.proposal-card h3{margin:0;font-size:1.1rem}.proposal-card .eyebrow{margin-bottom:.35rem}.proposal-state{padding:.32rem .55rem;border:1px solid var(--hara-line);border-radius:999px;color:var(--hara-muted);font:650 .62rem var(--hara-font-mono);text-transform:uppercase;white-space:nowrap}.proposal-state--changes-requested,.proposal-state--error{color:#c86d3c}.proposal-state--approved,.proposal-state--merged{color:var(--hara-signal)}.proposal-card dl{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:.65rem;margin:0}.proposal-card dt{color:var(--hara-faint);font:650 .62rem var(--hara-font-mono);text-transform:uppercase}.proposal-card dd{margin:0;color:var(--hara-muted);font-size:.78rem}.proposal-card footer{display:flex;align-items:center;flex-wrap:wrap;gap:1rem;padding-top:.8rem;border-top:1px solid var(--hara-line)}.proposal-empty{padding:2rem;border:1px dashed var(--hara-line-strong);text-align:center}.proposal-empty h3{font-size:1.4rem}.proposal-empty .hero-actions{justify-content:center}

@@ -28,7 +28,7 @@
 
 .learn-v2-shell .hara-v2-context-items a,
 .learn-v2-shell .hara-v2-context-actions a {
-  min-height: 38px;
+  min-height: 44px;
   border-radius: var(--hara-v2-radius);
 }
 

@@ -1,0 +1,74 @@
+---
+interface Lesson {
+  id: string;
+  slug: string;
+  title: string;
+  topic: string;
+  difficulty: number;
+  prompt: string;
+  starter: string;
+  tests: string[];
+}
+
+interface Props {
+  lesson: Lesson;
+  koanCount: number;
+}
+
+const { lesson, koanCount } = Astro.props as Props;
+const lessonHref = `/learn/koans/${lesson.slug}/`;
+---
+<section class="learn-home-section" id="first-lesson">
+  <header class="learn-home-section-head">
+    <div>
+      <p class="hara-v2-kicker">First lesson</p>
+      <h2>Source, expectation, and execution boundary remain adjacent.</h2>
+    </div>
+    <p>The homepage presents the exact starter form and first check statically. The exercise route owns editing, the Run action, browser-kernel loading, and accepted solutions.</p>
+  </header>
+
+  <article class="learn-home-lesson-record" aria-labelledby="learn-home-lesson-title">
+    <header>
+      <div>
+        <p class="hara-v2-kicker">Daily koan · {lesson.topic}</p>
+        <h3 id="learn-home-lesson-title">{lesson.id} · {lesson.title}</h3>
+      </div>
+      <span class="hara-v2-badge" data-tone="success">Level {lesson.difficulty}</span>
+    </header>
+
+    <div class="learn-home-lesson-contract">
+      <dl>
+        <div><dt>Source</dt><dd>Canonical koan catalogue</dd></div>
+        <div><dt>Runtime</dt><dd>Deferred to exercise</dd></div>
+        <div><dt>Access</dt><dd>Anonymous</dd></div>
+        <div><dt>State</dt><dd>Static lesson record</dd></div>
+      </dl>
+      <span>No inferred execution result is shown.</span>
+    </div>
+
+    <div class="learn-home-lesson-grid">
+      <div class="learn-home-lesson-prompt">
+        <span>Prompt</span>
+        <h4>{lesson.prompt}</h4>
+        <p>Read the check, change the starter expression, then run the test in the koan workspace.</p>
+      </div>
+
+      <div class="learn-home-source-record">
+        <div><span>{lesson.slug}.hal</span><small>Starter source</small></div>
+        <pre><code>{lesson.starter}</code></pre>
+      </div>
+
+      <aside class="learn-home-check-record">
+        <span>First check</span>
+        <code>{lesson.tests[0]}</code>
+        <p>The exercise page loads the Hara browser kernel only after you choose to run the tests.</p>
+        <a class="hara-v2-button" data-variant="primary" href={lessonHref}>Open the exercise <span aria-hidden="true">→</span></a>
+      </aside>
+    </div>
+
+    <footer>
+      <span>JavaScript is not required to read this lesson record.</span>
+      <a href="/learn/koans/">View all {koanCount} koans →</a>
+    </footer>
+  </article>
+</section>
